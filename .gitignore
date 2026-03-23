@@ -1,0 +1,17 @@
+/media/qbittorrent/
+/media/pia*
+/media/sonarr/
+/media/radarr/
+/media/lidarr/
+/media/bazarr/
+/media/prowlarr/
+/media/seerr/
+/media/sonarr/
+/media/radarr/
+/media/lidarr/
+/media/bazarr/
+/media/prowlarr/
+/media/seerr/
+/media/gluetun/
+
+.env
