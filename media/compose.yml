@@ -229,9 +229,8 @@ services:
       vpn:
         condition: service_healthy
         restart: true
-    networks:
-      servarrnetwork:
-        ipv4_address: ${PROWLARR_IP:-172.39.0.8}
+    network_mode: service:vpn
+
 
   flaresolverr:
     <<: *arr-dns # DNS for outbound HTTPS
