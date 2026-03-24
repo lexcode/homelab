@@ -1,16 +1,40 @@
+networks:
+  servarrnetwork:
+    name: servarrnetwork
+    ipam:
+      config:
+        # If you change SERVARR_SUBNET in .env, update every ipv4_address below to match that range.
+        - subnet: ${SERVARR_SUBNET:-172.39.0.0/24}
+
+# Docker's embedded DNS often forwards to the host resolver and returns SERVFAIL for some names
+# (e.g. api.radarr.video). Merge `<<: *arr-dns` into any servarrnetwork app that needs outbound HTTPS.
+x-arr-dns: &arr-dns
+  dns:
+    - 1.1.1.1
+    - 8.8.8.8
+
 services:
-  # PIA WireGuard (thrnz/docker-wireguard-pia) — create ./pia and ./pia-shared on the host
+  # PIA WireGuard — ./pia and ./pia-shared on the host
+  # Stays on servarrnetwork at ${VPN_IP} so other containers can reach qBittorrent at http://${VPN_IP}:${WEBUI_PORT}
   vpn:
     image: thrnz/docker-wireguard-pia
     container_name: vpn
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     cap_add:
       - NET_ADMIN
     devices:
       - /dev/net/tun:/dev/net/tun
     ports:
-      - 8080:8080/tcp # qBittorrent WebUI (was 8080 if nothing else uses 8080)
+      - ${WEBUI_PORT:-8080}:${WEBUI_PORT:-8080}/tcp # qBittorrent WebUI
       - 6881:6881/tcp
       - 6881:6881/udp
+      - 9696:9696 # prowlarr
+      - 8191:8191 # flaresolverr
+    networks:
+      servarrnetwork:
+        ipv4_address: ${VPN_IP:-172.39.0.2}
     volumes:
       - ./pia:/pia
       - ./pia-shared:/pia-shared
@@ -23,10 +47,13 @@ services:
       - LOCAL_NETWORK=${LOCAL_NETWORK}
       - PORT_FORWARDING=1
       - PORT_PERSIST=1
-      - VPNDNS=${VPNDNS}
+      # - VPNDNS=${VPNDNS}
       - TZ=${TZ}
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.default.disable_ipv6=1
+      - net.ipv6.conf.all.disable_ipv6=1
+      - net.ipv6.conf.lo.disable_ipv6=1
     restart: unless-stopped
     healthcheck:
       test: ping -c 1 www.google.com || exit 1
@@ -44,7 +71,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - WEBUI_PORT=${WEBUI_PORT} # must match vpn service published WebUI port
+      - WEBUI_PORT=${WEBUI_PORT:-8080}
       - TORRENTING_PORT=${TORRENTING_PORT}
     volumes:
       - ./qbittorrent:/config
@@ -61,7 +88,6 @@ services:
       start_period: 20s
       timeout: 10s
 
-  # See the 'qBittorrent Stalls with VPN Timeout' section for more information.
   deunhealth:
     image: qmcgaw/deunhealth
     container_name: deunhealth
@@ -73,3 +99,154 @@ services:
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
+
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./sonarr:/config
+      - /data:/data
+    ports:
+      - 8989:8989
+    depends_on:
+      vpn:
+        condition: service_healthy
+        restart: true
+    networks:
+      servarrnetwork:
+        ipv4_address: ${SONARR_IP:-172.39.0.3}
+
+  radarr:
+    <<: *arr-dns
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./radarr:/config
+      - /data:/data
+    ports:
+      - 7878:7878
+    networks:
+      servarrnetwork:
+        ipv4_address: ${RADARR_IP:-172.39.0.4}
+
+  lidarr:
+    <<: *arr-dns
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./lidarr:/config
+      - /data:/data
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    ports:
+      - 8686:8686
+    depends_on:
+      vpn:
+        condition: service_healthy
+        restart: true
+    networks:
+      servarrnetwork:
+        ipv4_address: ${LIDARR_IP:-172.39.0.5}
+
+  bazarr:
+    <<: *arr-dns
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./bazarr:/config
+      - /data:/data
+    ports:
+      - 6767:6767
+    depends_on:
+      vpn:
+        condition: service_healthy
+        restart: true
+    networks:
+      servarrnetwork:
+        ipv4_address: ${BAZARR_IP:-172.39.0.6}
+
+  seerr:
+    <<: *arr-dns
+    container_name: seerr
+    image: ghcr.io/seerr-team/seerr:latest
+    environment:
+      - LOG_LEVEL=debug
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    restart: unless-stopped
+    volumes:
+      - ./seerr:/app/config
+    ports:
+      - 5055:5055
+    networks:
+      servarrnetwork:
+        ipv4_address: ${SEERR_IP:-172.39.0.7}
+
+  prowlarr:
+    <<: *arr-dns
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./prowlarr:/config
+    restart: unless-stopped
+    depends_on:
+      vpn:
+        condition: service_healthy
+        restart: true
+    networks:
+      servarrnetwork:
+        ipv4_address: ${PROWLARR_IP:-172.39.0.8}
+
+  flaresolverr:
+    <<: *arr-dns # DNS for outbound HTTPS
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=${TZ}
+    restart: unless-stopped
+    depends_on:
+      vpn:
+        condition: service_healthy
+        restart: true
+    networks:
+      servarrnetwork:
+        ipv4_address: ${FLARESOLVERR_IP:-172.39.0.10}

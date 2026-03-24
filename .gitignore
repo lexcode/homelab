@@ -13,5 +13,6 @@
 /media/prowlarr/
 /media/seerr/
 /media/gluetun/
-
+/data/
+/media/data/
 .env
