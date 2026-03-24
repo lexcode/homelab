@@ -7,7 +7,8 @@ networks:
         - subnet: ${SERVARR_SUBNET:-172.39.0.0/24}
 
 # Docker's embedded DNS often forwards to the host resolver and returns SERVFAIL for some names
-# (e.g. api.radarr.video). Merge `<<: *arr-dns` into any servarrnetwork app that needs outbound HTTPS.
+# (e.g. api.radarr.video). Merge `<<: *arr-dns` on servarrnetwork services only — not with network_mode: service:vpn
+# (those inherit dns from the vpn container).
 x-arr-dns: &arr-dns
   dns:
     - 1.1.1.1
@@ -214,7 +215,6 @@ services:
         ipv4_address: ${SEERR_IP:-172.39.0.7}
 
   prowlarr:
-    <<: *arr-dns
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     environment:
