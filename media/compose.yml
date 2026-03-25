@@ -29,8 +29,8 @@ services:
       - /dev/net/tun:/dev/net/tun
     ports:
       - ${WEBUI_PORT:-8080}:${WEBUI_PORT:-8080}/tcp # qBittorrent WebUI
-      - 6881:6881/tcp
-      - 6881:6881/udp
+      - ${TORRENTING_PORT:-6881}:${TORRENTING_PORT:-6881}/tcp
+      - ${TORRENTING_PORT:-6881}:${TORRENTING_PORT:-6881}/udp
       - 9696:9696 # prowlarr
       - 8191:8191 # flaresolverr
     networks:
