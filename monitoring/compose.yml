@@ -1,0 +1,39 @@
+networks:
+  monitoringnetwork:
+    name: monitoringnetwork
+    ipam:
+      config:
+        - subnet: ${MONITORING_SUBNET:-172.39.1.0/24}
+
+services:
+  beszel:
+    image: henrygd/beszel
+    container_name: beszel
+    restart: unless-stopped
+    environment:
+      - APP_URL=${BESZEL_URL:-http://localhost:8090}
+      - LOG_LEVEL=${BESZEL_LOG_LEVEL:-info}
+    ports:
+      - ${BESZEL_PORT:-8090}:${BESZEL_PORT:-8090}
+    volumes:
+      - ./data/beszel_data:/beszel_data
+    networks:
+      monitoringnetwork:
+        ipv4_address: ${BESZEL_IP:-172.39.1.2}
+
+  beszelagent:
+    image: henrygd/beszel-agent
+    container_name: beszelagent
+    restart: unless-stopped
+    network_mode: service:beszel
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/beszel_agent_data:/var/lib/beszel-agent
+      # monitor other disks / partitions by mounting a folder in /extra-filesystems
+      # - /mnt/disk/.beszel:/extra-filesystems/sda1:ro
+    environment:
+      LISTEN: ${BESZEL_AGENT_LISTEN:-45876}
+      KEY: ${BESZEL_AGENT_KEY}
+      TOKEN: ${BESZEL_AGENT_TOKEN}
+      HUB_URL: ${BESZEL_URL}
+

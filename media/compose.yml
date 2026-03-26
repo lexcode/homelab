@@ -36,8 +36,8 @@ services:
       servarrnetwork:
         ipv4_address: ${VPN_IP:-172.39.0.2}
     volumes:
-      - ./pia:/pia
-      - ./pia-shared:/pia-shared
+      - ./data/pia:/pia
+      - ./data/pia-shared:/pia-shared
     env_file:
       - .env
     environment:
@@ -83,6 +83,9 @@ services:
   #   restart: unless-stopped
 
 
+  # qBittorrent WebUI → Settings → Advanced: set "Network interface" to wg0 (WireGuard in vpn
+  # container). Use IPv4 only if stalls persist (IPv6 disabled on vpn sysctls). Gluetun/OpenVPN
+  # typically uses tun0 instead of wg0.
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
@@ -96,7 +99,7 @@ services:
       - WEBUI_PORT=${WEBUI_PORT:-8080}
       - TORRENTING_PORT=${TORRENTING_PORT}
     volumes:
-      - ./qbittorrent:/config
+      - ./data/qbittorrent:/config
       - /data:/data
     depends_on:
       vpn:
@@ -135,7 +138,7 @@ services:
       - TZ=${TZ}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./sonarr:/config
+      - ./data/sonarr:/config
       - /data:/data
     ports:
       - 8989:8989
@@ -158,7 +161,7 @@ services:
       - TZ=${TZ}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./radarr:/config
+      - ./data/radarr:/config
       - /data:/data
     ports:
       - 7878:7878
@@ -173,7 +176,7 @@ services:
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./lidarr:/config
+      - ./data/lidarr:/config
       - /data:/data
     environment:
       - PUID=${PUID}
@@ -200,7 +203,7 @@ services:
       - TZ=${TZ}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./bazarr:/config
+      - ./data/bazarr:/config
       - /data:/data
     ports:
       - 6767:6767
@@ -229,7 +232,7 @@ services:
       retries: 3
     restart: unless-stopped
     volumes:
-      - ./seerr:/app/config
+      - ./data/seerr:/app/config
     ports:
       - 5055:5055
     networks:
@@ -245,14 +248,27 @@ services:
       - TZ=${TZ}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./prowlarr:/config
+      - ./data/prowlarr:/config
     restart: unless-stopped
     depends_on:
       vpn:
         condition: service_healthy
         restart: true
     network_mode: service:vpn
-
+    
+  # Host network: outbound calls to Jellyfin/Plex use the host LAN IP (e.g. 192.168.0.5).
+  # On a bridged custom network, TCP can leave with source 172.39.0.x; LAN-only firewalls
+  # (common on Unraid) then block :8096 while ping still works — same symptom as your wget timeout.
+  suggestarr:
+    image: ciuse99/suggestarr:latest
+    container_name: suggestarr
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./data/suggestarr/config_files:/app/config/config_files
+    environment:
+      - LOG_LEVEL=${SUGGESTARR_LOG_LEVEL:-info}
+      - SUGGESTARR_PORT=${SUGGESTARR_PORT:-5000}
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
