@@ -20,7 +20,7 @@ Networks are isolated by design (for example media on `172.39.0.0/24`, monitorin
 
 ## Media
 
-See **[media/README.md](media/README.md)** for environment variables, ports, qBittorrent/VPN notes, and **optional persistent CIFS mounts** when movies and TV live on a remote NAS under `/data`.
+See **[media/README.md](media/README.md)** for environment variables, ports, qBittorrent/VPN notes, an **example `/data` directory tree** (libraries and download folders), and **optional persistent CIFS mounts** when movies and TV live on a remote NAS under `/data`.
 
 Quick start:
 

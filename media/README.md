@@ -132,6 +132,23 @@ Keep all library paths on local disks under `/data` (or change the bind mounts i
 - `./data/*` — container configs (gitignored or local only; do not commit secrets)
 - `/data` on host — libraries, downloads root (as configured in each app)
 
+### Example host `/data` tree
+
+Conventional paths under the bind-mounted host root. Point Radarr, Sonarr, Lidarr, Bazarr, and qBittorrent at the folders you actually use.
+
+```text
+/data
+├── books
+├── downloads
+│   └── qbittorrent
+│       ├── completed
+│       ├── incomplete
+│       └── torrents
+├── movies
+├── music
+└── shows
+```
+
 ## References
 
 - `.env.example` — non-secret template
