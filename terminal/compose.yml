@@ -12,8 +12,10 @@ services:
       ATUIN_OPEN_REGISTRATION: "true"
       ATUIN_DB_URI: postgres://$ATUIN_DB_USERNAME:$ATUIN_DB_PASSWORD@db/$ATUIN_DB_NAME
       RUST_LOG: info,atuin_server=debug
+    depends_on:
+      - db
   db:
-    image: postgres:14
+    image: postgres:18
     restart: unless-stopped
     volumes: # Don't remove permanent storage for index database files!
       - "./database:/var/lib/postgresql/data/"
@@ -21,3 +23,21 @@ services:
       POSTGRES_USER: ${ATUIN_DB_USERNAME}
       POSTGRES_PASSWORD: ${ATUIN_DB_PASSWORD}
       POSTGRES_DB: ${ATUIN_DB_NAME}
+
+  # Backup service for atuin database
+  backup:
+    container_name: atuin_db_dumper
+    image: prodrigestivill/postgres-backup-local
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${ATUIN_DB_NAME}
+      POSTGRES_USER: ${ATUIN_DB_USERNAME}
+      POSTGRES_PASSWORD: ${ATUIN_DB_PASSWORD}
+      SCHEDULE: "@daily"
+      BACKUP_DIR: /db_dumps
+    volumes:
+      - ./db_dumps:/db_dumps
+    depends_on:
+      - db

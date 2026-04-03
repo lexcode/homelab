@@ -1,6 +1,6 @@
 # Atuin (self-hosted sync server)
 
-Docker Compose stack for [Atuin](https://atuin.sh/): a sync server for encrypted shell history. The server listens on **port 8888**; Postgres stores metadata under `./database`, and Atuin server config under `./config`.
+Docker Compose stack for [Atuin](https://atuin.sh/): a sync server for encrypted shell history. The server listens on **port 8888**; Postgres **18** stores metadata under `./database`, and Atuin server config under `./config`. A sidecar runs [postgres-backup-local](https://github.com/prodrigestivill/docker-postgres-backup-local) on **`@daily`** and writes compressed dumps to **`./db_dumps`**.
 
 ## Prerequisites
 
@@ -48,10 +48,19 @@ Docker Compose stack for [Atuin](https://atuin.sh/): a sync server for encrypted
 
 ## Data layout
 
-| Path            | Purpose                          |
-| --------------- | -------------------------------- |
-| `./config`      | Atuin server configuration       |
-| `./database`    | Postgres data (do not delete)   |
+| Path            | Purpose                                           |
+| --------------- | ------------------------------------------------- |
+| `./config`      | Atuin server configuration                        |
+| `./database`    | Postgres data directory (do not delete)          |
+| `./db_dumps`    | Scheduled SQL backups (daily; retention per image defaults) |
+
+### Postgres major upgrades
+
+If `./database` was created with an **older** Postgres major version (for example 14), you cannot point Postgres 18 at that directory without a [dump/restore or upgrade path](https://www.postgresql.org/docs/current/upgrading.html). For a clean start, stop the stack, move `./database` aside, and start again (you lose DB history unless you restore from a dump).
+
+### DB password and `ATUIN_DB_URI`
+
+Use a strong password in `.env`. Avoid characters that are special in URLs (`@`, `:`, `/`, `%`, etc.) or the `ATUIN_DB_URI` passed into the Atuin container may fail to parse; if you need those characters, URL-encode them in the URI or adjust how the URI is built.
 
 ## Security note
 
