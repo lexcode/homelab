@@ -7,7 +7,7 @@ networks:
 
 services:
   beszel:
-    image: henrygd/beszel
+    image: henrygd/beszel:latest
     container_name: beszel
     restart: unless-stopped
     environment:
@@ -22,7 +22,7 @@ services:
         ipv4_address: ${BESZEL_IP:-172.39.1.2}
 
   beszelagent:
-    image: henrygd/beszel-agent
+    image: henrygd/beszel-agent:latest
     container_name: beszelagent
     restart: unless-stopped
     network_mode: service:beszel
