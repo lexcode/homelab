@@ -31,7 +31,7 @@ services:
     environment:
       PAPERLESS_BASE_URL: "http://paperless-ngx:8001"
       PAPERLESS_API_TOKEN: "${PAPERLESS_API_TOKEN}"
-      # PAPERLESS_PUBLIC_URL: "http://paperless.mydomain.com" # Optional
+      PAPERLESS_PUBLIC_URL: "${PAPERLESS_PUBLIC_URL}" # Optional
       MANUAL_TAG: "paperless-gpt" # Optional, default: paperless-gpt
       AUTO_TAG: "paperless-gpt-auto" # Optional, default: paperless-gpt-auto
       # LLM Configuration - Choose one:
