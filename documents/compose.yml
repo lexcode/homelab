@@ -11,7 +11,7 @@ services:
     depends_on:
       - broker
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - ./data/paperless-ngx/data:/usr/src/paperless/data
       - ./data/paperless-ngx/media:/usr/src/paperless/media
@@ -29,7 +29,7 @@ services:
     image: icereed/paperless-gpt:latest # Docker Hub
     # image: ghcr.io/icereed/paperless-gpt:latest  # GitHub Container Registry
     environment:
-      PAPERLESS_BASE_URL: "http://paperless-ngx:8000"
+      PAPERLESS_BASE_URL: "http://paperless-ngx:8001"
       PAPERLESS_API_TOKEN: "${PAPERLESS_API_TOKEN}"
       # PAPERLESS_PUBLIC_URL: "http://paperless.mydomain.com" # Optional
       MANUAL_TAG: "paperless-gpt" # Optional, default: paperless-gpt
