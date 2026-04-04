@@ -1,3 +1,4 @@
 /media/data/*
 /monitoring/data/*
+/documents/data/*
 .env
