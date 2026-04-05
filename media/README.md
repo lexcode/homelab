@@ -25,11 +25,29 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
    - `PIA_LOC` — PIA location slug (see the VPN image docs)
    - `LOCAL_NETWORK` — your LAN CIDR (e.g. `192.168.0.0/24`) so the VPN container allows local access
 
-2. **PIA WireGuard data** (first run)
+2. **Create the folder structure**
 
-   The `vpn` service uses `./data/pia` and `./data/pia-shared`. They are created when the container starts; ensure the directory is writable.
+   If you're using bind mounts (like this stack does), create the directories up front so Docker doesn't create them as root.
 
-3. **Start**
+   ```bash
+   mkdir -p \
+     data/pia \
+     data/pia-shared \
+     data/qbittorrent \
+     data/sonarr \
+     data/radarr \
+     data/lidarr \
+     data/bazarr \
+     data/seerr \
+     data/prowlarr \
+     data/suggestarr/config_files
+   ```
+
+3. **PIA WireGuard data** (first run)
+
+   The `vpn` service uses `./data/pia` and `./data/pia-shared`. These are pre-created in the step above.
+
+4. **Start**
 
    From this directory:
 
@@ -37,7 +55,7 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
    docker compose up -d
    ```
 
-4. **qBittorrent**
+5. **qBittorrent**
 
    In **Settings → Advanced**, set **Network interface** to `wg0` (WireGuard in the VPN container). If torrents stall, symptoms often match MTU or IPv6 issues; the compose file already sets IPv6 off on the VPN service and an MTU hint.
 
