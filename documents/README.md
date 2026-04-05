@@ -19,20 +19,20 @@ The Raspberry Pi 5 is not powerful enough for LLM inference. Ollama runs on the 
 
 ## Services
 
-| Service | Port | Purpose |
-|---|---|---|
-| `paperless-ngx` | `8001` | Document storage, search, web UI |
-| `paperless-ai` | `3001` | Automatic AI document analysis and tagging |
-| `paperless-gpt` | `8811` | Manual-review AI tagging, OCR, title generation |
-| `postgres` | — | PostgreSQL database for paperless-ngx (internal only) |
-| `broker` | — | Redis message queue (required by paperless-ngx, internal only) |
+| Service         | Port   | Purpose                                                        |
+| --------------- | ------ | -------------------------------------------------------------- |
+| `paperless-ngx` | `8001` | Document storage, search, web UI                               |
+| `paperless-ai`  | `3001` | Automatic AI document analysis and tagging                     |
+| `paperless-gpt` | `8811` | Manual-review AI tagging, OCR, title generation                |
+| `postgres`      | —      | PostgreSQL database for paperless-ngx (internal only)          |
+| `broker`        | —      | Redis message queue (required by paperless-ngx, internal only) |
 
 ## Models (Ollama)
 
-| Model | Role |
-|---|---|
-| `minicpm-v` | Vision OCR — reads raw document scans/images and extracts text |
-| `qwen3:8b` | Text LLM — generates titles, tags, and correspondents from extracted text |
+| Model       | Role                                                                      |
+| ----------- | ------------------------------------------------------------------------- |
+| `minicpm-v` | Vision OCR — reads raw document scans/images and extracts text            |
+| `qwen3:8b`  | Text LLM — generates titles, tags, and correspondents from extracted text |
 
 Both models load on demand; Ollama unloads them after 5 minutes of inactivity.
 
@@ -46,17 +46,17 @@ cp .env.example .env
 
 Edit `.env` and fill in:
 
-| Variable | How to get it |
-|---|---|
-| `PAPERLESS_SECRET_KEY` | `python3 -c "import secrets; print(secrets.token_hex(32))"` |
-| `PAPERLESS_API_TOKEN` | See step 4 below |
-| `OLLAMA_HOST` | LAN IP of your desktop, e.g. `http://192.168.0.118:11434` |
-| `PUID` / `PGID` | Run `id` on the Pi to get your user/group IDs |
-| `TZ` | Your timezone, e.g. `Europe/Lisbon` |
-| `PAPERLESS_DB_USERNAME` | Postgres username for paperless-ngx (choose any) |
-| `PAPERLESS_DB_PASSWORD` | Postgres password for paperless-ngx (choose any) |
-| `PAPERLESS_DB_NAME` | Postgres database name for paperless-ngx (choose any) |
-| `PAPERLESS_USERNAME` | Your paperless-ngx admin username (for paperless-ai) |
+| Variable                | How to get it                                               |
+| ----------------------- | ----------------------------------------------------------- |
+| `PAPERLESS_SECRET_KEY`  | `python3 -c "import secrets; print(secrets.token_hex(32))"` |
+| `PAPERLESS_API_TOKEN`   | See step 4 below                                            |
+| `OLLAMA_HOST`           | LAN IP of your desktop, e.g. `http://192.168.0.118:11434`   |
+| `PUID` / `PGID`         | Run `id` on the Pi to get your user/group IDs               |
+| `TZ`                    | Your timezone, e.g. `Europe/Lisbon`                         |
+| `PAPERLESS_DB_USERNAME` | Postgres username for paperless-ngx (choose any)            |
+| `PAPERLESS_DB_PASSWORD` | Postgres password for paperless-ngx (choose any)            |
+| `PAPERLESS_DB_NAME`     | Postgres database name for paperless-ngx (choose any)       |
+| `PAPERLESS_USERNAME`    | Your paperless-ngx admin username (for paperless-ai)        |
 
 ### 2. Create the folder structure
 
@@ -66,7 +66,7 @@ If you're using bind mounts (like this stack does), create the directories up fr
 
 ```bash
 mkdir -p \
-  data/documents/paperless/paperless-ngx/{data,media,export,consume} \
+  data/paperless/paperless-ngx/{export,consume} \
   data/paperless-ngx/redis \
   data/paperless-gpt/{hocr,pdf}
 ```
@@ -75,6 +75,7 @@ mkdir -p \
 
 ```bash
 mkdir -p \
+  /data/documents/paperless/paperless-ngx/{data,media} \
   /data/documents/paperless/postgresql-paperless-ngx \
   /data/documents/paperless/paperless-ai \
   /data/documents/paperless/paperless-gpt/prompts
@@ -114,21 +115,21 @@ Paste the token into `.env` as `PAPERLESS_API_TOKEN`.
 docker compose up -d
 ```
 
-| URL | What |
-|---|---|
+| URL                   | What             |
+| --------------------- | ---------------- |
 | `http://<pi-ip>:8001` | paperless-ngx UI |
-| `http://<pi-ip>:3001` | paperless-ai UI |
+| `http://<pi-ip>:3001` | paperless-ai UI  |
 | `http://<pi-ip>:8811` | paperless-gpt UI |
 
 ## Usage
 
 paperless-gpt processes documents by tag:
 
-| Tag | Effect |
-|---|---|
-| `paperless-gpt` | Queue for **manual** review — you approve suggestions in the UI |
-| `paperless-gpt-auto` | **Automatic** — title, tags, and correspondent applied without review |
-| `paperless-gpt-ocr-auto` | **Automatic OCR** — runs vision OCR then updates the document |
+| Tag                      | Effect                                                                |
+| ------------------------ | --------------------------------------------------------------------- |
+| `paperless-gpt`          | Queue for **manual** review — you approve suggestions in the UI       |
+| `paperless-gpt-auto`     | **Automatic** — title, tags, and correspondent applied without review |
+| `paperless-gpt-ocr-auto` | **Automatic OCR** — runs vision OCR then updates the document         |
 
 Tag a document in paperless-ngx, then visit the paperless-gpt UI to review or monitor progress.
 
@@ -166,8 +167,6 @@ documents/
 ├── .env.example
 └── data/                 # not committed (gitignored)
     ├── documents/paperless/paperless-ngx/
-    │   ├── data/         # search index and app state (rebuilable)
-    │   ├── media/        # stored documents and thumbnails
     │   ├── export/       # manual exports
     │   └── consume/      # drop files here to auto-import
     ├── paperless-ngx/
@@ -181,6 +180,9 @@ documents/
 
 ```
 /data/documents/paperless/
+├── paperless-ngx/
+│   ├── data/             # search index and app state (rebuilable)
+│   └── media/            # stored documents and thumbnails ⚠️ largest directory
 ├── postgresql-paperless-ngx/   # postgres database — all metadata, tags, correspondents
 ├── paperless-ai/               # paperless-ai state (processed document tracking)
 └── paperless-gpt/

@@ -18,8 +18,8 @@ services:
     volumes:
       - /data/documents/paperless/paperless-ngx/data:/usr/src/paperless/data
       - /data/documents/paperless/paperless-ngx/media:/usr/src/paperless/media
-      - /data/documents/paperless/paperless-ngx/export:/usr/src/paperless/export
-      - /data/documents/paperless/paperless-ngx/consume:/usr/src/paperless/consume
+      - ./data/paperless/paperless-ngx/export:/usr/src/paperless/export
+      - ./data/paperless/paperless-ngx/consume:/usr/src/paperless/consume
     environment:
       PAPERLESS_REDIS: "redis://broker:6379"
       PAPERLESS_SECRET_KEY: "${PAPERLESS_SECRET_KEY}"
