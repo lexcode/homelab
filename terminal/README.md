@@ -16,7 +16,18 @@ Docker Compose stack for [Atuin](https://atuin.sh/): a sync server for encrypted
 
    Set `ATUIN_DB_NAME`, `ATUIN_DB_USERNAME`, and a strong `ATUIN_DB_PASSWORD` in `.env`.
 
-2. **Start**
+2. **Create the folder structure**
+
+   If you're using bind mounts (like this stack does), create the directories up front so Docker doesn't create them as root.
+
+   ```bash
+   mkdir -p \
+     config \
+     database \
+     db_dumps
+   ```
+
+3. **Start**
 
    From this directory:
 
@@ -24,7 +35,7 @@ Docker Compose stack for [Atuin](https://atuin.sh/): a sync server for encrypted
    docker compose up -d
    ```
 
-3. **Point your shell client at this server**
+4. **Point your shell client at this server**
 
    On each machine with the [Atuin CLI](https://docs.atuin.sh/), set the sync URL **before** registering or logging in. Either add to `~/.config/atuin/config.toml`:
 
