@@ -37,3 +37,16 @@ services:
       TOKEN: ${BESZEL_AGENT_TOKEN}
       HUB_URL: ${BESZEL_URL}
 
+    # optional but helpful log viewer
+  dozzle:
+    image: amir20/dozzle:latest
+    restart: unless-stopped
+    container_name: dozzle
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/dozzle_data:/data
+    ports:
+      - "8181:8080"
+    networks:
+      monitoringnetwork:
+        ipv4_address: ${DOZZLE_IP:-172.39.1.3}

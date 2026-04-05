@@ -15,15 +15,26 @@ Docker Compose stack for [Beszel](https://github.com/henrygd/beszel): a small hu
    cp .env.example .env
    ```
 
-2. **Start the hub** (agent env vars can be placeholders for the first boot if you prefer to fill them after opening the UI):
+2. **Create the folder structure**
+
+   If you're using bind mounts (like this stack does), create the directories up front so Docker doesn't create them as root.
+
+   ```bash
+   mkdir -p \
+     data/beszel_data \
+     data/beszel_agent_data \
+     data/dozzle_data
+   ```
+
+3. **Start the hub** (agent env vars can be placeholders for the first boot if you prefer to fill them after opening the UI):
 
    ```bash
    docker compose up -d
    ```
 
-3. **Open Beszel** at the URL you configured (`BESZEL_URL`, port `BESZEL_PORT`). Create an account if prompted.
+4. **Open Beszel** at the URL you configured (`BESZEL_URL`, port `BESZEL_PORT`). Create an account if prompted.
 
-4. **Add this machine in the UI**  
+5. **Add this machine in the UI**  
    When you register the host, Beszel shows the values the agent needs. Copy them into `.env` as `BESZEL_AGENT_KEY` and `BESZEL_AGENT_TOKEN`, then:
 
    ```bash
