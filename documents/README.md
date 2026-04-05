@@ -62,12 +62,22 @@ Edit `.env` and fill in:
 
 If you're using bind mounts (like this stack does), create the directories up front so Docker doesn't create them as root.
 
+**Local directories** (on the Pi's SD card):
+
 ```bash
 mkdir -p \
-  data/paperless-ngx/{data,media,export,consume,redis} \
-  data/postgresql-paperless-ngx \
-  data/paperless-ai \
-  data/paperless-gpt/{prompts,hocr,pdf}
+  data/documents/paperless/paperless-ngx/{data,media,export,consume} \
+  data/paperless-ngx/redis \
+  data/paperless-gpt/{hocr,pdf}
+```
+
+**Remote directories** (on your NAS/external mount at `/data`):
+
+```bash
+mkdir -p \
+  /data/documents/paperless/postgresql-paperless-ngx \
+  /data/documents/paperless/paperless-ai \
+  /data/documents/paperless/paperless-gpt/prompts
 ```
 
 ### 3. Pull Ollama models (on the desktop)
@@ -145,24 +155,36 @@ curl -sS http://<desktop-ip>:11434/api/version
 
 ## Data layout
 
+Storage is split between the Pi's local SD card (small, fast-access) and a remote mount at `/data` (large, backed-up).
+
+**Local (Pi SD card) — `./data/`:**
+
 ```
 documents/
 ├── compose.yml
 ├── .env                  # not committed
 ├── .env.example
 └── data/                 # not committed (gitignored)
-    ├── paperless-ngx/
-    │   ├── data/         # paperless database and index
-    │   ├── media/        # stored documents
+    ├── documents/paperless/paperless-ngx/
+    │   ├── data/         # search index and app state (rebuilable)
+    │   ├── media/        # stored documents and thumbnails
     │   ├── export/       # manual exports
-    │   ├── consume/      # drop files here to auto-import
-    │   └── redis/        # broker persistence
-    ├── postgresql-paperless-ngx/  # postgres data directory
-    ├── paperless-ai/     # paperless-ai persistent data
+    │   └── consume/      # drop files here to auto-import
+    ├── paperless-ngx/
+    │   └── redis/        # broker persistence (transient)
     └── paperless-gpt/
-        ├── prompts/      # customisable AI prompt templates
-        ├── hocr/         # hOCR output (if enabled)
-        └── pdf/          # enhanced PDF output (if enabled)
+        ├── hocr/         # hOCR output (if enabled, transient)
+        └── pdf/          # enhanced PDF output (if enabled, transient)
 ```
 
-Drop files into `data/paperless-ngx/consume/` and they will be automatically imported.
+**Remote (NAS/external mount) — `/data/`:**
+
+```
+/data/documents/paperless/
+├── postgresql-paperless-ngx/   # postgres database — all metadata, tags, correspondents
+├── paperless-ai/               # paperless-ai state (processed document tracking)
+└── paperless-gpt/
+    └── prompts/                # customisable AI prompt templates
+```
+
+Drop files into `data/documents/paperless/paperless-ngx/consume/` and they will be automatically imported.

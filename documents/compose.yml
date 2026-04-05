@@ -16,10 +16,10 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - ./data/paperless-ngx/data:/usr/src/paperless/data
-      - ./data/paperless-ngx/media:/usr/src/paperless/media
-      - ./data/paperless-ngx/export:/usr/src/paperless/export
-      - ./data/paperless-ngx/consume:/usr/src/paperless/consume
+      - /data/documents/paperless/paperless-ngx/data:/usr/src/paperless/data
+      - /data/documents/paperless/paperless-ngx/media:/usr/src/paperless/media
+      - /data/documents/paperless/paperless-ngx/export:/usr/src/paperless/export
+      - /data/documents/paperless/paperless-ngx/consume:/usr/src/paperless/consume
     environment:
       PAPERLESS_REDIS: "redis://broker:6379"
       PAPERLESS_SECRET_KEY: "${PAPERLESS_SECRET_KEY}"
@@ -37,7 +37,7 @@ services:
       POSTGRES_PASSWORD: ${PAPERLESS_DB_PASSWORD}
       POSTGRES_DB: ${PAPERLESS_DB_NAME}
     volumes:
-      - ./data/postgresql-paperless-ngx:/var/lib/postgresql
+      - /data/documents/paperless/postgresql-paperless-ngx:/var/lib/postgresql
 
   # paperless-ai service
   paperless-ai:
@@ -61,7 +61,7 @@ services:
       SCAN_INTERVAL: ${SCAN_INTERVAL}
       PAPERLESS_URL: ${PAPERLESS_URL}
     volumes:
-      - ./data/paperless-ai:/app/data
+      - /data/documents/paperless/paperless-ai:/app/data
 
   paperless-gpt:
     container_name: paperless-gpt
@@ -158,7 +158,7 @@ services:
       OCR_LIMIT_PAGES: "5" # Optional, default: 5. Set to 0 for no limit.
       LOG_LEVEL: "info" # Optional: debug, warn, error
     volumes:
-      - ./data/paperless-gpt/prompts:/app/prompts # Mount the prompts directory
+      - /data/documents/paperless/paperless-gpt/prompts:/app/prompts # Mount the prompts directory
       # For Google Document AI:
       - ${HOME}/.config/gcloud/application_default_credentials.json:/app/credentials.json
       # For local hOCR and PDF saving:
