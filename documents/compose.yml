@@ -1,15 +1,18 @@
 services:
   broker:
+    container_name: broker
     image: docker.io/library/redis:7
     restart: unless-stopped
     volumes:
       - ./data/paperless-ngx/redis:/data
 
   paperless-ngx:
+    container_name: paperless-ngx
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
     restart: unless-stopped
     depends_on:
       - broker
+      - postgres
     ports:
       - "8001:8000"
     volumes:
@@ -24,12 +27,49 @@ services:
       USERMAP_UID: "${PUID:-1000}"
       USERMAP_GID: "${PGID:-1000}"
 
+  # postgres database for paperless-ngx
+  postgres:
+    container_name: postgres
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PAPERLESS_DB_USERNAME}
+      POSTGRES_PASSWORD: ${PAPERLESS_DB_PASSWORD}
+      POSTGRES_DB: ${PAPERLESS_DB_NAME}
+    volumes:
+      - ./data/postgresql-paperless-ngx:/var/lib/postgresql
+
+  # paperless-ai service
+  paperless-ai:
+    container_name: paperless-ai
+    image: clusterzx/paperless-ai:latest
+    restart: unless-stopped
+    depends_on:
+      - broker
+      - paperless-ngx
+    ports:
+      - "3001:3000"
+    environment:
+      PAPERLESS_API_URL: ${PAPERLESS_API_URL} 
+      PAPERLESS_API_TOKEN: ${PAPERLESS_API_TOKEN}
+      PAPERLESS_USERNAME: ${PAPERLESS_USERNAME}
+      AI_PROVIDER: ${AI_PROVIDER}
+      OLLAMA_API_URL: ${OLLAMA_API_URL}
+      OLLAMA_MODEL: ${OLLAMA_MODEL}
+      RAG_SERVICE_URL: ${RAG_SERVICE_URL}
+      RAG_SERVICE_ENABLED: ${RAG_SERVICE_ENABLED}
+      SCAN_INTERVAL: ${SCAN_INTERVAL}
+      PAPERLESS_URL: ${PAPERLESS_URL}
+    volumes:
+      - ./data/paperless-ai:/app/data
+
   paperless-gpt:
+    container_name: paperless-gpt
     # Use one of these image sources:
     image: icereed/paperless-gpt:latest # Docker Hub
     # image: ghcr.io/icereed/paperless-gpt:latest  # GitHub Container Registry
     environment:
-      PAPERLESS_BASE_URL: "http://paperless-ngx:8001"
+      PAPERLESS_BASE_URL: "${PAPERLESS_BASE_URL}"
       PAPERLESS_API_TOKEN: "${PAPERLESS_API_TOKEN}"
       PAPERLESS_PUBLIC_URL: "${PAPERLESS_PUBLIC_URL}" # Optional
       MANUAL_TAG: "paperless-gpt" # Optional, default: paperless-gpt

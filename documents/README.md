@@ -1,16 +1,18 @@
-# Documents stack (paperless-ngx + paperless-gpt)
+# Documents stack (paperless-ngx + paperless-ai + paperless-gpt)
 
-AI-powered document management. [paperless-ngx](https://docs.paperless-ngx.com/) handles storage, search, and the web UI. [paperless-gpt](https://github.com/icereed/paperless-gpt) sits alongside it and uses an LLM to automatically OCR scans, generate titles, tags, and correspondents.
+AI-powered document management. [paperless-ngx](https://docs.paperless-ngx.com/) handles storage, search, and the web UI. [paperless-ai](https://github.com/clusterzx/paperless-ai) automatically analyses and tags new documents using an LLM. [paperless-gpt](https://github.com/icereed/paperless-gpt) provides manual-review OCR, title, tag, and correspondent generation.
 
 ## Architecture
 
 ```
 Raspberry Pi 5 (server)          Desktop / main machine
 ┌──────────────────────┐         ┌─────────────────────┐
-│  paperless-ngx :8000 │         │  Ollama  :11434      │
-│  paperless-gpt :8080 │────────▶│  - minicpm-v (OCR)   │
-│  redis (broker)      │  LAN    │  - qwen3:8b (tagging)│
-└──────────────────────┘         └─────────────────────┘
+│  paperless-ngx :8001 │         │  Ollama  :11434      │
+│  paperless-ai  :3001 │────────▶│  - minicpm-v (OCR)   │
+│  paperless-gpt :8811 │  LAN    │  - qwen3:8b (tagging)│
+│  postgres            │         └─────────────────────┘
+│  redis (broker)      │
+└──────────────────────┘
 ```
 
 The Raspberry Pi 5 is not powerful enough for LLM inference. Ollama runs on the desktop and is exposed on the LAN so the Pi can reach it. See [Ollama LAN setup](#ollama-lan-setup) if it's not accessible yet.
@@ -19,8 +21,10 @@ The Raspberry Pi 5 is not powerful enough for LLM inference. Ollama runs on the 
 
 | Service | Port | Purpose |
 |---|---|---|
-| `paperless-ngx` | `8000` | Document storage, search, web UI |
-| `paperless-gpt` | `8811` | AI tagging, OCR, title generation |
+| `paperless-ngx` | `8001` | Document storage, search, web UI |
+| `paperless-ai` | `3001` | Automatic AI document analysis and tagging |
+| `paperless-gpt` | `8811` | Manual-review AI tagging, OCR, title generation |
+| `postgres` | — | PostgreSQL database for paperless-ngx (internal only) |
 | `broker` | — | Redis message queue (required by paperless-ngx, internal only) |
 
 ## Models (Ollama)
@@ -45,23 +49,39 @@ Edit `.env` and fill in:
 | Variable | How to get it |
 |---|---|
 | `PAPERLESS_SECRET_KEY` | `python3 -c "import secrets; print(secrets.token_hex(32))"` |
-| `PAPERLESS_API_TOKEN` | See step 3 below |
+| `PAPERLESS_API_TOKEN` | See step 4 below |
 | `OLLAMA_HOST` | LAN IP of your desktop, e.g. `http://192.168.0.118:11434` |
 | `PUID` / `PGID` | Run `id` on the Pi to get your user/group IDs |
 | `TZ` | Your timezone, e.g. `Europe/Lisbon` |
+| `PAPERLESS_DB_USERNAME` | Postgres username for paperless-ngx (choose any) |
+| `PAPERLESS_DB_PASSWORD` | Postgres password for paperless-ngx (choose any) |
+| `PAPERLESS_DB_NAME` | Postgres database name for paperless-ngx (choose any) |
+| `PAPERLESS_USERNAME` | Your paperless-ngx admin username (for paperless-ai) |
 
-### 2. Pull Ollama models (on the desktop)
+### 2. Create the folder structure
+
+If you're using bind mounts (like this stack does), create the directories up front so Docker doesn't create them as root.
+
+```bash
+mkdir -p \
+  data/paperless-ngx/{data,media,export,consume,redis} \
+  data/postgresql-paperless-ngx \
+  data/paperless-ai \
+  data/paperless-gpt/{prompts,hocr,pdf}
+```
+
+### 3. Pull Ollama models (on the desktop)
 
 ```bash
 ollama pull minicpm-v
 ollama pull qwen3:8b
 ```
 
-### 3. Start paperless-ngx first and create an admin user
+### 4. Start the database and paperless-ngx first, then create an admin user
 
 ```bash
 cd documents
-docker compose up -d broker paperless-ngx
+docker compose up -d broker postgres paperless-ngx
 ```
 
 Wait ~20 seconds, then create a superuser:
@@ -78,7 +98,7 @@ docker compose exec paperless-ngx python3 manage.py drf_create_token <username>
 
 Paste the token into `.env` as `PAPERLESS_API_TOKEN`.
 
-### 4. Start the full stack
+### 5. Start the full stack
 
 ```bash
 docker compose up -d
@@ -86,7 +106,8 @@ docker compose up -d
 
 | URL | What |
 |---|---|
-| `http://<pi-ip>:8000` | paperless-ngx UI |
+| `http://<pi-ip>:8001` | paperless-ngx UI |
+| `http://<pi-ip>:3001` | paperless-ai UI |
 | `http://<pi-ip>:8811` | paperless-gpt UI |
 
 ## Usage
@@ -134,12 +155,14 @@ documents/
     │   ├── data/         # paperless database and index
     │   ├── media/        # stored documents
     │   ├── export/       # manual exports
-    │   └── consume/      # drop files here to auto-import
-    ├── paperless-gpt/
-    │   ├── prompts/      # customisable AI prompt templates
-    │   ├── hocr/         # hOCR output (if enabled)
-    │   └── pdf/          # enhanced PDF output (if enabled)
-    └── redis/            # broker persistence
+    │   ├── consume/      # drop files here to auto-import
+    │   └── redis/        # broker persistence
+    ├── postgresql-paperless-ngx/  # postgres data directory
+    ├── paperless-ai/     # paperless-ai persistent data
+    └── paperless-gpt/
+        ├── prompts/      # customisable AI prompt templates
+        ├── hocr/         # hOCR output (if enabled)
+        └── pdf/          # enhanced PDF output (if enabled)
 ```
 
 Drop files into `data/paperless-ngx/consume/` and they will be automatically imported.
