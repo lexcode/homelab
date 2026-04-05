@@ -2,6 +2,48 @@
 
 Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, and lightweight host monitoring.
 
+```mermaid
+graph LR
+    subgraph pi["🖥️  Raspberry Pi 5"]
+        direction TB
+        subgraph docs["📄  documents/"]
+            pngx[paperless-ngx :8001]
+            pai[paperless-ai :3001]
+            pgpt[paperless-gpt :8811]
+            pg[(postgres)]
+            rd[(redis broker)]
+        end
+        subgraph med["🎬  media/"]
+            subgraph vpnnet["🔒  WireGuard VPN"]
+                qbt[qBittorrent :8080]
+                prowlarr[Prowlarr :9696]
+                flare[FlareSolverr :8191]
+            end
+            sonarr[Sonarr :8989]
+            radarr[Radarr :7878]
+            lidarr[Lidarr :8686]
+            bazarr[Bazarr :6767]
+            seerr[Seerr :5055]
+            suggestarr[SuggestArr :5000]
+        end
+        subgraph mon["📊  monitoring/"]
+            beszel[Beszel :8090]
+            dozzle[Dozzle :8181]
+            beszelagent[beszel-agent]
+        end
+        subgraph term["💻  terminal/"]
+            atuin[Atuin :8888]
+            atuinpg[(postgres)]
+            atuinbkp[/db backup/]
+        end
+    end
+    subgraph desktop["🖥️  Desktop (LAN)"]
+        ollama[Ollama :11434]
+    end
+    pai -- LAN --> ollama
+    pgpt -- LAN --> ollama
+```
+
 ## Layout
 
 | Directory | Purpose |
