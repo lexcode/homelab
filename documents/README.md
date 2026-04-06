@@ -6,26 +6,26 @@ AI-powered document management. [paperless-ngx](https://docs.paperless-ngx.com/)
 
 ```
 Raspberry Pi 5 (server)          Desktop / main machine
-┌──────────────────────┐         ┌─────────────────────┐
-│  paperless-ngx :8001 │         │  Ollama  :11434      │
-│  paperless-ai  :3001 │────────▶│  - minicpm-v (OCR)   │
-│  paperless-gpt :8811 │  LAN    │  - qwen3:8b (tagging)│
-│  postgres            │         └─────────────────────┘
-│  redis (broker)      │
-└──────────────────────┘
+┌──────────────────────────────┐         ┌──────────────────────┐
+│  paperless-ngx        :8001  │         │  Ollama  :11434      │
+│  paperless-ai         :3001  │────────▶│  - minicpm-v (OCR)   │
+│  paperless-gpt        :8811  │  LAN    │  - qwen3:8b (tagging)│
+│  postgresql-paperless-ngx    │         └──────────────────────┘
+│  redis (broker)              │
+└──────────────────────────────┘
 ```
 
 The Raspberry Pi 5 is not powerful enough for LLM inference. Ollama runs on the desktop and is exposed on the LAN so the Pi can reach it. See [Ollama LAN setup](#ollama-lan-setup) if it's not accessible yet.
 
 ## Services
 
-| Service         | Port   | Purpose                                                        |
-| --------------- | ------ | -------------------------------------------------------------- |
-| `paperless-ngx` | `8001` | Document storage, search, web UI                               |
-| `paperless-ai`  | `3001` | Automatic AI document analysis and tagging                     |
-| `paperless-gpt` | `8811` | Manual-review AI tagging, OCR, title generation                |
-| `postgres`      | —      | PostgreSQL database for paperless-ngx (internal only)          |
-| `broker`        | —      | Redis message queue (required by paperless-ngx, internal only) |
+| Service                    | Port   | Purpose                                                        |
+| -------------------------- | ------ | -------------------------------------------------------------- |
+| `paperless-ngx`            | `8001` | Document storage, search, web UI                               |
+| `paperless-ai`             | `3001` | Automatic AI document analysis and tagging                     |
+| `paperless-gpt`            | `8811` | Manual-review AI tagging, OCR, title generation                |
+| `postgresql-paperless-ngx` | —      | PostgreSQL database for paperless-ngx (internal only)          |
+| `broker`                   | —      | Redis message queue (required by paperless-ngx, internal only) |
 
 ## Models (Ollama)
 
@@ -66,18 +66,20 @@ If you're using bind mounts (like this stack does), create the directories up fr
 
 ```bash
 mkdir -p \
-  data/paperless/paperless-ngx/{export,consume} \
-  data/paperless-ngx/redis \
+  data/paperless-ngx/{data,export,consume,redis} \
+  data/postgresql-paperless-ngx \
+  data/paperless-ai \
   data/paperless-gpt/{hocr,pdf}
+
+# postgres runs as UID 999 inside the container — fix ownership so it can initialise
+sudo chown -R 999:999 data/postgresql-paperless-ngx
 ```
 
 **Remote directories** (on your NAS/external mount at `/data`):
 
 ```bash
 mkdir -p \
-  /data/documents/paperless/paperless-ngx/{data,media} \
-  /data/documents/paperless/postgresql-paperless-ngx \
-  /data/documents/paperless/paperless-ai \
+  /data/documents/paperless/paperless-ngx/media \
   /data/documents/paperless/paperless-gpt/prompts
 ```
 
@@ -92,7 +94,7 @@ ollama pull qwen3:8b
 
 ```bash
 cd documents
-docker compose up -d broker postgres paperless-ngx
+docker compose up -d broker postgresql-paperless-ngx paperless-ngx
 ```
 
 Wait ~20 seconds, then create a superuser:
@@ -166,11 +168,13 @@ documents/
 ├── .env                  # not committed
 ├── .env.example
 └── data/                 # not committed (gitignored)
-    ├── documents/paperless/paperless-ngx/
-    │   ├── export/       # manual exports
-    │   └── consume/      # drop files here to auto-import
     ├── paperless-ngx/
+    │   ├── data/         # search index and app state (rebuilable)
+    │   ├── export/       # manual exports
+    │   ├── consume/      # drop files here to auto-import
     │   └── redis/        # broker persistence (transient)
+    ├── postgresql-paperless-ngx/  # postgres data (chown 999:999)
+    ├── paperless-ai/              # paperless-ai state
     └── paperless-gpt/
         ├── hocr/         # hOCR output (if enabled, transient)
         └── pdf/          # enhanced PDF output (if enabled, transient)
@@ -181,12 +185,9 @@ documents/
 ```
 /data/documents/paperless/
 ├── paperless-ngx/
-│   ├── data/             # search index and app state (rebuilable)
-│   └── media/            # stored documents and thumbnails ⚠️ largest directory
-├── postgresql-paperless-ngx/   # postgres database — all metadata, tags, correspondents
-├── paperless-ai/               # paperless-ai state (processed document tracking)
+│   └── media/            # stored documents and thumbnails ⚠️ largest directory — back this up
 └── paperless-gpt/
-    └── prompts/                # customisable AI prompt templates
+    └── prompts/          # customisable AI prompt templates
 ```
 
-Drop files into `data/documents/paperless/paperless-ngx/consume/` and they will be automatically imported.
+Drop files into `data/paperless-ngx/consume/` and they will be automatically imported.

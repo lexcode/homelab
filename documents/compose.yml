@@ -12,24 +12,35 @@ services:
     restart: unless-stopped
     depends_on:
       - broker
-      - postgres
+      - postgresql-paperless-ngx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     ports:
       - "8001:8000"
     volumes:
-      - /data/documents/paperless/paperless-ngx/data:/usr/src/paperless/data
       - /data/documents/paperless/paperless-ngx/media:/usr/src/paperless/media
-      - ./data/paperless/paperless-ngx/export:/usr/src/paperless/export
-      - ./data/paperless/paperless-ngx/consume:/usr/src/paperless/consume
+      - ./data/paperless-ngx/data:/usr/src/paperless/data
+      - ./data/paperless-ngx/export:/usr/src/paperless/export
+      - ./data/paperless-ngx/consume:/usr/src/paperless/consume
     environment:
       PAPERLESS_REDIS: "redis://broker:6379"
       PAPERLESS_SECRET_KEY: "${PAPERLESS_SECRET_KEY}"
       PAPERLESS_TIME_ZONE: "${TZ:-UTC}"
       USERMAP_UID: "${PUID:-1000}"
       USERMAP_GID: "${PGID:-1000}"
+      PAPERLESS_DBENGINE: postgresql
+      PAPERLESS_DBHOST: postgresql-paperless-ngx
+      PAPERLESS_DBNAME: "${PAPERLESS_DB_NAME}"
+      PAPERLESS_DBUSER: "${PAPERLESS_DB_USERNAME}"
+      PAPERLESS_DBPASS: "${PAPERLESS_DB_PASSWORD}"
 
   # postgres database for paperless-ngx
-  postgres:
-    container_name: postgres
+  postgresql-paperless-ngx:
+    container_name: postgresql-paperless-ngx
     image: postgres:18
     restart: unless-stopped
     environment:
@@ -37,7 +48,7 @@ services:
       POSTGRES_PASSWORD: ${PAPERLESS_DB_PASSWORD}
       POSTGRES_DB: ${PAPERLESS_DB_NAME}
     volumes:
-      - /data/documents/paperless/postgresql-paperless-ngx:/var/lib/postgresql
+      - ./data/postgresql-paperless-ngx:/var/lib/postgresql
 
   # paperless-ai service
   paperless-ai:
@@ -45,8 +56,10 @@ services:
     image: clusterzx/paperless-ai:latest
     restart: unless-stopped
     depends_on:
-      - broker
-      - paperless-ngx
+      broker:
+        condition: service_started
+      paperless-ngx:
+        condition: service_healthy
     ports:
       - "3001:3000"
     environment:
@@ -61,7 +74,7 @@ services:
       SCAN_INTERVAL: ${SCAN_INTERVAL}
       PAPERLESS_URL: ${PAPERLESS_URL}
     volumes:
-      - /data/documents/paperless/paperless-ai:/app/data
+      - ./data/paperless-ai:/app/data
 
   paperless-gpt:
     container_name: paperless-gpt
@@ -167,4 +180,5 @@ services:
     ports:
       - "8811:8080"
     depends_on:
-      - paperless-ngx
+      paperless-ngx:
+        condition: service_healthy
