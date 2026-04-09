@@ -1,0 +1,51 @@
+networks:
+  analyticsnetwork:
+    name: analyticsnetwork
+    ipam:
+      config:
+        - subnet: ${ANALYTICS_SUBNET:-172.39.2.0/24}
+
+services:
+  your_spotify_server:
+    image: yooooomi/your_spotify_server:latest
+    container_name: your_spotify_server
+    restart: unless-stopped
+    ports:
+      - ${YOUR_SPOTIFY_API_PORT:-8080}:8080
+    environment:
+      - API_ENDPOINT=${YOUR_SPOTIFY_API_ENDPOINT}
+      - CLIENT_ENDPOINT=${YOUR_SPOTIFY_CLIENT_ENDPOINT}
+      - SPOTIFY_PUBLIC=${SPOTIFY_PUBLIC}
+      - SPOTIFY_SECRET=${SPOTIFY_SECRET}
+      - MONGO_ENDPOINT=mongodb://your_spotify_mongo:27017/your_spotify
+      - TIMEZONE=${TZ:-Europe/London}
+      - LOG_LEVEL=${YOUR_SPOTIFY_LOG_LEVEL:-info}
+    depends_on:
+      - your_spotify_mongo
+    networks:
+      analyticsnetwork:
+        ipv4_address: ${YOUR_SPOTIFY_SERVER_IP:-172.39.2.2}
+
+  your_spotify_client:
+    image: yooooomi/your_spotify_client:latest
+    container_name: your_spotify_client
+    restart: unless-stopped
+    ports:
+      - ${YOUR_SPOTIFY_CLIENT_PORT:-3000}:3000
+    environment:
+      - API_ENDPOINT=${YOUR_SPOTIFY_API_ENDPOINT}
+    depends_on:
+      - your_spotify_server
+    networks:
+      analyticsnetwork:
+        ipv4_address: ${YOUR_SPOTIFY_CLIENT_IP:-172.39.2.3}
+
+  your_spotify_mongo:
+    image: mongo:4.4 # ARM (Raspberry Pi) — use mongo:6 on x86_64
+    container_name: your_spotify_mongo
+    restart: unless-stopped
+    volumes:
+      - ./data/mongo:/data/db
+    networks:
+      analyticsnetwork:
+        ipv4_address: ${YOUR_SPOTIFY_MONGO_IP:-172.39.2.4}

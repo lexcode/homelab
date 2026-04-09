@@ -1,4 +1,6 @@
 /media/data/*
 /monitoring/data/*
 /documents/data/*
+/homepage/data/*
+/analytics/data/*
 .env
