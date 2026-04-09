@@ -1,0 +1,15 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/info-widgets/
+
+- resources:
+    cpu: true
+    memory: true
+    disk: /
+    cputemp: true
+    uptime: true
+    network: true
+
+# - unifi_console:
+#     url: "{{HOMEPAGE_VAR_UNIFI_URL}}"
+#     key: "{{HOMEPAGE_VAR_UNIFI_KEY}}"

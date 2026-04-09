@@ -1,0 +1,177 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/services/
+
+
+- Servers:
+    - Synology:
+        href: "{{HOMEPAGE_VAR_SYNOLOGY_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/synology.svg
+        widget:
+            type: diskstation
+            url: "{{HOMEPAGE_VAR_SYNOLOGY_URL}}"
+            username: "{{HOMEPAGE_VAR_SYNOLOGY_USERNAME}}"
+            password: "{{HOMEPAGE_VAR_SYNOLOGY_PASSWORD}}"
+            # volume: volume_N # optional
+    - Unraid:
+        href: "{{HOMEPAGE_VAR_UNRAID_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/unraid.svg
+        widget:
+            type: unraid
+            url: "{{HOMEPAGE_VAR_UNRAID_URL}}"
+            key: "{{HOMEPAGE_VAR_UNRAID_KEY}}"
+            # volume: volume_N # optional
+    - Unifi Network Application:
+        href: "{{HOMEPAGE_VAR_UNIFI_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/unifi.svg
+        widget:
+            type: unifi
+            url: "{{HOMEPAGE_VAR_UNIFI_URL}}"
+            key: "{{HOMEPAGE_VAR_UNIFI_KEY}}"
+
+
+- Monitoring:
+    - Beszel:
+        href: "{{HOMEPAGE_VAR_BESZEL_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/beszel.svg
+        server: docker
+        container: beszel
+
+    - Dozzle:
+        href: "{{HOMEPAGE_VAR_DOZZLE_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/dozzle.svg
+        server: docker
+        container: dozzle
+
+- Analytics:
+    - Spotify:
+        href: "{{HOMEPAGE_VAR_SPOTIFY_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/spotify.svg
+        widget:
+            type: yourspotify
+            url: "{{HOMEPAGE_VAR_SPOTIFY_SERVER_URL}}"
+            key: "{{HOMEPAGE_VAR_SPOTIFY_KEY}}"
+            interval: month # optional, defaults to week - Allowed values for interval: day, week, month, year, all. https://gethomepage.dev/widgets/services/yourspotify/
+
+- Media:
+    - Jellyfin:
+        href: "{{HOMEPAGE_VAR_JELLYFIN_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/jellyfin.svg
+        widget:
+            type: jellyfin
+            url: "{{HOMEPAGE_VAR_JELLYFIN_URL}}"
+            key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
+            version: 2 # optional, default is 1
+            enableBlocks: true # optional, defaults to false
+            enableNowPlaying: true # optional, defaults to true
+            enableUser: true # optional, defaults to false
+            enableMediaControl: false # optional, defaults to true
+            showEpisodeNumber: true # optional, defaults to false
+            expandOneStreamToTwoRows: false # optional, defaults to true
+    - Jellystat:
+        href: "{{HOMEPAGE_VAR_JELLYSTAT_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/jellystat.svg
+        widget:
+            type: jellystat
+            url: "{{HOMEPAGE_VAR_JELLYSTAT_URL}}"
+            key: "{{HOMEPAGE_VAR_JELLYSTAT_KEY}}"
+    - Sonarr:
+        href: "{{HOMEPAGE_VAR_SONARR_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/sonarr.svg
+        server: docker
+        container: sonarr
+        widget:
+            type: sonarr
+            url: "{{HOMEPAGE_VAR_SONARR_URL}}"
+            key: "{{HOMEPAGE_VAR_SONARR_KEY}}"
+            enableQueue: true # optional, defaults to false
+    - Radarr:
+        href: "{{HOMEPAGE_VAR_RADARR_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/radarr.svg
+        server: docker
+        container: radarr
+        widget:
+            type: radarr
+            url: "{{HOMEPAGE_VAR_RADARR_URL}}"
+            key: "{{HOMEPAGE_VAR_RADARR_KEY}}"
+            enableQueue: true
+    - Lidarr:
+        href: "{{HOMEPAGE_VAR_LIDARR_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/lidarr.svg
+        server: docker
+        container: lidarr
+        widget:
+            type: lidarr
+            url: "{{HOMEPAGE_VAR_LIDARR_URL}}"
+            key: "{{HOMEPAGE_VAR_LIDARR_KEY}}"
+    - Bazarr:
+        href: "{{HOMEPAGE_VAR_BAZARR_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/bazarr.svg
+        server: docker
+        container: bazarr
+        widget:
+            type: bazarr
+            url: "{{HOMEPAGE_VAR_BAZARR_URL}}"
+            key: "{{HOMEPAGE_VAR_BAZARR_KEY}}"
+    - Seerr:
+        href: "{{HOMEPAGE_VAR_SEERR_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/seerr.svg
+        server: docker
+        container: seerr
+        widget:
+            type: seerr
+            url: "{{HOMEPAGE_VAR_SEERR_URL}}"
+            key: "{{HOMEPAGE_VAR_SEERR_KEY}}"
+    - Prowlarr:
+        href: "{{HOMEPAGE_VAR_PROWLARR_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prowlarr.svg
+        server: docker
+        container: prowlarr
+        widget:
+            type: prowlarr
+            url: "{{HOMEPAGE_VAR_PROWLARR_URL}}"
+            key: "{{HOMEPAGE_VAR_PROWLARR_KEY}}"
+    - FlareSolverr:
+        href: "{{HOMEPAGE_VAR_FLARESOLVERR_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/flaresolverr.svg
+        server: docker
+        container: flaresolverr
+    - qBittorrent:
+        href: "{{HOMEPAGE_VAR_QBIT_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/qbittorrent.svg
+        server: docker
+        container: qbittorrent
+        widget:
+            type: qbittorrent
+            url: "{{HOMEPAGE_VAR_QBIT_URL}}"
+            username: "{{HOMEPAGE_VAR_QBIT_USERNAME}}"
+            password: "{{HOMEPAGE_VAR_QBIT_PASSWORD}}"
+            # enableLeechProgress: true # optional, defaults to false
+            # enableLeechSize: true # optional, defaults to false
+    - Suggestarr:
+        href: "{{HOMEPAGE_VAR_SUGGESTARR_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/suggest-arr.png
+        server: docker
+        container: suggestarr
+
+- Documents:
+    - Paperless-ngx:
+        href: "{{HOMEPAGE_VAR_PAPERLESS_NGX_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/paperless-ngx.svg
+        widget:
+            type: paperlessngx
+            url: "{{HOMEPAGE_VAR_PAPERLESS_NGX_URL}}"
+            key: "{{HOMEPAGE_VAR_PAPERLESS_NGX_KEY}}"
+    - Paperless-AI:
+        href: "{{HOMEPAGE_VAR_PAPERLESS_AI_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/paperless-ngx.svg
+    - Paperless-GPT:
+        href: "{{HOMEPAGE_VAR_PAPERLESS_GPT_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/paperless-ngx.svg
+
+- Terminal:
+    - Atuin:
+        href: "{{HOMEPAGE_VAR_ATUIN_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/atuin.svg
+        server: docker
+        container: atuin
