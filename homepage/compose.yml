@@ -48,6 +48,7 @@ services:
       HOMEPAGE_VAR_PAPERLESS_AI_URL: ${HOMEPAGE_VAR_PAPERLESS_AI_URL}
       HOMEPAGE_VAR_PAPERLESS_GPT_URL: ${HOMEPAGE_VAR_PAPERLESS_GPT_URL}
       HOMEPAGE_VAR_ATUIN_URL: ${HOMEPAGE_VAR_ATUIN_URL}
+    restart: unless-stopped
   dockerproxy:
     image: ghcr.io/tecnativa/docker-socket-proxy:latest
     container_name: dockerproxy
