@@ -1,6 +1,6 @@
 # Homelab
 
-Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, and lightweight host monitoring.
+Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, and analytics.
 
 ```mermaid
 graph LR
@@ -31,6 +31,11 @@ graph LR
             dozzle[Dozzle :8181]
             beszelagent[beszel-agent]
         end
+        subgraph ana["📈  analytics/"]
+            yss[your_spotify_server :8080]
+            ysc[your_spotify_client :3000]
+            ysm[(mongo)]
+        end
         subgraph term["💻  terminal/"]
             atuin[Atuin :8888]
             atuinpg[(postgres)]
@@ -46,12 +51,13 @@ graph LR
 
 ## Layout
 
-| Directory | Purpose |
-|-----------|---------|
-| [`media/`](media/) | Servarr stack (qBittorrent over WireGuard PIA, Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, deunhealth) — see **[media/README.md](media/README.md)**. |
-| [`documents/`](documents/) | AI-powered document management (paperless-ngx + paperless-gpt with Ollama OCR and tagging) — see **[documents/README.md](documents/README.md)**. |
-| [`monitoring/`](monitoring/) | [Beszel](https://github.com/henrygd/beszel) hub plus co-located agent — see **[monitoring/README.md](monitoring/README.md)**. |
-| [`terminal/`](terminal/) | [Atuin](https://atuin.sh/) self-hosted shell history sync server — see **[terminal/README.md](terminal/README.md)**. |
+| Directory                    | Purpose                                                                                                                                                                             |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`media/`](media/)           | Servarr stack (qBittorrent over WireGuard PIA, Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, deunhealth) — see **[media/README.md](media/README.md)**. |
+| [`documents/`](documents/)   | AI-powered document management (paperless-ngx + paperless-gpt with Ollama OCR and tagging) — see **[documents/README.md](documents/README.md)**.                                    |
+| [`monitoring/`](monitoring/) | [Beszel](https://github.com/henrygd/beszel) hub plus co-located agent — see **[monitoring/README.md](monitoring/README.md)**.                                                       |
+| [`terminal/`](terminal/)     | [Atuin](https://atuin.sh/) self-hosted shell history sync server — see **[terminal/README.md](terminal/README.md)**.                                                                |
+| [`analytics/`](analytics/)   | [Your Spotify](https://github.com/Yooooomi/your_spotify) self-hosted Spotify listening statistics — see **[analytics/README.md](analytics/README.md)**.                             |
 
 Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./data/` (not committed).
 
@@ -60,7 +66,7 @@ Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./dat
 - Docker and Docker Compose v2
 - Separate `.env` files per stack (copy from each `.env.example`)
 
-Networks are isolated by design (for example media on `172.39.0.0/24`, monitoring on `172.39.1.0/24`). Adjust subnets in `.env` if they clash with your LAN or other projects.
+Networks are isolated by design (for example media on `172.39.0.0/24`, monitoring on `172.39.1.0/24`, analytics on `172.39.2.0/24`). Adjust subnets in `.env` if they clash with your LAN or other projects.
 
 ## Media
 
@@ -116,6 +122,18 @@ cp .env.example .env   # set ATUIN_DB_NAME, ATUIN_DB_USERNAME, ATUIN_DB_PASSWORD
 docker compose up -d
 ```
 
+## Analytics
+
+See **[analytics/README.md](analytics/README.md)** for Spotify developer app setup, Cloudflare Tunnel configuration, DNS notes, and ARM/Raspberry Pi specifics.
+
+Quick start:
+
+```bash
+cd analytics
+cp .env.example .env   # set YOUR_SPOTIFY_API_ENDPOINT, YOUR_SPOTIFY_CLIENT_ENDPOINT, SPOTIFY_PUBLIC, SPOTIFY_SECRET
+docker compose up -d
+```
+
 ## Secrets and git
 
-Do not commit real `.env` files or credentials. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `terminal/database`, and similar paths are intended to stay local.
+Do not commit real `.env` files or credentials. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `terminal/database`, `analytics/data`, and similar paths are intended to stay local.
