@@ -1,0 +1,64 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    ports:
+      - 3003:3000
+    volumes:
+      - ./data/homepage/config:/app/config # Make sure your local config directory exists
+      - ./data/homepage/images:/app/public/images
+      - /var/run/docker.sock:/var/run/docker.sock:ro # (optional) For docker integrations, see alternative methods
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS} # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
+      PUID: ${PUID}
+      PGID: ${PGID}
+      # Services
+      HOMEPAGE_VAR_SYNOLOGY_URL: ${HOMEPAGE_VAR_SYNOLOGY_URL}
+      HOMEPAGE_VAR_SYNOLOGY_USERNAME: ${HOMEPAGE_VAR_SYNOLOGY_USERNAME}
+      HOMEPAGE_VAR_SYNOLOGY_PASSWORD: ${HOMEPAGE_VAR_SYNOLOGY_PASSWORD}
+      HOMEPAGE_VAR_UNRAID_URL: ${HOMEPAGE_VAR_UNRAID_URL}
+      HOMEPAGE_VAR_UNRAID_KEY: ${HOMEPAGE_VAR_UNRAID_KEY}
+      HOMEPAGE_VAR_UNIFI_URL: ${HOMEPAGE_VAR_UNIFI_URL}
+      HOMEPAGE_VAR_UNIFI_KEY: ${HOMEPAGE_VAR_UNIFI_KEY}
+      HOMEPAGE_VAR_QBIT_URL: ${HOMEPAGE_VAR_QBIT_URL}
+      HOMEPAGE_VAR_QBIT_USERNAME: ${HOMEPAGE_VAR_QBIT_USERNAME}
+      HOMEPAGE_VAR_QBIT_PASSWORD: ${HOMEPAGE_VAR_QBIT_PASSWORD}
+      HOMEPAGE_VAR_BESZEL_URL: ${HOMEPAGE_VAR_BESZEL_URL}
+      HOMEPAGE_VAR_DOZZLE_URL: ${HOMEPAGE_VAR_DOZZLE_URL}
+      HOMEPAGE_VAR_JELLYFIN_URL: ${HOMEPAGE_VAR_JELLYFIN_URL}
+      HOMEPAGE_VAR_JELLYFIN_KEY: ${HOMEPAGE_VAR_JELLYFIN_KEY}
+      HOMEPAGE_VAR_JELLYSTAT_URL: ${HOMEPAGE_VAR_JELLYSTAT_URL}
+      HOMEPAGE_VAR_JELLYSTAT_KEY: ${HOMEPAGE_VAR_JELLYSTAT_KEY}
+      HOMEPAGE_VAR_SONARR_URL: ${HOMEPAGE_VAR_SONARR_URL}
+      HOMEPAGE_VAR_SONARR_KEY: ${HOMEPAGE_VAR_SONARR_KEY}
+      HOMEPAGE_VAR_RADARR_URL: ${HOMEPAGE_VAR_RADARR_URL}
+      HOMEPAGE_VAR_RADARR_KEY: ${HOMEPAGE_VAR_RADARR_KEY}
+      HOMEPAGE_VAR_LIDARR_URL: ${HOMEPAGE_VAR_LIDARR_URL}
+      HOMEPAGE_VAR_LIDARR_KEY: ${HOMEPAGE_VAR_LIDARR_KEY}
+      HOMEPAGE_VAR_BAZARR_URL: ${HOMEPAGE_VAR_BAZARR_URL}
+      HOMEPAGE_VAR_BAZARR_KEY: ${HOMEPAGE_VAR_BAZARR_KEY}
+      HOMEPAGE_VAR_SEERR_URL: ${HOMEPAGE_VAR_SEERR_URL}
+      HOMEPAGE_VAR_SEERR_KEY: ${HOMEPAGE_VAR_SEERR_KEY}
+      HOMEPAGE_VAR_PROWLARR_URL: ${HOMEPAGE_VAR_PROWLARR_URL}
+      HOMEPAGE_VAR_PROWLARR_KEY: ${HOMEPAGE_VAR_PROWLARR_KEY}
+      HOMEPAGE_VAR_FLARESOLVERR_URL: ${HOMEPAGE_VAR_FLARESOLVERR_URL}
+      HOMEPAGE_VAR_SUGGESTARR_URL: ${HOMEPAGE_VAR_SUGGESTARR_URL}
+      HOMEPAGE_VAR_PAPERLESS_NGX_URL: ${HOMEPAGE_VAR_PAPERLESS_NGX_URL}
+      HOMEPAGE_VAR_PAPERLESS_NGX_KEY: ${HOMEPAGE_VAR_PAPERLESS_NGX_KEY}
+      HOMEPAGE_VAR_PAPERLESS_AI_URL: ${HOMEPAGE_VAR_PAPERLESS_AI_URL}
+      HOMEPAGE_VAR_PAPERLESS_GPT_URL: ${HOMEPAGE_VAR_PAPERLESS_GPT_URL}
+      HOMEPAGE_VAR_ATUIN_URL: ${HOMEPAGE_VAR_ATUIN_URL}
+    restart: unless-stopped
+  dockerproxy:
+    image: ghcr.io/tecnativa/docker-socket-proxy:latest
+    container_name: dockerproxy
+    environment:
+      - CONTAINERS=1 # Allow access to viewing containers
+      - SERVICES=1 # Allow access to viewing services (necessary when using Docker Swarm)
+      - TASKS=1 # Allow access to viewing tasks (necessary when using Docker Swarm)
+      - POST=0 # Disallow any POST operations (effectively read-only)
+    ports:
+      - 127.0.0.1:2375:2375
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Mounted as read-only
+    restart: unless-stopped

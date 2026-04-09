@@ -1,6 +1,7 @@
 /media/data/*
 /monitoring/data/*
 /documents/data/*
-/homepage/data/*
+/homepage/data/homepage/config/logs/*
 /analytics/data/*
 .env
+.cursor/*

@@ -1,6 +1,6 @@
 # Homelab
 
-Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, and analytics.
+Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, analytics, and a self-hosted dashboard.
 
 ```mermaid
 graph LR
@@ -41,12 +41,19 @@ graph LR
             atuinpg[(postgres)]
             atuinbkp[/db backup/]
         end
+        subgraph home["🏠  homepage/"]
+            hp[Homepage :3003]
+            dp[dockerproxy :2375]
+        end
+        cf[☁️  proxy/cloudflared]
     end
     subgraph desktop["🖥️  Desktop (LAN)"]
         ollama[Ollama :11434]
     end
     pai -- LAN --> ollama
     pgpt -- LAN --> ollama
+    cf -- tunnel --> hp
+    cf -- tunnel --> ysc
 ```
 
 ## Layout
@@ -58,6 +65,8 @@ graph LR
 | [`monitoring/`](monitoring/) | [Beszel](https://github.com/henrygd/beszel) hub plus co-located agent — see **[monitoring/README.md](monitoring/README.md)**.                                                       |
 | [`terminal/`](terminal/)     | [Atuin](https://atuin.sh/) self-hosted shell history sync server — see **[terminal/README.md](terminal/README.md)**.                                                                |
 | [`analytics/`](analytics/)   | [Your Spotify](https://github.com/Yooooomi/your_spotify) self-hosted Spotify listening statistics — see **[analytics/README.md](analytics/README.md)**.                             |
+| [`homepage/`](homepage/)     | [Homepage](https://gethomepage.dev) self-hosted dashboard with service widgets and Docker integration — see **[homepage/README.md](homepage/README.md)**.                           |
+| [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) — exposes internal services over HTTPS without opening inbound ports — see **[proxy/README.md](proxy/README.md)**. |
 
 Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./data/` (not committed).
 
@@ -131,6 +140,30 @@ Quick start:
 ```bash
 cd analytics
 cp .env.example .env   # set YOUR_SPOTIFY_API_ENDPOINT, YOUR_SPOTIFY_CLIENT_ENDPOINT, SPOTIFY_PUBLIC, SPOTIFY_SECRET
+docker compose up -d
+```
+
+## Homepage
+
+See **[homepage/README.md](homepage/README.md)** for config file layout, Docker integration via dockerproxy, background image setup, and service widget variables.
+
+Quick start:
+
+```bash
+cd homepage
+cp .env.example .env   # set HOMEPAGE_ALLOWED_HOSTS and service URLs/keys
+docker compose up -d
+```
+
+## Proxy
+
+See **[proxy/README.md](proxy/README.md)** for Cloudflare Tunnel setup and adding public hostnames.
+
+Quick start:
+
+```bash
+cd proxy
+cp .env.example .env   # set CLOUDFLARED_TOKEN from the Zero Trust dashboard
 docker compose up -d
 ```
 

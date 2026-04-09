@@ -1,0 +1,23 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/settings/
+
+layout:
+  Servers:
+    style: row
+    columns: 3
+  Monitoring:
+    style: row
+    columns: 2
+  Analytics:
+    style: row
+    columns: 1
+
+background:
+  image: /images/arc-raider-speranza.jpg
+  blur: sm
+
+# providers:
+#   openweathermap: openweathermapapikey
+#   weatherapi: 
+  
