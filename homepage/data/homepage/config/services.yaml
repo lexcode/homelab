@@ -36,6 +36,13 @@
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/beszel.svg
         server: docker
         container: beszel
+        widget:
+            type: beszel
+            url: "{{HOMEPAGE_VAR_BESZEL_URL}}"
+            username: "{{HOMEPAGE_VAR_BESZEL_USERNAME}}" # email
+            password: "{{HOMEPAGE_VAR_BESZEL_PASSWORD}}"
+            # systemId: "{{HOMEPAGE_VAR_BESZEL_SYSTEMID}}" # optional
+            version: 2
 
     - Dozzle:
         href: "{{HOMEPAGE_VAR_DOZZLE_URL}}"
