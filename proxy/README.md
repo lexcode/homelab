@@ -29,13 +29,17 @@ Docker Compose stack for [**cloudflared**](https://github.com/cloudflare/cloudfl
 
 Configure public hostnames in the Cloudflare tunnel dashboard, pointing each subdomain to the internal service:
 
-| Public hostname               | Internal service               |
-|-------------------------------|--------------------------------|
-| `spotify.yourdomain.com`      | `http://localhost:3000`        |
-| `api-spotify.yourdomain.com`  | `http://localhost:8080`        |
-| `homepage.yourdomain.com`     | `http://localhost:3003`        |
+| Public hostname              | Internal service        |
+| ---------------------------- | ----------------------- |
+| `spotify.yourdomain.com`     | `http://localhost:3000` |
+| `api-spotify.yourdomain.com` | `http://localhost:8080` |
+| `homepage.yourdomain.com`    | `http://localhost:3003` |
 
 Add more hostnames as you expose additional services.
+
+## Homepage widget
+
+The [Homepage](../homepage/) dashboard includes a `cloudflared` widget for this tunnel. In addition to `CLOUDFLARED_TOKEN` (the tunnel token used here), the widget requires a separate **API token** with `Account → Cloudflare Tunnel: Read` permission. See [homepage/README.md](../homepage/README.md#cloudflare-tunnel-widget) for details.
 
 ## Notes
 

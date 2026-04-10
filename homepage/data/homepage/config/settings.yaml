@@ -1,6 +1,7 @@
 ---
 # For configuration options and examples, please see:
 # https://gethomepage.dev/configs/settings/
+useEqualHeights: true
 
 layout:
   Servers:
@@ -9,9 +10,10 @@ layout:
   Monitoring:
     style: row
     columns: 2
-  Analytics:
+  Media:
     style: row
-    columns: 1
+    columns: 3
+
 
 background:
   image: /images/arc-raider-speranza.jpg
@@ -19,5 +21,5 @@ background:
 
 # providers:
 #   openweathermap: openweathermapapikey
-#   weatherapi: 
+#   weatherapi: weatherapikey
   
