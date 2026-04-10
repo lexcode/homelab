@@ -16,7 +16,6 @@ Docker Compose stack for [**Homepage**](https://gethomepage.dev) — a self-host
    ```
 
    Edit `.env` and set at minimum:
-
    - `PUID` / `PGID` — host user/group (commonly `1000` / `1000`)
    - `HOMEPAGE_ALLOWED_HOSTS` — hostname(s) used to access the dashboard (e.g. `homepage.yourdomain.com` or `localhost:3003`)
    - Service URLs and API keys for any widgets you want to enable
@@ -32,7 +31,7 @@ Docker Compose stack for [**Homepage**](https://gethomepage.dev) — a self-host
 ## Ports
 
 | Service  | Port (host) | Notes  |
-|----------|-------------|--------|
+| -------- | ----------- | ------ |
 | homepage | `3003`      | Web UI |
 
 `dockerproxy` binds only to `127.0.0.1:2375` and is not exposed externally.
@@ -47,7 +46,7 @@ Docker Compose stack for [**Homepage**](https://gethomepage.dev) — a self-host
 All config lives under `./data/homepage/config/` and is hot-reloaded — no container restart needed after edits.
 
 | File             | Purpose                                    |
-|------------------|--------------------------------------------|
+| ---------------- | ------------------------------------------ |
 | `settings.yaml`  | Global settings: layout, background, theme |
 | `services.yaml`  | Service cards and widgets                  |
 | `widgets.yaml`   | Info widgets (CPU, memory, disk, weather)  |
@@ -69,6 +68,19 @@ The images directory maps to `/app/public/images` inside the container.
 ## Service variables
 
 All sensitive values are passed via `HOMEPAGE_VAR_*` environment variables and referenced in `services.yaml` as `{{HOMEPAGE_VAR_*}}`. This keeps secrets out of the config files, which are committed to git.
+
+### Cloudflare Tunnel widget
+
+The Proxy section includes a `cloudflared` widget. Set these in `.env`:
+
+| Variable                             | Description                                                                                     |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `HOMEPAGE_VAR_CLOUDFLARED_URL`       | URL to the Cloudflare Zero Trust dashboard                                                      |
+| `HOMEPAGE_VAR_CLOUDFLARED_ACCOUNTID` | Account ID from the Zero Trust dashboard URL: `https://one.dash.cloudflare.com/<accountid>/...` |
+| `HOMEPAGE_VAR_CLOUDFLARED_TUNNELID`  | Tunnel UUID found in Networks → Tunnels → click tunnel name                                     |
+| `HOMEPAGE_VAR_CLOUDFLARED_TOKEN`     | API token with **Account → Cloudflare Tunnel: Read** permission (not a tunnel token)            |
+
+> The API token must be scoped to **Account**, not a Zone. Create it at https://dash.cloudflare.com/profile/api-tokens.
 
 ## Docker integration
 

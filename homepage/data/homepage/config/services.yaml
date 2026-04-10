@@ -53,6 +53,25 @@
             key: "{{HOMEPAGE_VAR_SPOTIFY_KEY}}"
             interval: month # optional, defaults to week - Allowed values for interval: day, week, month, year, all. https://gethomepage.dev/widgets/services/yourspotify/
 
+- Proxy:
+    - Cloudflare Tunnel:
+        href: "{{HOMEPAGE_VAR_CLOUDFLARED_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/cloudflare.svg
+        server: docker
+        container: cloudflare-tunnel
+        widget:
+            type: cloudflared
+            accountid: {{HOMEPAGE_VAR_CLOUDFLARED_ACCOUNTID}} # from zero trust dashboard url e.g. https://one.dash.cloudflare.com/<accountid>/home/quick-start
+            tunnelid: {{HOMEPAGE_VAR_CLOUDFLARED_TUNNELID}} # found in tunnels dashboard under the tunnel name
+            key: {{HOMEPAGE_VAR_CLOUDFLARED_TOKEN}} # api token with `Account.Cloudflare Tunnel:Read` https://dash.cloudflare.com/profile/api-tokens
+
+- Terminal:
+    - Atuin:
+        href: "{{HOMEPAGE_VAR_ATUIN_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/atuin.svg
+        server: docker
+        container: atuin
+
 - Media:
     - Jellyfin:
         href: "{{HOMEPAGE_VAR_JELLYFIN_URL}}"
@@ -75,6 +94,18 @@
             type: jellystat
             url: "{{HOMEPAGE_VAR_JELLYSTAT_URL}}"
             key: "{{HOMEPAGE_VAR_JELLYSTAT_KEY}}"
+    - qBittorrent:
+        href: "{{HOMEPAGE_VAR_QBIT_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/qbittorrent.svg
+        server: docker
+        container: qbittorrent
+        widget:
+            type: qbittorrent
+            url: "{{HOMEPAGE_VAR_QBIT_URL}}"
+            username: "{{HOMEPAGE_VAR_QBIT_USERNAME}}"
+            password: "{{HOMEPAGE_VAR_QBIT_PASSWORD}}"
+            # enableLeechProgress: true # optional, defaults to false
+            # enableLeechSize: true # optional, defaults to false
     - Sonarr:
         href: "{{HOMEPAGE_VAR_SONARR_URL}}"
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/sonarr.svg
@@ -136,18 +167,6 @@
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/flaresolverr.svg
         server: docker
         container: flaresolverr
-    - qBittorrent:
-        href: "{{HOMEPAGE_VAR_QBIT_URL}}"
-        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/qbittorrent.svg
-        server: docker
-        container: qbittorrent
-        widget:
-            type: qbittorrent
-            url: "{{HOMEPAGE_VAR_QBIT_URL}}"
-            username: "{{HOMEPAGE_VAR_QBIT_USERNAME}}"
-            password: "{{HOMEPAGE_VAR_QBIT_PASSWORD}}"
-            # enableLeechProgress: true # optional, defaults to false
-            # enableLeechSize: true # optional, defaults to false
     - Suggestarr:
         href: "{{HOMEPAGE_VAR_SUGGESTARR_URL}}"
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/suggest-arr.png
@@ -169,9 +188,4 @@
         href: "{{HOMEPAGE_VAR_PAPERLESS_GPT_URL}}"
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/paperless-ngx.svg
 
-- Terminal:
-    - Atuin:
-        href: "{{HOMEPAGE_VAR_ATUIN_URL}}"
-        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/atuin.svg
-        server: docker
-        container: atuin
+
