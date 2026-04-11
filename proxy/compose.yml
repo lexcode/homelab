@@ -14,9 +14,9 @@ services:
     image: jc21/nginx-proxy-manager:latest
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-      - "81:81" # admin UI
+      - "8080:80"    # HTTP (proxied traffic)
+      - "8443:443"   # HTTPS (proxied traffic)
+      - "8181:81"    # NPM admin UI (default)
     volumes:
       - ./data/nginx-proxy-manager/data:/data
       - ./data/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
