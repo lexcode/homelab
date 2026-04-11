@@ -6,3 +6,41 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    networks:
+      - proxynetwork
+
+  nginx-proxy-manager:
+    container_name: nginx-proxy-manager
+    image: jc21/nginx-proxy-manager:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81" # admin UI
+    volumes:
+      - ./data/nginx-proxy-manager/data:/data
+      - ./data/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    networks:
+      - proxynetwork
+      - servarrnetwork
+      - analyticsnetwork
+      - monitoringnetwork
+      - documentsnetwork
+      - terminalnetwork
+      - homepagenetwork
+
+networks:
+  proxynetwork:
+    name: proxynetwork
+  servarrnetwork:
+    external: true
+  analyticsnetwork:
+    external: true
+  monitoringnetwork:
+    external: true
+  documentsnetwork:
+    external: true
+  terminalnetwork:
+    external: true
+  homepagenetwork:
+    external: true

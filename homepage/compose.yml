@@ -4,6 +4,8 @@ services:
     container_name: homepage
     ports:
       - 3003:3000
+    networks:
+      - homepagenetwork
     volumes:
       - ./data/homepage/config:/app/config # Make sure your local config directory exists
       - ./data/homepage/images:/app/public/images
@@ -63,6 +65,8 @@ services:
   dockerproxy:
     image: ghcr.io/tecnativa/docker-socket-proxy:latest
     container_name: dockerproxy
+    networks:
+      - homepagenetwork
     environment:
       - CONTAINERS=1 # Allow access to viewing containers
       - SERVICES=1 # Allow access to viewing services (necessary when using Docker Swarm)
@@ -73,3 +77,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro # Mounted as read-only
     restart: unless-stopped
+
+networks:
+  homepagenetwork:
+    name: homepagenetwork

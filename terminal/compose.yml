@@ -14,9 +14,14 @@ services:
       RUST_LOG: info,atuin_server=debug
     depends_on:
       - db
+    networks:
+      - terminalnetwork
+
   db:
     image: postgres:18
     restart: unless-stopped
+    networks:
+      - terminalnetwork
     volumes: # Don't remove permanent storage for index database files!
       - "./database:/var/lib/postgresql/data/"
     environment:
@@ -41,3 +46,9 @@ services:
       - ./db_dumps:/db_dumps
     depends_on:
       - db
+    networks:
+      - terminalnetwork
+
+networks:
+  terminalnetwork:
+    name: terminalnetwork

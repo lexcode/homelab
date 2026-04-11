@@ -3,5 +3,6 @@
 /documents/data/*
 /homepage/data/homepage/config/logs/*
 /analytics/data/*
+/proxy/data/*
 .env
 .cursor/*

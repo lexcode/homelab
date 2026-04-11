@@ -54,7 +54,7 @@ Docker Compose stack for [**Your Spotify**](https://github.com/Yooooomi/your_spo
 | `YOUR_SPOTIFY_SERVER_IP`       | Static IPv4 for the server container.                                    |
 | `YOUR_SPOTIFY_CLIENT_IP`       | Static IPv4 for the client container.                                    |
 | `YOUR_SPOTIFY_MONGO_IP`        | Static IPv4 for the MongoDB container.                                   |
-| `YOUR_SPOTIFY_API_PORT`        | Host port for the API server (default `8080`).                           |
+| `YOUR_SPOTIFY_API_PORT`        | Host port mapped to the API container’s `8080` (Compose default `8080` if unset; `.env.example` uses `8282`). |
 | `YOUR_SPOTIFY_CLIENT_PORT`     | Host port for the web UI (default `3000`).                               |
 | `YOUR_SPOTIFY_API_ENDPOINT`    | Public HTTPS URL of the API server. Must match the Spotify redirect URI. |
 | `YOUR_SPOTIFY_CLIENT_ENDPOINT` | Public HTTPS URL of the web client.                                      |
@@ -92,7 +92,7 @@ This stack is designed to run behind a Cloudflare Tunnel. Configure two public h
 | Public hostname              | Service                          |
 | ---------------------------- | -------------------------------- |
 | `spotify.yourdomain.com`     | `http://localhost:3000` (client) |
-| `api.spotify.yourdomain.com` | `http://localhost:8080` (server) |
+| `api.spotify.yourdomain.com` | `http://localhost:8282` (server — use your `YOUR_SPOTIFY_API_PORT`) |
 
 If Cloudflare Web Analytics is enabled on your domain, the app's strict CSP will block the injected beacon script on the client page. Disable analytics injection for the client subdomain via a Cloudflare Configuration Rule or by removing the hostname from Web Analytics.
 
