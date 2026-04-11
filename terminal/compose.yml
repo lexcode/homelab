@@ -1,5 +1,6 @@
 services:
   atuin:
+    container_name: atuin
     restart: always
     image: ghcr.io/atuinsh/atuin:c28ac1b
     command: server start
@@ -18,6 +19,7 @@ services:
       - terminalnetwork
 
   db:
+    container_name: atuin_db
     image: postgres:18
     restart: unless-stopped
     networks:
