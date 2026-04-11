@@ -24,8 +24,8 @@ services:
     restart: unless-stopped
     networks:
       - terminalnetwork
-    volumes: # Don't remove permanent storage for index database files!
-      - "./data/database:/var/lib/postgresql/data/"
+    volumes: # PG 18+: mount parent dir (cluster lives in .../18/docker). See postgres Docker README.
+      - "./data/database:/var/lib/postgresql"
     environment:
       POSTGRES_USER: ${ATUIN_DB_USERNAME}
       POSTGRES_PASSWORD: ${ATUIN_DB_PASSWORD}
