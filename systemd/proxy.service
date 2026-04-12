@@ -1,0 +1,14 @@
+[Unit]
+Description=Proxy Stack (Cloudflare Tunnel + Nginx Proxy Manager)
+After=docker.service media.service monitoring.service analytics.service documents.service terminal.service homepage.service
+Requires=docker.service
+
+[Service]
+WorkingDirectory=/home/lexcode/code/homelab/proxy
+ExecStart=/usr/bin/docker compose up
+ExecStop=/usr/bin/docker compose down
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

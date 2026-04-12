@@ -59,11 +59,11 @@ Docker Compose stack for [Atuin](https://atuin.sh/): a sync server for encrypted
 
 ## Data layout
 
-| Path            | Purpose                                           |
-| --------------- | ------------------------------------------------- |
-| `./config`      | Atuin server configuration                        |
-| `./database`    | Postgres data directory (do not delete)          |
-| `./db_dumps`    | Scheduled SQL backups (daily; retention per image defaults) |
+| Path         | Purpose                                                     |
+| ------------ | ----------------------------------------------------------- |
+| `./config`   | Atuin server configuration                                  |
+| `./database` | Postgres data directory (do not delete)                     |
+| `./db_dumps` | Scheduled SQL backups (daily; retention per image defaults) |
 
 ### Postgres major upgrades
 
