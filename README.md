@@ -1,6 +1,6 @@
 # Homelab
 
-Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, analytics, and a self-hosted dashboard.
+Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, analytics, DNS-level ad blocking, and a self-hosted dashboard.
 
 ```mermaid
 graph LR
@@ -45,6 +45,9 @@ graph LR
             hp[Homepage :3003]
             dp[dockerproxy :2375]
         end
+        subgraph dns["🛡️  dns/"]
+            ag[AdGuard Home :3005]
+        end
         cf[☁️  proxy/cloudflared]
     end
     subgraph desktop["🖥️  Desktop (LAN)"]
@@ -67,6 +70,7 @@ graph LR
 | [`analytics/`](analytics/)   | [Your Spotify](https://github.com/Yooooomi/your_spotify) self-hosted Spotify listening statistics — see **[analytics/README.md](analytics/README.md)**.                             |
 | [`homepage/`](homepage/)     | [Homepage](https://gethomepage.dev) self-hosted dashboard with service widgets and Docker integration — see **[homepage/README.md](homepage/README.md)**.                           |
 | [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager — see **[proxy/README.md](proxy/README.md)**.                                                  |
+| [`dns/`](dns/)               | LAN DNS / filtering (currently [AdGuard Home](https://github.com/AdguardTeam/AdGuardHome); room for Pi-hole or others) — see **[dns/README.md](dns/README.md)**.                    |
 | [`systemd/`](systemd/)       | Optional systemd units to start each stack at boot — see **Boot with systemd** below.                                                                                               |
 
 Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./data/` (not committed).
@@ -76,7 +80,7 @@ Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./dat
 - Docker and Docker Compose v2
 - Separate `.env` files per stack (copy from each `.env.example`)
 
-Networks are isolated by design (for example media on `172.39.0.0/24`, monitoring on `172.39.1.0/24`, analytics on `172.39.2.0/24`). Adjust subnets in `.env` if they clash with your LAN or other projects.
+Networks are isolated by design (for example media on `172.39.0.0/24`, monitoring on `172.39.1.0/24`, analytics on `172.39.2.0/24`, AdGuard Home on `172.39.5.0/24`). Adjust subnets in `.env` if they clash with your LAN or other projects.
 
 ## Media
 
@@ -168,6 +172,18 @@ cp .env.example .env   # set CLOUDFLARED_TOKEN from the Zero Trust dashboard
 docker compose up -d
 ```
 
+## DNS (AdGuard Home)
+
+See **[dns/README.md](dns/README.md)** for why this is not under `proxy/`, DNS port conflicts (e.g. systemd-resolved), port defaults that avoid clashing with Nginx Proxy Manager.
+
+Quick start:
+
+```bash
+cd dns
+cp .env.example .env   # adjust ADGUARD_DNS_PORT / ADGUARD_HTTP_PORT if needed
+docker compose up -d
+```
+
 ## Boot with systemd (optional)
 
 Unit files live in [`systemd/`](systemd/). They run each stack with `docker compose up` from the matching directory and are suitable for enabling stacks at boot on a single host.
@@ -177,7 +193,7 @@ Unit files live in [`systemd/`](systemd/). They run each stack with `docker comp
 ```bash
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now media.service documents.service monitoring.service analytics.service terminal.service homepage.service proxy.service
+sudo systemctl enable --now media.service documents.service monitoring.service analytics.service terminal.service homepage.service dns.service proxy.service
 ```
 
 **Why `proxy.service` lists other stacks in `After=`:** The proxy stack includes [Nginx Proxy Manager](https://nginxproxymanager.com/) joined to **external** Docker networks (`servarrnetwork`, `documentsnetwork`, etc.). Those networks are created when each respective `docker compose` stack starts. If `proxy.service` runs first, Compose fails with “network … not found.” So the proxy unit must start **after** every stack that defines those named networks.
@@ -188,6 +204,6 @@ Order is encoded only in `proxy.service`; other units only need `After=docker.se
 
 ## Secrets and git
 
-Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `terminal/database`, `analytics/data`, and similar paths are intended to stay local.
+Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `terminal/database`, `analytics/data`, `dns/data`, and similar paths are intended to stay local.
 
 `.cursor/` is listed in `.gitignore` so editor-specific rules stay on your machine and are not shared via the repo; remove that line if you intentionally want to version Cursor project config.

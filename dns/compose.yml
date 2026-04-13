@@ -1,0 +1,22 @@
+networks:
+  adguardnetwork:
+    name: adguardnetwork
+    ipam:
+      config:
+        - subnet: ${ADGUARD_SUBNET:-172.39.5.0/24}
+
+services:
+  adguardhome:
+    container_name: adguardhome
+    image: adguard/adguardhome:latest
+    restart: unless-stopped
+    ports:
+      - "${ADGUARD_DNS_PORT:-53}:53/tcp"
+      - "${ADGUARD_DNS_PORT:-53}:53/udp"
+      - "${ADGUARD_HTTP_PORT:-3000}:3000/tcp"
+    volumes:
+      - ./data/work:/opt/adguardhome/work
+      - ./data/conf:/opt/adguardhome/conf
+    networks:
+      adguardnetwork:
+        ipv4_address: ${ADGUARD_IP:-172.39.5.2}

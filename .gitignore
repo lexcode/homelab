@@ -4,6 +4,7 @@
 /homepage/data/homepage/config/logs/*
 /analytics/data/*
 /proxy/data/*
+/dns/data/*
 /terminal/data/*
 .env
 .cursor/*
