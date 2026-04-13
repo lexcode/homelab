@@ -20,6 +20,8 @@ services:
       - MONGO_ENDPOINT=mongodb://your_spotify_mongo:27017/your_spotify
       - TIMEZONE=${TZ}
       - LOG_LEVEL=${YOUR_SPOTIFY_LOG_LEVEL:-info}
+      - COOKIE_VALIDITY_MS=8h
+      - MAX_IMPORT_CACHE_SIZE=100000
     depends_on:
       - your_spotify_mongo
     networks:

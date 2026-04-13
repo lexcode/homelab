@@ -17,7 +17,6 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
    ```
 
    Edit `.env` and set at least:
-
    - `PUID` / `PGID` — host user/group that owns `/data` and `./data/*` configs (commonly `1000` / `1000`)
    - `TZ`
    - `SERVARR_SUBNET` and each `*_IP` — must stay inside the same subnet; defaults match `compose.yml`
@@ -61,17 +60,17 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
 
 ## Ports (defaults)
 
-| Service      | Port (host) | Notes                                      |
-|-------------|-------------|--------------------------------------------|
-| qBittorrent | `8080`      | Published via VPN container                |
-| Sonarr      | `8989`      |                                            |
-| Radarr      | `7878`      |                                            |
-| Lidarr      | `8686`      |                                            |
-| Bazarr      | `6767`      |                                            |
-| Seerr       | `5055`      |                                            |
-| Prowlarr    | `9696`      | Via VPN container                          |
-| FlareSolverr| `8191`      | Via VPN container                          |
-| SuggestArr  | `5000`      | `network_mode: host` — binds on the host |
+| Service      | Port (host) | Notes                                    |
+| ------------ | ----------- | ---------------------------------------- |
+| qBittorrent  | `8080`      | Published via VPN container              |
+| Sonarr       | `8989`      |                                          |
+| Radarr       | `7878`      |                                          |
+| Lidarr       | `8686`      |                                          |
+| Bazarr       | `6767`      |                                          |
+| Seerr        | `5055`      |                                          |
+| Prowlarr     | `9696`      | Via VPN container                        |
+| FlareSolverr | `8191`      | Via VPN container                        |
+| SuggestArr   | `5000`      | `network_mode: host` — binds on the host |
 
 **DNS:** Apps on `servarrnetwork` use public DNS (`1.1.1.1` / `8.8.8.8`) where noted in `compose.yml`, so lookups like Radarr’s API host work reliably. Do not add that YAML anchor to services using `network_mode: service:vpn`.
 
@@ -97,7 +96,7 @@ Restrict permissions:
 chmod 600 ~/.smbcredentials
 ```
 
-Use the **same** `uid`/`gid` in mount options as `PUID`/`PGID` in `.env` so the *arr apps and qBittorrent see matching ownership.
+Use the **same** `uid`/`gid` in mount options as `PUID`/`PGID` in `.env` so the \*arr apps and qBittorrent see matching ownership.
 
 ### 2. Mount points
 

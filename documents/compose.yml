@@ -5,9 +5,13 @@ services:
     restart: unless-stopped
     volumes:
       - ./data/paperless-ngx/redis:/data
+    networks:
+      - documentsnetwork
 
   paperless-ngx:
     container_name: paperless-ngx
+    networks:
+      - documentsnetwork
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
     restart: unless-stopped
     depends_on:
@@ -43,6 +47,8 @@ services:
     container_name: postgresql-paperless-ngx
     image: postgres:18
     restart: unless-stopped
+    networks:
+      - documentsnetwork
     environment:
       POSTGRES_USER: ${PAPERLESS_DB_USERNAME}
       POSTGRES_PASSWORD: ${PAPERLESS_DB_PASSWORD}
@@ -62,6 +68,8 @@ services:
         condition: service_healthy
     ports:
       - "3001:3000"
+    networks:
+      - documentsnetwork
     environment:
       PAPERLESS_API_URL: ${PAPERLESS_API_URL} 
       PAPERLESS_API_TOKEN: ${PAPERLESS_API_TOKEN}
@@ -78,6 +86,8 @@ services:
 
   paperless-gpt:
     container_name: paperless-gpt
+    networks:
+      - documentsnetwork
     # Use one of these image sources:
     image: icereed/paperless-gpt:latest # Docker Hub
     # image: ghcr.io/icereed/paperless-gpt:latest  # GitHub Container Registry
@@ -182,3 +192,7 @@ services:
     depends_on:
       paperless-ngx:
         condition: service_healthy
+
+networks:
+  documentsnetwork:
+    name: documentsnetwork

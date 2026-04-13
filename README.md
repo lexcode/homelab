@@ -66,7 +66,8 @@ graph LR
 | [`terminal/`](terminal/)     | [Atuin](https://atuin.sh/) self-hosted shell history sync server — see **[terminal/README.md](terminal/README.md)**.                                                                |
 | [`analytics/`](analytics/)   | [Your Spotify](https://github.com/Yooooomi/your_spotify) self-hosted Spotify listening statistics — see **[analytics/README.md](analytics/README.md)**.                             |
 | [`homepage/`](homepage/)     | [Homepage](https://gethomepage.dev) self-hosted dashboard with service widgets and Docker integration — see **[homepage/README.md](homepage/README.md)**.                           |
-| [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) — exposes internal services over HTTPS without opening inbound ports — see **[proxy/README.md](proxy/README.md)**. |
+| [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager — see **[proxy/README.md](proxy/README.md)**.                                                  |
+| [`systemd/`](systemd/)       | Optional systemd units to start each stack at boot — see **Boot with systemd** below.                                                                                               |
 
 Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./data/` (not committed).
 
@@ -167,6 +168,26 @@ cp .env.example .env   # set CLOUDFLARED_TOKEN from the Zero Trust dashboard
 docker compose up -d
 ```
 
+## Boot with systemd (optional)
+
+Unit files live in [`systemd/`](systemd/). They run each stack with `docker compose up` from the matching directory and are suitable for enabling stacks at boot on a single host.
+
+**Install (paths assume this repo at `/home/lexcode/code/homelab`; edit the unit files if your clone lives elsewhere):**
+
+```bash
+sudo cp systemd/*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now media.service documents.service monitoring.service analytics.service terminal.service homepage.service proxy.service
+```
+
+**Why `proxy.service` lists other stacks in `After=`:** The proxy stack includes [Nginx Proxy Manager](https://nginxproxymanager.com/) joined to **external** Docker networks (`servarrnetwork`, `documentsnetwork`, etc.). Those networks are created when each respective `docker compose` stack starts. If `proxy.service` runs first, Compose fails with “network … not found.” So the proxy unit must start **after** every stack that defines those named networks.
+
+Order is encoded only in `proxy.service`; other units only need `After=docker.service` and `Requires=docker.service`.
+
+**`Requires=` vs `After=`:** Other stacks do not use `Requires=` on each other so one failing service does not block Docker or unrelated stacks. Only `proxy` needs strict ordering relative to the stacks whose networks it imports.
+
 ## Secrets and git
 
-Do not commit real `.env` files or credentials. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `terminal/database`, `analytics/data`, and similar paths are intended to stay local.
+Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `terminal/database`, `analytics/data`, and similar paths are intended to stay local.
+
+`.cursor/` is listed in `.gitignore` so editor-specific rules stay on your machine and are not shared via the repo; remove that line if you intentionally want to version Cursor project config.
