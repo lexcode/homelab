@@ -174,7 +174,7 @@ docker compose up -d
 
 ## DNS (AdGuard Home)
 
-See **[dns/README.md](dns/README.md)** for why this is not under `proxy/`, DNS port conflicts (e.g. systemd-resolved), port defaults that avoid clashing with Nginx Proxy Manager.
+See **[dns/README.md](dns/README.md)** for bridge networking, port defaults vs NPM, and systemd-resolved.
 
 Quick start:
 
