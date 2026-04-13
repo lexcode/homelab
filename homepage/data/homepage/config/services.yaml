@@ -71,6 +71,15 @@
             accountid: {{HOMEPAGE_VAR_CLOUDFLARED_ACCOUNTID}} # from zero trust dashboard url e.g. https://one.dash.cloudflare.com/<accountid>/home/quick-start
             tunnelid: {{HOMEPAGE_VAR_CLOUDFLARED_TUNNELID}} # found in tunnels dashboard under the tunnel name
             key: {{HOMEPAGE_VAR_CLOUDFLARED_TOKEN}} # api token with `Account.Cloudflare Tunnel:Read` https://dash.cloudflare.com/profile/api-tokens
+    - Nginx Proxy Manager:
+        href: "{{HOMEPAGE_VAR_NGINX_PROXY_MANAGER_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nginx-proxy-manager.svg
+        server: docker
+        widget:
+            type: npm
+            url: "{{HOMEPAGE_VAR_NGINX_PROXY_MANAGER_URL}}"
+            username: "{{HOMEPAGE_VAR_NGINX_PROXY_MANAGER_USERNAME}}"
+            password: "{{HOMEPAGE_VAR_NGINX_PROXY_MANAGER_PASSWORD}}"
 
 - Terminal:
     - Atuin:
@@ -179,6 +188,17 @@
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/suggest-arr.png
         server: docker
         container: suggestarr
+
+- DNS:
+    - AdGuard Home:
+        href: "{{HOMEPAGE_VAR_ADGUARD_HOME_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/adguard-home.svg
+        server: docker
+        widget:
+            type: adguard
+            url: "{{HOMEPAGE_VAR_ADGUARD_HOME_URL}}"
+            username: "{{HOMEPAGE_VAR_ADGUARD_HOME_USERNAME}}"
+            password: "{{HOMEPAGE_VAR_ADGUARD_HOME_PASSWORD}}"
 
 - Documents:
     - Paperless-ngx:
