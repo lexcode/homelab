@@ -110,6 +110,18 @@
             type: jellystat
             url: "{{HOMEPAGE_VAR_JELLYSTAT_URL}}"
             key: "{{HOMEPAGE_VAR_JELLYSTAT_KEY}}"
+    - Tracearr:
+        href: "{{HOMEPAGE_VAR_TRACEARR_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tracearr.svg
+        widget:
+            type: tracearr
+            url: "{{HOMEPAGE_VAR_TRACEARR_URL}}"
+            key: "{{HOMEPAGE_VAR_TRACEARR_KEY}}"
+            view: both # optional, "summary", "details", or "both", defaults to "details"
+            enableUser: true # optional, defaults to false
+            showEpisodeNumber: true # optional, defaults to false
+            expandOneStreamToTwoRows: false # optional, defaults to true
+
     - qBittorrent:
         href: "{{HOMEPAGE_VAR_QBIT_URL}}"
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/qbittorrent.svg
