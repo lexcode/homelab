@@ -61,6 +61,8 @@ graph LR
 
 ## Layout
 
+See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole repo and each stack (compose files, `data/`, systemd units).
+
 | Directory                    | Purpose                                                                                                                                                                             |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`media/`](media/)           | Servarr stack (qBittorrent over WireGuard PIA, Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, deunhealth) — see **[media/README.md](media/README.md)**. |
@@ -204,6 +206,6 @@ Order is encoded only in `proxy.service`; other units only need `After=docker.se
 
 ## Secrets and git
 
-Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `terminal/database`, `analytics/data`, `dns/data`, and similar paths are intended to stay local.
+Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `terminal/data`, `analytics/data`, `dns/data`, and similar paths are intended to stay local.
 
 `.cursor/` is listed in `.gitignore` so editor-specific rules stay on your machine and are not shared via the repo; remove that line if you intentionally want to version Cursor project config.
