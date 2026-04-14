@@ -70,7 +70,7 @@ graph LR
 | [`analytics/`](analytics/)   | [Your Spotify](https://github.com/Yooooomi/your_spotify) self-hosted Spotify listening statistics — see **[analytics/README.md](analytics/README.md)**.                             |
 | [`homepage/`](homepage/)     | [Homepage](https://gethomepage.dev) self-hosted dashboard with service widgets and Docker integration — see **[homepage/README.md](homepage/README.md)**.                           |
 | [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager — see **[proxy/README.md](proxy/README.md)**.                                                  |
-| [`dns/`](dns/)               | LAN DNS / filtering (currently [AdGuard Home](https://github.com/AdguardTeam/AdGuardHome); room for Pi-hole or others) — see **[dns/README.md](dns/README.md)**.                    |
+| [`dns/`](dns/)               | LAN DNS / filtering ([AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)) — **primary** on Raspberry Pi 5, **secondary** on Unraid; DHCP DNS via **UniFi Dream Machine Pro** — see **[dns/README.md](dns/README.md)**. |
 | [`systemd/`](systemd/)       | Optional systemd units to start each stack at boot — see **Boot with systemd** below.                                                                                               |
 
 Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./data/` (not committed).
@@ -174,7 +174,7 @@ docker compose up -d
 
 ## DNS (AdGuard Home)
 
-See **[dns/README.md](dns/README.md)** for bridge networking, port defaults vs NPM, and systemd-resolved.
+See **[dns/README.md](dns/README.md)** for bridge networking, port defaults vs NPM, systemd-resolved, and **UniFi DMP** DHCP DNS (**primary** = Pi `dns/` stack, **secondary** = Unraid AdGuard).
 
 Quick start:
 
