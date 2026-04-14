@@ -1,6 +1,6 @@
 # Homelab
 
-Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, analytics, DNS-level ad blocking, and a self-hosted dashboard.
+Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, analytics, push notifications (Gotify), DNS-level ad blocking, and a self-hosted dashboard.
 
 ```mermaid
 graph LR
@@ -48,6 +48,9 @@ graph LR
         subgraph dns["🛡️  dns/"]
             ag[AdGuard Home :3005]
         end
+        subgraph notif["🔔 notifications/"]
+            gotify[Gotify :8688]
+        end
         cf[☁️  proxy/cloudflared]
     end
     subgraph desktop["🖥️  Desktop (LAN)"]
@@ -71,6 +74,7 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | [`terminal/`](terminal/)     | [Atuin](https://atuin.sh/) self-hosted shell history sync server — see **[terminal/README.md](terminal/README.md)**.                                                                |
 | [`analytics/`](analytics/)   | [Your Spotify](https://github.com/Yooooomi/your_spotify) self-hosted Spotify listening statistics — see **[analytics/README.md](analytics/README.md)**.                             |
 | [`homepage/`](homepage/)     | [Homepage](https://gethomepage.dev) self-hosted dashboard with service widgets and Docker integration — see **[homepage/README.md](homepage/README.md)**.                           |
+| [`notifications/`](notifications/) | [Gotify](https://gotify.net/) self-hosted push notification server — see **[notifications/README.md](notifications/README.md)**.                                                |
 | [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager — see **[proxy/README.md](proxy/README.md)**.                                                  |
 | [`dns/`](dns/)               | LAN DNS / filtering ([AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)) — **primary** on Raspberry Pi 5, **secondary** on Unraid; DHCP DNS via **UniFi Dream Machine Pro** — see **[dns/README.md](dns/README.md)**. |
 | [`systemd/`](systemd/)       | Optional systemd units to start each stack at boot — see **Boot with systemd** below.                                                                                               |
@@ -162,6 +166,18 @@ cp .env.example .env   # set HOMEPAGE_ALLOWED_HOSTS and service URLs/keys
 docker compose up -d
 ```
 
+## Notifications (Gotify)
+
+See **[notifications/README.md](notifications/README.md)** for ports, persistent data under `./data/gotify`, clients, and integrating apps (for example *arr Connect).
+
+Quick start:
+
+```bash
+cd notifications
+cp .env.example .env   # set GOTIFY_DEFAULTUSER_PASS before first run if desired
+docker compose up -d
+```
+
 ## Proxy
 
 See **[proxy/README.md](proxy/README.md)** for Cloudflare Tunnel setup and adding public hostnames.
@@ -195,7 +211,7 @@ Unit files live in [`systemd/`](systemd/). They run each stack with `docker comp
 ```bash
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now media.service documents.service monitoring.service analytics.service terminal.service homepage.service dns.service proxy.service
+sudo systemctl enable --now media.service documents.service monitoring.service analytics.service terminal.service homepage.service notifications.service dns.service proxy.service
 ```
 
 **Why `proxy.service` lists other stacks in `After=`:** The proxy stack includes [Nginx Proxy Manager](https://nginxproxymanager.com/) joined to **external** Docker networks (`servarrnetwork`, `documentsnetwork`, etc.). Those networks are created when each respective `docker compose` stack starts. If `proxy.service` runs first, Compose fails with “network … not found.” So the proxy unit must start **after** every stack that defines those named networks.
@@ -206,6 +222,6 @@ Order is encoded only in `proxy.service`; other units only need `After=docker.se
 
 ## Secrets and git
 
-Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `terminal/data`, `analytics/data`, `dns/data`, and similar paths are intended to stay local.
+Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `terminal/data`, `analytics/data`, `notifications/data`, `dns/data`, and similar paths are intended to stay local.
 
 `.cursor/` is listed in `.gitignore` so editor-specific rules stay on your machine and are not shared via the repo; remove that line if you intentionally want to version Cursor project config.

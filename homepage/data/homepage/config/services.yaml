@@ -60,6 +60,17 @@
             key: "{{HOMEPAGE_VAR_SPOTIFY_KEY}}"
             interval: month # optional, defaults to week - Allowed values for interval: day, week, month, year, all. https://gethomepage.dev/widgets/services/yourspotify/
 
+- Notifications:
+    - Gotify:
+        href: "{{HOMEPAGE_VAR_GOTIFY_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/gotify.svg
+        server: docker
+        container: gotify
+        widget:
+            type: gotify
+            url: "{{HOMEPAGE_VAR_GOTIFY_URL}}"
+            key: "{{HOMEPAGE_VAR_GOTIFY_KEY}}"
+
 - Proxy:
     - Cloudflare Tunnel:
         href: "{{HOMEPAGE_VAR_CLOUDFLARED_URL}}"

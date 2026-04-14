@@ -18,6 +18,7 @@ homelab/
 ├── terminal/                 # Atuin sync server + Postgres
 ├── analytics/                # Your Spotify (API + web + MongoDB)
 ├── homepage/                 # Homepage dashboard + docker socket proxy
+├── notifications/            # Gotify push notification server
 ├── proxy/                    # cloudflared + Nginx Proxy Manager (+ optional Tailscale)
 ├── dns/                      # AdGuard Home
 └── systemd/                  # Optional unit files to start stacks at boot
@@ -126,6 +127,19 @@ Secrets belong in **`.env`** via `HOMEPAGE_VAR_*`; keep tokens out of committed 
 
 ---
 
+## `notifications/`
+
+```text
+notifications/
+├── compose.yml               # Gotify (gotify/server)
+├── .env.example
+├── README.md                 # Ports, data dir, clients, Homepage widget
+└── data/                     # SQLite + uploads (not committed)
+    └── gotify/
+```
+
+---
+
 ## `proxy/`
 
 ```text
@@ -161,6 +175,7 @@ systemd/
 ├── terminal.service
 ├── analytics.service
 ├── homepage.service
+├── notifications.service
 ├── dns.service
 └── proxy.service
 ```

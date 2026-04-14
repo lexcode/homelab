@@ -1,0 +1,12 @@
+services:
+  gotify:
+    image: gotify/server:latest
+    container_name: gotify
+    restart: unless-stopped
+    ports:
+      - "${GOTIFY_HTTP_PORT:-8688}:80"
+    environment:
+      TZ: ${TZ:-UTC}
+      GOTIFY_DEFAULTUSER_PASS: ${GOTIFY_DEFAULTUSER_PASS:-changeme}
+    volumes:
+      - ./data/gotify:/app/data

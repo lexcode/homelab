@@ -82,6 +82,17 @@ The Proxy section includes a `cloudflared` widget. Set these in `.env`:
 
 > The API token must be scoped to **Account**, not a Zone. Create it at https://dash.cloudflare.com/profile/api-tokens.
 
+### Gotify widget
+
+The Notifications section includes a [`gotify`](https://gethomepage.dev/widgets/services/gotify/) widget (messages/apps/clients summary). Set in `.env`:
+
+| Variable                   | Description                                                                 |
+| -------------------------- | --------------------------------------------------------------------------- |
+| `HOMEPAGE_VAR_GOTIFY_URL`  | Base URL of your Gotify server (same host/port as in `notifications/`).     |
+| `HOMEPAGE_VAR_GOTIFY_KEY`  | **Client** token from the Gotify admin UI (**Clients**), not an application token used for API pushes. |
+
+Gotify must run on the **same Docker host** as Homepage so `server: docker` / `container: gotify` resolve. If Gotify lives elsewhere, remove those two lines from `services.yaml` and keep `href` + `widget` only.
+
 ## Docker integration
 
 `docker.yaml` points Homepage at the dockerproxy sidecar:
