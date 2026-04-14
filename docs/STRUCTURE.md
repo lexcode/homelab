@@ -131,11 +131,12 @@ Secrets belong in **`.env`** via `HOMEPAGE_VAR_*`; keep tokens out of committed 
 
 ```text
 notifications/
-├── compose.yml               # Gotify (gotify/server)
+├── compose.yml               # Gotify + iGotify assistant (notificationsnetwork)
 ├── .env.example
 ├── README.md                 # Ports, data dir, clients, Homepage widget
-└── data/                     # SQLite + uploads (not committed)
-    └── gotify/
+└── data/                     # Per-service state (not committed)
+    ├── gotify/
+    └── igotify/
 ```
 
 ---

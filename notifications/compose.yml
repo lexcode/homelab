@@ -1,12 +1,66 @@
+# Gotify + iGotify Notification Assistant
+# Upstream reference: https://github.com/androidseb25/iGotify-Notification-Assistent/blob/main/docker-compose.yaml
+#
+# Same layout idea as homepage/terminal: named bridge + bind mounts under ./data/
+
+networks:
+  notificationsnetwork:
+    name: notificationsnetwork
+
 services:
   gotify:
-    image: gotify/server:latest
     container_name: gotify
+    hostname: gotify
+    image: gotify/server:latest
+    # image: gotify/server-arm64  # Raspberry Pi / ARM64
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - notificationsnetwork
     ports:
       - "${GOTIFY_HTTP_PORT:-8688}:80"
     environment:
       TZ: ${TZ:-UTC}
       GOTIFY_DEFAULTUSER_PASS: ${GOTIFY_DEFAULTUSER_PASS:-changeme}
+      # GOTIFY_REGISTRATION: "false"  # optional: disable user registration
     volumes:
       - ./data/gotify:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # Bridges Gotify → SecNtfy → Apple APNs for the iGotify iOS app.
+  # https://github.com/androidseb25/iGotify-Notification-Assistent/wiki
+  igotify:
+    container_name: igotify
+    hostname: igotify
+    image: ghcr.io/androidseb25/igotify-notification-assist:latest
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      gotify:
+        condition: service_healthy
+    networks:
+      - notificationsnetwork
+    ports:
+      - "${IGOTIFY_HTTP_PORT:-8681}:8080"
+    volumes:
+      - ./data/igotify:/app/data
+    environment:
+      GOTIFY_URLS: ${GOTIFY_URLS:-}
+      GOTIFY_CLIENT_TOKENS: ${GOTIFY_CLIENT_TOKENS:-}
+      SECNTFY_TOKENS: ${SECNTFY_TOKENS:-}
+      ENABLE_CONSOLE_LOG: ${ENABLE_CONSOLE_LOG:-true}
+      ENABLE_SCALAR_UI: ${ENABLE_SCALAR_UI:-true}
+    healthcheck:
+      # Matches upstream compose. If unhealthy but the app works, try /api/Version (see README).
+      test: ["CMD", "curl", "-f", "http://localhost:8080/Version"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
