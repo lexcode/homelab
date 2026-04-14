@@ -72,6 +72,7 @@ The [Homepage](../homepage/) dashboard includes a `cloudflared` widget for this 
 
 - **cloudflared** uses outbound connections only; no inbound router port forward is required.
 - **NPM** publishes `80`, `443`, and `81` on the host for local and tunnel-terminated HTTP(S).
+- **DNS / AdGuard Home** (LAN resolver / ad blocking) is a separate stack: [`dns/`](../dns/README.md). The **bridge** setup publishes the web UI on **`ADGUARD_HTTP_PORT`** (default **3005**) so it does not fight NPM for **80**/**443** on the same host.
 - `restart: unless-stopped` ensures the tunnel reconnects after a reboot.
 - To restrict access by country, use Cloudflare WAF Custom Rules (Security → WAF → Custom Rules). Optional for public services; not required for basic tunnel operation.
 
