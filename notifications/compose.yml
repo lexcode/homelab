@@ -58,8 +58,8 @@ services:
       ENABLE_CONSOLE_LOG: ${ENABLE_CONSOLE_LOG:-true}
       ENABLE_SCALAR_UI: ${ENABLE_SCALAR_UI:-true}
     healthcheck:
-      # Matches upstream compose. If unhealthy but the app works, try /api/Version (see README).
-      test: ["CMD", "curl", "-f", "http://localhost:8080/Version"]
+      # App uses UsePathBase("/api"); /Version without prefix returns 404 on current builds.
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/Version"]
       interval: 5s
       timeout: 3s
       retries: 5

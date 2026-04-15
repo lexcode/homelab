@@ -1,8 +1,8 @@
 # Notifications (push server)
 
-Docker Compose stack for [**Gotify**](https://github.com/gotify/server): a self-hosted REST/WebSocket API for sending push notifications to phones and desktops. The directory is named **`notifications/`** so you can add another notifier or related tooling later without mixing it with monitoring or the dashboard.
+Docker Compose stack for [**Gotify**](https://github.com/gotify/server) plus the [**iGotify Notification Assistant**](https://github.com/androidseb25/iGotify-Notification-Assistent) (optional but recommended for **iOS** lock-screen push via SecNtfy/APNs). The directory is named **`notifications/`** so you can add other notifiers later without mixing them with monitoring or the dashboard.
 
-**Upstream:** [Installation](https://gotify.net/docs/install), [Configuration](https://gotify.net/docs/config).
+**Upstream:** [Gotify install](https://gotify.net/docs/install), [Gotify config](https://gotify.net/docs/config), [iGotify wiki](https://github.com/androidseb25/iGotify-Notification-Assistent/wiki).
 
 ## Quick start
 
@@ -50,7 +50,7 @@ The log line `Failed to determine the https port for redirect` is a common ASP.N
 
 **Networking:** Docker bridge **`notificationsnetwork`** (same pattern as `homepagenetwork` / `terminalnetwork` in this repo). Services reach each other at **`http://gotify:80`** for `GOTIFY_URLS`.
 
-**Compose layout** follows the [upstream `docker-compose.yaml`](https://github.com/androidseb25/iGotify-Notification-Assistent/blob/main/docker-compose.yaml) (healthchecks, images, `security_opt`). This repo uses **bind mounts** and **ports** `8688` / `8681` by default instead of named volumes / `8680`. If `igotify` reports **unhealthy** but the app works, the upstream healthcheck uses `/Version`; if your image only serves `/api/Version`, change the healthcheck `test` in `compose.yml` to that path.
+**Compose layout** follows the [upstream `docker-compose.yaml`](https://github.com/androidseb25/iGotify-Notification-Assistent/blob/main/docker-compose.yaml) (healthchecks, images, `security_opt`). This repo uses **bind mounts** and **ports** `8688` / `8681` by default instead of named volumes / `8680`. The healthcheck targets **`/api/Version`** to match the assistant’s `UsePathBase("/api")`; older upstream examples used `/Version` only.
 
 ## Homepage
 
