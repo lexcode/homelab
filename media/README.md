@@ -166,6 +166,10 @@ Conventional paths under the bind-mounted host root. Point Radarr, Sonarr, Lidar
 └── shows
 ```
 
+## Related
+
+- **[notifications/](../notifications/README.md)** — [Gotify](https://gotify.net/) for push alerts; in each *arr app use **Settings → Connect → Gotify** with your server URL (reachable from the container) and an **application** token from Gotify.
+
 ## References
 
 - `.env.example` — non-secret template

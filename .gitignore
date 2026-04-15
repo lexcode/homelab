@@ -6,5 +6,6 @@
 /proxy/data/*
 /dns/data/*
 /terminal/data/*
+/notifications/data/*
 .env
 .cursor/*
