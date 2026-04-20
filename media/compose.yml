@@ -192,6 +192,25 @@ services:
       servarrnetwork:
         ipv4_address: ${LIDARR_IP:-172.39.0.5}
 
+  # Readarr successor — https://github.com/pennydreadful/bookshelf (Hardcover metadata; use :softcover for Goodreads / Readarr DB compatibility)
+  bookshelf:
+    image: ghcr.io/pennydreadful/bookshelf:hardcover
+    container_name: bookshelf
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./data/bookshelf:/config
+      - /data:/data
+    ports:
+      - 8787:8787
+    networks:
+      servarrnetwork:
+        ipv4_address: ${BOOKSHELF_IP:-172.39.0.10}
+
   bazarr:
     <<: *arr-dns
     image: lscr.io/linuxserver/bazarr:latest

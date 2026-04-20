@@ -1,6 +1,6 @@
 # Media stack (Servarr + VPN)
 
-Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, and deunhealth. Config lives under `./data/`; libraries and downloads are expected on the host at **`/data`** (bind-mounted into the containers).
+Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Radarr, Lidarr, Bookshelf (Readarr fork), Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, and deunhealth. Config lives under `./data/`; libraries and downloads are expected on the host at **`/data`** (bind-mounted into the containers).
 
 ## Prerequisites
 
@@ -36,6 +36,7 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
      data/sonarr \
      data/radarr \
      data/lidarr \
+     data/bookshelf \
      data/bazarr \
      data/seerr \
      data/prowlarr \
@@ -66,6 +67,7 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
 | Sonarr       | `8989`      |                                          |
 | Radarr       | `7878`      |                                          |
 | Lidarr       | `8686`      |                                          |
+| Bookshelf    | `8787`      | [Bookshelf](https://github.com/pennydreadful/bookshelf) (Readarr successor); image tag `hardcover` or `softcover` in `compose.yml` |
 | Bazarr       | `6767`      |                                          |
 | Seerr        | `5055`      |                                          |
 | Prowlarr     | `9696`      | Via VPN container                        |
@@ -151,7 +153,7 @@ Keep all library paths on local disks under `/data` (or change the bind mounts i
 
 ### Example host `/data` tree
 
-Conventional paths under the bind-mounted host root. Point Radarr, Sonarr, Lidarr, Bazarr, and qBittorrent at the folders you actually use.
+Conventional paths under the bind-mounted host root. Point Radarr, Sonarr, Lidarr, Bookshelf, Bazarr, and qBittorrent at the folders you actually use.
 
 ```text
 /data
