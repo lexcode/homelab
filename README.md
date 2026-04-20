@@ -53,14 +53,18 @@ graph LR
             igotify[iGotify :8681]
         end
         cf[☁️  proxy/cloudflared]
+        ts[🔗 proxy/tailscale-funnel]
+        npm[proxy/nginx-proxy-manager]
     end
     subgraph desktop["🖥️  Desktop (LAN)"]
         ollama[Ollama :11434]
     end
     pai -- LAN --> ollama
     pgpt -- LAN --> ollama
-    cf -- tunnel --> hp
-    cf -- tunnel --> ysc
+    cf -- tunnel --> npm
+    ts -- funnel --> npm
+    npm -- HTTP --> hp
+    npm -- HTTP --> ysc
 ```
 
 ## Layout
@@ -76,7 +80,7 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | [`analytics/`](analytics/)   | [Your Spotify](https://github.com/Yooooomi/your_spotify) self-hosted Spotify listening statistics — see **[analytics/README.md](analytics/README.md)**.                             |
 | [`homepage/`](homepage/)     | [Homepage](https://gethomepage.dev) self-hosted dashboard with service widgets and Docker integration — see **[homepage/README.md](homepage/README.md)**.                           |
 | [`notifications/`](notifications/) | [Gotify](https://gotify.net/) plus optional [iGotify assistant](https://github.com/androidseb25/iGotify-Notification-Assistent) for iOS push — see **[notifications/README.md](notifications/README.md)**. |
-| [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager — see **[proxy/README.md](proxy/README.md)**.                                                  |
+| [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager + optional [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) for video/high-bandwidth services — see **[proxy/README.md](proxy/README.md)**.                                                  |
 | [`dns/`](dns/)               | LAN DNS / filtering ([AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)) — **primary** on Raspberry Pi 5, **secondary** on Unraid; DHCP DNS via **UniFi Dream Machine Pro** — see **[dns/README.md](dns/README.md)**. |
 | [`systemd/`](systemd/)       | Optional systemd units to start each stack at boot — see **Boot with systemd** below.                                                                                               |
 
@@ -181,13 +185,13 @@ docker compose up -d
 
 ## Proxy
 
-See **[proxy/README.md](proxy/README.md)** for Cloudflare Tunnel setup and adding public hostnames.
+See **[proxy/README.md](proxy/README.md)** for Cloudflare Tunnel setup, adding public hostnames, and the optional [Tailscale Funnel](proxy/README.md#tailscale-funnel-optional) sidecar for publicly exposing a single service (for example Jellyfin) outside the Cloudflare CDN — Cloudflare’s terms prohibit proxying video.
 
 Quick start:
 
 ```bash
 cd proxy
-cp .env.example .env   # set CLOUDFLARED_TOKEN from the Zero Trust dashboard
+cp .env.example .env   # set CLOUDFLARED_TOKEN; TS_AUTHKEY only if using Tailscale Funnel
 docker compose up -d
 ```
 

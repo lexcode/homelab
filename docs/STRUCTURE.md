@@ -145,10 +145,15 @@ notifications/
 
 ```text
 proxy/
-├── compose.yml               # cloudflared, NPM, external Docker networks
+├── compose.yml               # cloudflared, NPM, optional tailscale-funnel, external Docker networks
 ├── .env.example
-├── README.md                 # Tunnel token, hostnames
-└── data/                     # NPM data, certs, tunnel state (not committed)
+├── README.md                 # Tunnel token, hostnames, Tailscale Funnel setup
+├── config/
+│   └── tailscale-funnel/
+│       └── serve.json        # Tailscale Serve/Funnel config (committed template)
+└── data/                     # NPM data, certs, tunnel and tailscale state (not committed)
+    ├── nginx-proxy-manager/
+    └── tailscale-funnel/
 ```
 
 ---
