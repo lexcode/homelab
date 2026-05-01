@@ -83,8 +83,19 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager + optional [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) for video/high-bandwidth services — see **[proxy/README.md](proxy/README.md)**.                                                  |
 | [`dns/`](dns/)               | LAN DNS / filtering ([AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)) — **primary** on Raspberry Pi 5, **secondary** on Unraid; DHCP DNS via **UniFi Dream Machine Pro** — see **[dns/README.md](dns/README.md)**. |
 | [`systemd/`](systemd/)       | Optional systemd units to start each stack at boot — see **Boot with systemd** below.                                                                                               |
+| [`scripts/`](scripts/)       | Helper scripts — see **Scripts** below.                                                                                                                                           |
 
 Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./data/` (not committed).
+
+## Scripts
+
+[**`scripts/docker-compose-pull-all.sh`**](scripts/docker-compose-pull-all.sh) discovers every Compose file under the repo (for example `docker-compose.yml`, `compose.yml`, and `compose.*.yml` overlays), skips `.git`, and runs `docker compose pull` once per directory (falls back to `docker-compose` if the v2 plugin is missing). Useful for refreshing images across stacks without visiting each folder. Requires **GNU find** (`-printf`).
+
+From the repo root:
+
+```bash
+./scripts/docker-compose-pull-all.sh
+```
 
 ## Requirements
 
