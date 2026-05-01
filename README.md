@@ -97,6 +97,21 @@ From the repo root:
 ./scripts/docker-compose-pull-all.sh
 ```
 
+On a **Raspberry Pi** (or similar) with Docker on **SD card storage**, default pulls can stress the card (Compose and Docker fetch many layers in parallel). **Sequential pulls** (one Compose service after another) are gentler:
+
+```bash
+./scripts/docker-compose-pull-all.sh --sequential
+# equivalent: HOMELAB_COMPOSE_PULL_SEQUENTIAL=1 ./scripts/docker-compose-pull-all.sh
+```
+
+You can also cap how many layers Docker pulls at once globally in `/etc/docker/daemon.json`:
+
+```json
+{ "max-concurrent-downloads": 2 }
+```
+
+Then restart Docker (`sudo systemctl restart docker`).
+
 ## Requirements
 
 - Docker and Docker Compose v2
