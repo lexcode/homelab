@@ -63,6 +63,7 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
 | Service      | Port (host) | Notes                                    |
 | ------------ | ----------- | ---------------------------------------- |
 | qBittorrent  | `8080`      | Published via VPN container              |
+| Torrenting   | `6881`      | TCP/UDP BitTorrent port via VPN container (`TORRENTING_PORT`) |
 | Sonarr       | `8989`      |                                          |
 | Radarr       | `7878`      |                                          |
 | Lidarr       | `8686`      |                                          |
@@ -75,6 +76,10 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
 **DNS:** Apps on `servarrnetwork` use public DNS (`1.1.1.1` / `8.8.8.8`) where noted in `compose.yml`, so lookups like Radarr’s API host work reliably. Do not add that YAML anchor to services using `network_mode: service:vpn`.
 
 **SuggestArr** uses the host network so outbound calls to Jellyfin/Plex on the LAN use the host’s source address (avoids LAN firewalls that drop traffic from the Docker bridge range).
+
+## deunhealth (container watchdog)
+
+[**deunhealth**](https://github.com/qdm12/deunhealth) watches for containers that become unhealthy and restarts them. It uses `network_mode: none` (no network access needed) and mounts the Docker socket read-only. Services that should be restarted on unhealthy status carry the label `deunhealth.restart.on.unhealthy=true` in `compose.yml` — currently applied to the `vpn` container. If the WireGuard health check fails (e.g. connectivity loss), deunhealth triggers a restart automatically rather than leaving the VPN container stuck and all dependent services unreachable.
 
 ## Optional: remote NAS for movies and TV (persistent CIFS mounts)
 

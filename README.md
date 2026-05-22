@@ -1,6 +1,6 @@
 # Homelab
 
-Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, analytics, push notifications (Gotify and optional iGotify assistant for iOS), DNS-level ad blocking, and a self-hosted dashboard.
+Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, analytics, push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
 
 ```mermaid
 graph LR
@@ -51,6 +51,7 @@ graph LR
         subgraph notif["🔔 notifications/"]
             gotify[Gotify :8688]
             igotify[iGotify :8681]
+            cd[changedetection :5001]
         end
         cf[☁️  proxy/cloudflared]
         ts[🔗 proxy/tailscale-funnel]
@@ -79,7 +80,7 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | [`terminal/`](terminal/)     | [Atuin](https://atuin.sh/) self-hosted shell history sync server — see **[terminal/README.md](terminal/README.md)**.                                                                |
 | [`analytics/`](analytics/)   | [Your Spotify](https://github.com/Yooooomi/your_spotify) self-hosted Spotify listening statistics — see **[analytics/README.md](analytics/README.md)**.                             |
 | [`homepage/`](homepage/)     | [Homepage](https://gethomepage.dev) self-hosted dashboard with service widgets and Docker integration — see **[homepage/README.md](homepage/README.md)**.                           |
-| [`notifications/`](notifications/) | [Gotify](https://gotify.net/) plus optional [iGotify assistant](https://github.com/androidseb25/iGotify-Notification-Assistent) for iOS push — see **[notifications/README.md](notifications/README.md)**. |
+| [`notifications/`](notifications/) | [Gotify](https://gotify.net/) plus optional [iGotify assistant](https://github.com/androidseb25/iGotify-Notification-Assistent) for iOS push, and [changedetection.io](https://github.com/dgtlmoon/changedetection.io) for web-page change monitoring — see **[notifications/README.md](notifications/README.md)**. |
 | [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager + optional [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) for video/high-bandwidth services — see **[proxy/README.md](proxy/README.md)**.                                                  |
 | [`dns/`](dns/)               | LAN DNS / filtering ([AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)) — **primary** on Raspberry Pi 5, **secondary** on Unraid; DHCP DNS via **UniFi Dream Machine Pro** — see **[dns/README.md](dns/README.md)**. |
 | [`systemd/`](systemd/)       | Optional systemd units to start each stack at boot — see **Boot with systemd** below.                                                                                               |
@@ -173,7 +174,7 @@ docker compose up -d
 
 ## Notifications (Gotify + iGotify)
 
-See **[notifications/README.md](notifications/README.md)** for ports, persistent data under `./data/gotify` and `./data/igotify`, iOS assistant env vars, clients, and *arr Connect.
+See **[notifications/README.md](notifications/README.md)** for ports, persistent data under `./data/gotify`, `./data/igotify`, and `./data/changedetection`, iOS assistant env vars, clients, and *arr Connect.
 
 Quick start:
 
