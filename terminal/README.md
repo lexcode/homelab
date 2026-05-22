@@ -1,6 +1,6 @@
 # Atuin (self-hosted sync server)
 
-Docker Compose stack for [Atuin](https://atuin.sh/): a sync server for encrypted shell history. The server listens on **port 8888**; Postgres **18** stores metadata under `./database`, and Atuin server config under `./config`. A sidecar runs [postgres-backup-local](https://github.com/prodrigestivill/docker-postgres-backup-local) on **`@daily`** and writes compressed dumps to **`./db_dumps`**.
+Docker Compose stack for [Atuin](https://atuin.sh/): a sync server for encrypted shell history. The server listens on **port 8888**; Postgres **18** stores metadata under `./data/database`, and Atuin server config under `./data/config`. A sidecar runs [postgres-backup-local](https://github.com/prodrigestivill/docker-postgres-backup-local) on **`@daily`** and writes compressed dumps to **`./data/db_dumps`**.
 
 ## Prerequisites
 
@@ -22,9 +22,9 @@ Docker Compose stack for [Atuin](https://atuin.sh/): a sync server for encrypted
 
    ```bash
    mkdir -p \
-     config \
-     database \
-     db_dumps
+     data/config \
+     data/database \
+     data/db_dumps
    ```
 
 3. **Start**
@@ -59,15 +59,15 @@ Docker Compose stack for [Atuin](https://atuin.sh/): a sync server for encrypted
 
 ## Data layout
 
-| Path         | Purpose                                                     |
-| ------------ | ----------------------------------------------------------- |
-| `./config`   | Atuin server configuration                                  |
-| `./database` | Postgres data directory (do not delete)                     |
-| `./db_dumps` | Scheduled SQL backups (daily; retention per image defaults) |
+| Path              | Purpose                                                     |
+| ----------------- | ----------------------------------------------------------- |
+| `./data/config`   | Atuin server configuration                                  |
+| `./data/database` | Postgres data directory (do not delete)                     |
+| `./data/db_dumps` | Scheduled SQL backups (daily; retention per image defaults) |
 
 ### Postgres major upgrades
 
-If `./database` was created with an **older** Postgres major version (for example 14), you cannot point Postgres 18 at that directory without a [dump/restore or upgrade path](https://www.postgresql.org/docs/current/upgrading.html). For a clean start, stop the stack, move `./database` aside, and start again (you lose DB history unless you restore from a dump).
+If `./data/database` was created with an **older** Postgres major version (for example 14), you cannot point Postgres 18 at that directory without a [dump/restore or upgrade path](https://www.postgresql.org/docs/current/upgrading.html). For a clean start, stop the stack, move `./data/database` aside, and start again (you lose DB history unless you restore from a dump).
 
 ### DB password and `ATUIN_DB_URI`
 
