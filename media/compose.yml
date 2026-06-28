@@ -32,6 +32,8 @@ services:
       - ${TORRENTING_PORT:-6881}:${TORRENTING_PORT:-6881}
       - 9696:9696 # prowlarr
       - 8191:8191 # flaresolverr
+      - ${TORRENTING_PORT:-41066}:${TORRENTING_PORT:-41066}/tcp
+      - ${TORRENTING_PORT:-41066}:${TORRENTING_PORT:-41066}/udp
     networks:
       servarrnetwork:
         ipv4_address: ${VPN_IP:-172.39.0.2}
@@ -82,7 +84,6 @@ services:
   #     - .env
   #   restart: unless-stopped
 
-
   # qBittorrent WebUI → Settings → Advanced: set "Network interface" to wg0 (WireGuard in vpn
   # container). Use IPv4 only if stalls persist (IPv6 disabled on vpn sysctls). Gluetun/OpenVPN
   # typically uses tun0 instead of wg0.
@@ -124,8 +125,6 @@ services:
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-
-
 
   sonarr:
     <<: *arr-dns
@@ -255,7 +254,7 @@ services:
         condition: service_healthy
         restart: true
     network_mode: service:vpn
-    
+
   # Host network: outbound calls to Jellyfin/Plex use the host LAN IP (e.g. 192.168.0.5).
   # On a bridged custom network, TCP can leave with source 172.39.0.x; LAN-only firewalls
   # (common on Unraid) then block :8096 while ping still works — same symptom as your wget timeout.
