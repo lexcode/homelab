@@ -27,6 +27,8 @@ services:
       - NET_ADMIN
     devices:
       - /dev/net/tun:/dev/net/tun
+    labels:
+      - deunhealth.restart.on.unhealthy=true
     ports:
       - ${WEBUI_PORT:-8080}:${WEBUI_PORT:-8080} # qBittorrent WebUI
       - ${TORRENTING_PORT:-6881}:${TORRENTING_PORT:-6881}
@@ -52,6 +54,9 @@ services:
       - MTU=1280 # Pi / VPN: avoids path-MTU black holes that show up as stalled torrents
       # - VPNDNS=${VPNDNS}
       - TZ=${TZ}
+      - ACTIVE_HEALTHCHECKS=1 # image's built-in healthcheck otherwise only does passive checks
+      - PORT_FATAL=1 # treat port-forwarding failures (the curl timeout loop) as fatal
+      - EXIT_ON_FATAL=1 # exit on fatal error so `restart: unless-stopped` + deunhealth can recover it
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.default.disable_ipv6=1
@@ -294,4 +299,3 @@ services:
         condition: service_healthy
         restart: true
     network_mode: service:vpn
-    
