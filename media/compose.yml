@@ -101,7 +101,9 @@ services:
       - TORRENTING_PORT=${TORRENTING_PORT}
     volumes:
       - ./data/qbittorrent:/config
-      - /data:/data
+      - /mnt/usb/downloads2:/data/downloads2
+      - /mnt/usb2/downloads:/data/downloads3
+      - /data/downloads-unraid:/data/downloads-unraid
     depends_on:
       vpn:
         condition: service_healthy
@@ -139,6 +141,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./data/sonarr:/config
       - /data:/data
+      - /data/downloads-unraid:/data/downloads-unraid
+      - /mnt/usb/downloads2:/data/downloads2
+      - /mnt/usb2/downloads:/data/downloads3
     ports:
       - 8989:8989
     depends_on:
@@ -162,6 +167,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./data/radarr:/config
       - /data:/data
+      - /mnt/usb/downloads2:/data/downloads2
+      - /mnt/usb2/downloads:/data/downloads3
+      - /data/downloads-unraid:/data/downloads-unraid
     ports:
       - 7878:7878
     networks:
@@ -177,6 +185,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./data/lidarr:/config
       - /data:/data
+      - /mnt/usb/downloads2:/data/downloads2
+      - /mnt/usb2/downloads:/data/downloads3
+      - /data/downloads-unraid:/data/downloads-unraid
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -283,3 +294,4 @@ services:
         condition: service_healthy
         restart: true
     network_mode: service:vpn
+    
