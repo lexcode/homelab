@@ -31,6 +31,11 @@
 
 
 - Monitoring:
+    - Dockge:
+        href: "{{HOMEPAGE_VAR_DOCKGE_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/dockge.svg
+        server: docker
+        container: dockge
     - Beszel:
         href: "{{HOMEPAGE_VAR_BESZEL_URL}}"
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/beszel.svg
@@ -246,5 +251,4 @@
     - Paperless-GPT:
         href: "{{HOMEPAGE_VAR_PAPERLESS_GPT_URL}}"
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/paperless-ngx.svg
-
 

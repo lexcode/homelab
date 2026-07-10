@@ -93,6 +93,10 @@ The Notifications section includes a [`gotify`](https://gethomepage.dev/widgets/
 
 Gotify must run on the **same Docker host** as Homepage so `server: docker` / `container: gotify` resolve. If Gotify lives elsewhere, remove those two lines from `services.yaml` and keep `href` + `widget` only.
 
+### Dockge card
+
+The Monitoring section includes a Dockge card with Docker status. Set `HOMEPAGE_VAR_DOCKGE_URL` to the URL users should open, such as `http://<host-lan-ip>:5002` or its authenticated reverse-proxy URL. Dockge must run on the same Docker host for its container status to appear.
+
 ## Docker integration
 
 `docker.yaml` points Homepage at the dockerproxy sidecar:

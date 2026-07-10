@@ -1,6 +1,6 @@
 # Homelab
 
-Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, analytics, push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
+Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, container management, analytics, push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
 
 ```mermaid
 graph LR
@@ -30,6 +30,9 @@ graph LR
             beszel[Beszel :8090]
             dozzle[Dozzle :8181]
             beszelagent[beszel-agent]
+        end
+        subgraph mgmt["🐳  management/"]
+            dockge[Dockge :5002]
         end
         subgraph ana["📈  analytics/"]
             yss[your_spotify_server :8080]
@@ -77,6 +80,7 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | [`media/`](media/)           | Servarr stack (qBittorrent over WireGuard PIA, Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, deunhealth) — see **[media/README.md](media/README.md)**. |
 | [`documents/`](documents/)   | AI-powered document management (paperless-ngx + paperless-gpt with Ollama OCR and tagging) — see **[documents/README.md](documents/README.md)**.                                    |
 | [`monitoring/`](monitoring/) | [Beszel](https://github.com/henrygd/beszel) hub plus co-located agent — see **[monitoring/README.md](monitoring/README.md)**.                                                       |
+| [`management/`](management/) | [Dockge](https://github.com/louislam/dockge) Compose stack manager with click-to-update workflows — see **[management/README.md](management/README.md)**. |
 | [`terminal/`](terminal/)     | [Atuin](https://atuin.sh/) self-hosted shell history sync server — see **[terminal/README.md](terminal/README.md)**.                                                                |
 | [`analytics/`](analytics/)   | [Your Spotify](https://github.com/Yooooomi/your_spotify) self-hosted Spotify listening statistics — see **[analytics/README.md](analytics/README.md)**.                             |
 | [`homepage/`](homepage/)     | [Homepage](https://gethomepage.dev) self-hosted dashboard with service widgets and Docker integration — see **[homepage/README.md](homepage/README.md)**.                           |
@@ -92,7 +96,7 @@ Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./dat
 - Docker and Docker Compose v2
 - Separate `.env` files per stack (copy from each `.env.example`)
 
-Networks are isolated by design (for example media on `172.39.0.0/24`, monitoring on `172.39.1.0/24`, analytics on `172.39.2.0/24`, AdGuard Home on `172.39.5.0/24`). Adjust subnets in `.env` if they clash with your LAN or other projects.
+Networks are isolated by design (for example media on `172.39.0.0/24`, monitoring on `172.39.1.0/24`, analytics on `172.39.2.0/24`, AdGuard Home on `172.39.5.0/24`, and management on `172.39.8.0/24`). Adjust subnets in `.env` if they clash with your LAN or other projects.
 
 ## Media
 
@@ -133,6 +137,19 @@ Quick start:
 ```bash
 cd monitoring
 cp .env.example .env   # set BESZEL_URL; add BESZEL_AGENT_KEY / TOKEN from the UI after first visit
+docker compose up -d
+```
+
+## Container management
+
+See **[management/README.md](management/README.md)** for Dockge setup, stack discovery, update guidance, reverse-proxy configuration, and Docker socket security considerations.
+
+Quick start:
+
+```bash
+cd management
+cp .env.example .env   # set HOMELAB_ROOT to this repository's absolute host path
+mkdir -p data/dockge
 docker compose up -d
 ```
 
@@ -217,7 +234,7 @@ Unit files live in [`systemd/`](systemd/). They run each stack with `docker comp
 ```bash
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now media.service documents.service monitoring.service analytics.service terminal.service homepage.service notifications.service dns.service proxy.service
+sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service dns.service proxy.service
 ```
 
 **Why `proxy.service` lists other stacks in `After=`:** The proxy stack includes [Nginx Proxy Manager](https://nginxproxymanager.com/) joined to **external** Docker networks (`servarrnetwork`, `documentsnetwork`, etc.). Those networks are created when each respective `docker compose` stack starts. If `proxy.service` runs first, Compose fails with “network … not found.” So the proxy unit must start **after** every stack that defines those named networks.
@@ -228,6 +245,6 @@ Order is encoded only in `proxy.service`; other units only need `After=docker.se
 
 ## Secrets and git
 
-Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `terminal/data`, `analytics/data`, `notifications/data`, `dns/data`, and similar paths are intended to stay local.
+Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `management/data`, `terminal/data`, `analytics/data`, `notifications/data`, `dns/data`, and similar paths are intended to stay local.
 
 `.cursor/` is listed in `.gitignore` so editor-specific rules stay on your machine and are not shared via the repo; remove that line if you intentionally want to version Cursor project config.

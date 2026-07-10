@@ -1,0 +1,23 @@
+services:
+  dockge:
+    image: louislam/dockge:1
+    container_name: dockge
+    restart: unless-stopped
+    ports:
+      - "${DOCKGE_PORT:-5002}:5001"
+    environment:
+      - DOCKGE_STACKS_DIR=${HOMELAB_ROOT:?Set HOMELAB_ROOT in management/.env}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/dockge:/app/data
+      # Dockge requires the stacks path to be identical on the host and in the container.
+      - ${HOMELAB_ROOT:?Set HOMELAB_ROOT in management/.env}:${HOMELAB_ROOT:?Set HOMELAB_ROOT in management/.env}
+    networks:
+      - managementnetwork
+
+networks:
+  managementnetwork:
+    name: managementnetwork
+    ipam:
+      config:
+        - subnet: ${MANAGEMENT_SUBNET:-172.39.8.0/24}
