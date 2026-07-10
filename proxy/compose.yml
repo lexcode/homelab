@@ -57,6 +57,7 @@ services:
       - documentsnetwork
       - terminalnetwork
       - homepagenetwork
+      - managementnetwork
 
 networks:
   proxynetwork:
@@ -72,4 +73,6 @@ networks:
   terminalnetwork:
     external: true
   homepagenetwork:
+    external: true
+  managementnetwork:
     external: true

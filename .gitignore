@@ -7,5 +7,6 @@
 /dns/data/*
 /terminal/data/*
 /notifications/data/*
+/management/data/*
 .env
 .cursor/*

@@ -7,7 +7,7 @@ Two ingress paths feed into NPM:
 - **Cloudflare Tunnel** for most hostnames (admin UIs, dashboards, low-bandwidth apps).
 - **Tailscale Funnel** for a single public hostname that should **bypass Cloudflare’s network** — typically a media server, since Cloudflare’s [Self-Serve Subscription Agreement §2.8](https://www.cloudflare.com/terms/) prohibits using the Cloudflare proxy to serve video.
 
-**Networks:** NPM joins `servarrnetwork`, `analyticsnetwork`, `monitoringnetwork`, `documentsnetwork`, `terminalnetwork`, and `homepagenetwork` as `external: true` networks. Those networks must already exist—start the corresponding stacks once before bringing up the proxy stack, or use the [`systemd/`](../systemd/) units (see the root [README.md](../README.md#boot-with-systemd-optional)) so `proxy.service` starts after the other stacks.
+**Networks:** NPM joins `servarrnetwork`, `analyticsnetwork`, `monitoringnetwork`, `documentsnetwork`, `terminalnetwork`, `homepagenetwork`, and `managementnetwork` as `external: true` networks. Those networks must already exist—start the corresponding stacks once before bringing up the proxy stack, or use the [`systemd/`](../systemd/) units (see the root [README.md](../README.md#boot-with-systemd-optional)) so `proxy.service` starts after the other stacks.
 
 ## Prerequisites
 
@@ -68,6 +68,8 @@ If you ever run **cloudflared on the host** instead, then `http://127.0.0.1:80` 
 `YOUR_SPOTIFY_API_PORT` defaults to `8080` in Compose if unset; this repo’s `.env.example` sets **8282** on the host (maps to container `8080`).
 
 Add more hostnames as you expose additional services.
+
+For Dockge, create an NPM Proxy Host that forwards to `http://dockge:5001` over `managementnetwork`. Because Dockge controls the Docker host, protect any non-LAN hostname with an identity-aware access layer or VPN in addition to Dockge's login.
 
 ## Tailscale Funnel (optional)
 

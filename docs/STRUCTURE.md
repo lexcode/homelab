@@ -15,6 +15,7 @@ homelab/
 ├── media/                    # Servarr + VPN + *arr stack
 ├── documents/                # paperless-ngx, AI helpers, broker, DBs
 ├── monitoring/               # Beszel hub + agent, Dozzle
+├── management/               # Dockge Compose stack manager
 ├── terminal/                 # Atuin sync server + Postgres
 ├── analytics/                # Your Spotify (API + web + MongoDB)
 ├── homepage/                 # Homepage dashboard + docker socket proxy
@@ -71,6 +72,21 @@ monitoring/
 ├── README.md                 # Keys, mounts, remote agents
 └── data/                     # Hub/agent state (not committed)
 ```
+
+---
+
+## `management/`
+
+```text
+management/
+├── compose.yml               # Dockge UI and management network
+├── .env.example
+├── README.md                 # Setup, updates, proxying, and security guidance
+└── data/
+    └── dockge/               # Dockge settings (not committed)
+```
+
+Dockge mounts this repository at the same absolute host/container path and mounts the Docker socket with write access so it can manage the existing Compose stacks.
 
 ---
 
@@ -179,6 +195,7 @@ systemd/
 ├── media.service
 ├── documents.service
 ├── monitoring.service
+├── management.service
 ├── terminal.service
 ├── analytics.service
 ├── homepage.service
