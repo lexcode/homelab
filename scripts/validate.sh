@@ -38,6 +38,7 @@ for stack in "${stacks[@]}"; do
 
   if (
     cd "$repo_root/$stack" &&
+      GOTIFY_DEFAULTUSER_PASS=test-only-placeholder \
       SERVICE_ENV_FILE=.env.example \
         docker compose --env-file .env.example config --quiet >/dev/null 2>&1
   ); then
