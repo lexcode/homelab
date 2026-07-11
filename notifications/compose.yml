@@ -36,8 +36,6 @@ services:
   # Bridges Gotify → SecNtfy → Apple APNs for the iGotify iOS app.
   # https://github.com/androidseb25/iGotify-Notification-Assistent/wiki
   igotify:
-    profiles:
-      - igotify
     container_name: igotify
     hostname: igotify
     image: ghcr.io/androidseb25/igotify-notification-assist:latest

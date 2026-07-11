@@ -194,7 +194,7 @@ cp .env.example .env   # set HOMEPAGE_ALLOWED_HOSTS and service URLs/keys
 docker compose up -d
 ```
 
-## Notifications (Gotify + optional iGotify)
+## Notifications (Gotify + iGotify)
 
 See **[notifications/README.md](notifications/README.md)** for ports, persistent data under `./data/gotify`, `./data/igotify`, and `./data/changedetection`, iOS assistant env vars, clients, and *arr Connect.
 
@@ -203,9 +203,7 @@ Quick start:
 ```bash
 cd notifications
 cp .env.example .env   # set GOTIFY_DEFAULTUSER_PASS; for Local iGotify set GOTIFY_* / SECNTFY_* per README
-docker compose up -d   # Gotify + changedetection.io
-# Optional iOS assistant:
-docker compose --profile igotify up -d
+docker compose up -d
 ```
 
 ## Proxy

@@ -8,6 +8,8 @@
 
 ## Status
 
+- **Decision**: REJECTED — iGotify is required for this deployment and must
+  continue to start with the default Compose and systemd commands.
 - **Priority**: P2
 - **Effort**: S
 - **Risk**: LOW
@@ -70,10 +72,10 @@ port binding policy, Gotify password mechanics beyond Plan 003, or containers.
 
 ## Done criteria
 
-- [x] Bare startup excludes iGotify.
-- [x] Profile startup includes all three services.
-- [x] Docs give exact commands and accurate systemd semantics.
-- [x] No token or runtime state changed; Plan 008 is `DONE`.
+- [ ] Bare startup excludes iGotify.
+- [ ] Profile startup includes all three services.
+- [ ] Docs give exact commands and accurate systemd semantics.
+- [ ] No token or runtime state changed; Plan 008 is `DONE`.
 
 ## STOP conditions
 
