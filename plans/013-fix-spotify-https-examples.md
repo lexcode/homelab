@@ -72,10 +72,10 @@ credentials, ports, application code/images, or runtime startup.
 
 ## Done criteria
 
-- [ ] Both endpoint examples use HTTPS public placeholders.
-- [ ] README and proxy examples agree on client/API roles.
-- [ ] No credential or external dashboard was changed.
-- [ ] Analytics config validates; Plan 013 is `DONE`.
+- [x] Both endpoint examples use HTTPS public placeholders.
+- [x] README and proxy examples agree on client/API roles.
+- [x] No credential or external dashboard was changed.
+- [x] Analytics config validates; Plan 013 is `DONE`.
 
 ## STOP conditions
 
