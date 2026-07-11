@@ -236,7 +236,7 @@ docker compose up -d
 
 ## Boot with systemd (optional)
 
-Unit files live in [`systemd/`](systemd/). They run each stack with `docker compose up` from the matching directory and are suitable for enabling stacks at boot on a single host.
+Unit files live in [`systemd/`](systemd/). They run each stack with `docker compose up -d` from the matching directory as oneshot services and are suitable for enabling stacks at boot on a single host. Successful activation means detached Compose startup completed; container health and restart behavior remain Docker/Compose responsibilities.
 
 The default `proxy.service` startup excludes the optional Tailscale Funnel
 profile.
@@ -249,7 +249,22 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service dns.service proxy.service
 ```
 
-**Why `proxy.service` lists other stacks in `After=`:** The proxy stack includes [Nginx Proxy Manager](https://nginxproxymanager.com/) joined to **external** Docker networks (`servarrnetwork`, `documentsnetwork`, etc.). Those networks are created when each respective `docker compose` stack starts. If `proxy.service` runs first, Compose fails with “network … not found.” So the proxy unit must start **after** every stack that defines those named networks.
+**After pulling systemd unit updates:** The files in this repository are source
+copies; systemd uses the installed copies under `/etc/systemd/system/`. Reinstall
+them and reload systemd after pulling changes:
+
+```bash
+git pull
+sudo cp systemd/*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+```
+
+Already-enabled units do not need to be enabled again. Updated behavior takes
+effect the next time each unit starts, such as after a reboot. To apply changes
+immediately, restart the affected units during a maintenance window; restarting
+one of these units runs `docker compose down` before starting it again.
+
+**Why `proxy.service` lists other stacks in `After=`:** The proxy stack includes [Nginx Proxy Manager](https://nginxproxymanager.com/) joined to **external** Docker networks (`servarrnetwork`, `documentsnetwork`, etc.). Those networks are created when each respective `docker compose` stack starts. If `proxy.service` runs first, Compose fails with “network … not found.” The producer units use oneshot activation, so their `After=` ordering holds proxy startup until each `docker compose up -d` command has completed and created its network.
 
 Order is encoded only in `proxy.service`; other units only need `After=docker.service` and `Requires=docker.service`.
 
