@@ -18,6 +18,10 @@ Docker Compose stack combining:
    cp .env.example .env
    ```
 
+   Set `DOZZLE_AGENT_BIND_ADDRESS` to this host's trusted LAN address before
+   starting the stack. It is intentionally blank in `.env.example` so copying
+   the file cannot publish the Docker-log agent accidentally.
+
 2. **Create the folder structure**
 
    If you're using bind mounts (like this stack does), create the directories up front so Docker doesn't create them as root.
@@ -114,14 +118,14 @@ Example `.env` values per machine:
 
 ```
 # On PC (Omarchy)
-DOZZLE_AGENT_BIND_ADDRESS=192.168.1.10
+DOZZLE_AGENT_BIND_ADDRESS=192.168.0.10
 DOZZLE_HOSTNAME=omarchy
-DOZZLE_REMOTE_AGENT=192.168.1.20:7007
+DOZZLE_REMOTE_AGENT=192.168.0.24:7007
 
 # On Raspberry Pi
-DOZZLE_AGENT_BIND_ADDRESS=192.168.1.20
+DOZZLE_AGENT_BIND_ADDRESS=192.168.0.24
 DOZZLE_HOSTNAME=raspberry-pi
-DOZZLE_REMOTE_AGENT=192.168.1.10:7007
+DOZZLE_REMOTE_AGENT=192.168.0.10:7007
 ```
 
 ### Machines not running this compose (e.g. Unraid)
