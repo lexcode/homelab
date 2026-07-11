@@ -9,7 +9,7 @@ update the corresponding status row when done.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |------|-------|----------|--------|------------|--------|
-| 005 | Add a repository-wide configuration validation gate | P1 | S | - | TODO |
+| 005 | Add a repository-wide configuration validation gate | P1 | S | - | DONE |
 | 001 | Make Tailscale Funnel explicitly opt-in | P1 | S | 005 | TODO |
 | 002 | Remove Homepage's direct Docker socket access | P1 | S | 005 | TODO |
 | 003 | Require an explicit Gotify administrator password | P1 | S | 005 | TODO |
