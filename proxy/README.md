@@ -1,6 +1,6 @@
 # Proxy (Cloudflare Tunnel + Nginx Proxy Manager + optional Tailscale Funnel)
 
-Docker Compose stack for [**cloudflared**](https://github.com/cloudflare/cloudflared), [**Nginx Proxy Manager**](https://nginxproxymanager.com/) (NPM), and an optional [**Tailscale Funnel**](https://tailscale.com/kb/1223/funnel) sidecar. The tunnels expose services over HTTPS without opening inbound ports on the router. NPM listens on the host (`80`, `443`, `81` for the admin UI) and is attached to each stack’s **named Docker network** so you can proxy to containers by service name (for example `http://homepage:3000`) instead of publishing every app on the host.
+Docker Compose stack for [**cloudflared**](https://github.com/cloudflare/cloudflared), [**Nginx Proxy Manager**](https://nginxproxymanager.com/) (NPM), and an optional [**Tailscale Funnel**](https://tailscale.com/kb/1223/funnel) sidecar. The tunnels expose services over HTTPS without opening inbound ports on the router. NPM publishes public HTTP/HTTPS on host ports `80` and `443`; its admin UI on port `81` binds to loopback by default. NPM is attached to each stack's **named Docker network** so you can proxy to containers by service name (for example `http://homepage:3000`) instead of publishing every app on the host.
 
 Two ingress paths feed into NPM:
 
@@ -25,7 +25,7 @@ Two ingress paths feed into NPM:
    cp .env.example .env
    ```
 
-   Set `CLOUDFLARED_TOKEN` to the token from the tunnel dashboard.
+   Set `CLOUDFLARED_TOKEN` to the token from the tunnel dashboard. Keep `NPM_ADMIN_BIND_ADDRESS=127.0.0.1`, or set it to one trusted LAN address if direct remote administration is required.
 
 3. **Start other stacks first** (or use systemd ordering) so external Docker networks exist.
 
@@ -38,7 +38,7 @@ Two ingress paths feed into NPM:
    This starts Cloudflare Tunnel and Nginx Proxy Manager only. Tailscale Funnel
    is excluded by default through the `tailscale` Compose profile.
 
-5. **NPM admin:** open `http://<host-ip>:81` and complete the first-run wizard.
+5. **NPM admin:** open `http://127.0.0.1:81` on the Docker host and complete the first-run wizard. If you configured a trusted LAN address, use `http://<that-address>:81` instead.
 
 ## Public hostnames
 
@@ -167,7 +167,7 @@ The [Homepage](../homepage/) dashboard includes a `cloudflared` widget for this 
 ## Notes
 
 - **cloudflared** uses outbound connections only; no inbound router port forward is required.
-- **NPM** publishes `80`, `443`, and `81` on the host for local and tunnel-terminated HTTP(S).
+- **NPM** publishes public HTTP/HTTPS on `80` and `443`. The admin UI publishes on `81` only at `NPM_ADMIN_BIND_ADDRESS`, which defaults to loopback. Setting it to `0.0.0.0` restores broad exposure and is not recommended.
 - **DNS / AdGuard Home** (LAN resolver / ad blocking) is a separate stack: [`dns/`](../dns/README.md). The **bridge** setup publishes the web UI on **`ADGUARD_HTTP_PORT`** (default **3005**) so it does not fight NPM for **80**/**443** on the same host.
 - `restart: unless-stopped` ensures the tunnel reconnects after a reboot.
 - To restrict access by country, use Cloudflare WAF Custom Rules (Security → WAF → Custom Rules). Optional for public services; not required for basic tunnel operation.

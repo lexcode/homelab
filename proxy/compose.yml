@@ -46,7 +46,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "81:81"
+      - "${NPM_ADMIN_BIND_ADDRESS:-127.0.0.1}:81:81"
     volumes:
       - ./data/nginx-proxy-manager/data:/data
       - ./data/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
