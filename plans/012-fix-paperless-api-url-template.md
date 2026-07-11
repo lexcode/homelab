@@ -72,10 +72,10 @@ endpoint, plan status.
 
 ## Done criteria
 
-- [ ] Exactly one API URL definition exists.
-- [ ] It renders to the correct internal endpoint for paperless-ai.
-- [ ] Host/public/internal URL roles are documented.
-- [ ] No secrets or runtime state changed; Plan 012 is `DONE`.
+- [x] Exactly one API URL definition exists.
+- [x] It renders to the correct internal endpoint for paperless-ai.
+- [x] Host/public/internal URL roles are documented.
+- [x] No secrets or runtime state changed; Plan 012 is `DONE`.
 
 ## STOP conditions
 

@@ -123,6 +123,17 @@ docker compose up -d
 | `http://<pi-ip>:3001` | paperless-ai UI  |
 | `http://<pi-ip>:8811` | paperless-gpt UI |
 
+### Paperless URL roles
+
+Containers reach paperless-ngx through the Compose network using its service
+name and container port. Keep `PAPERLESS_API_URL` set to
+`http://paperless-ngx:8000/api` for paperless-ai and `PAPERLESS_BASE_URL` set to
+`http://paperless-ngx:8000` for paperless-gpt.
+
+Browsers and external clients cannot use the Compose service name. Use the
+host-published URL `http://<pi-ip>:8001` or your configured public URL instead;
+`PAPERLESS_PUBLIC_URL` supplies that external address to paperless-gpt.
+
 ## Optional Google Document AI credentials
 
 The default stack uses Ollama and does not mount Google Cloud credentials. To
