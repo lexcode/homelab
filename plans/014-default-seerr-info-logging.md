@@ -67,10 +67,10 @@ versions, Seerr data, or starting containers.
 
 ## Done criteria
 
-- [ ] Default rendered Seerr log level is info.
-- [ ] Explicit debug override still works.
-- [ ] Documentation explains temporary troubleshooting use.
-- [ ] Stack validates; Plan 014 is `DONE`.
+- [x] Default rendered Seerr log level is info.
+- [x] Explicit debug override still works.
+- [x] Documentation explains temporary troubleshooting use.
+- [x] Stack validates; Plan 014 is `DONE`.
 
 ## STOP conditions
 
