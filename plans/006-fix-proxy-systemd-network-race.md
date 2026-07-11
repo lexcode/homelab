@@ -34,19 +34,19 @@ start proxy too early and enter a restart loop.
 
 ## Target design
 
-Make every stack unit use detached startup with `Type=oneshot` and
-`RemainAfterExit=yes`, so successful unit activation means `docker compose up
--d` completed. Keep `ExecStop=docker compose down`. Preserve Docker dependency
-lines and proxy's existing producer ordering. This plan establishes startup
-completion semantics only; Plan 011 separately addresses health observability
-and supervision policy.
+Make every stack unit use detached startup with `Type=oneshot`,
+`RemainAfterExit=yes`, and a bounded 15-minute startup timeout, so successful
+unit activation means `docker compose up -d` completed. Keep `ExecStop=docker
+compose down`. Preserve Docker dependency lines and proxy's existing producer
+ordering. This plan establishes startup completion semantics only; Plan 011
+separately addresses health observability and supervision policy.
 
 ## Commands
 
 | Purpose | Command | Expected result |
 |---|---|---|
 | Unit syntax | `systemd-analyze verify systemd/*.service` | No unit syntax/errors; environment permission warnings may be noted separately |
-| Unit consistency | `for f in systemd/*.service; do rg -q '^Type=oneshot$' "$f" && rg -q '^RemainAfterExit=yes$' "$f" && rg -q '^ExecStart=/usr/bin/docker compose up -d$' "$f" || exit 1; done` | Exit 0 |
+| Unit consistency | `for f in systemd/*.service; do rg -q '^Type=oneshot$' "$f" && rg -q '^RemainAfterExit=yes$' "$f" && rg -q '^TimeoutStartSec=15min$' "$f" && rg -q '^ExecStart=/usr/bin/docker compose up -d$' "$f" || exit 1; done` | Exit 0 |
 | Stack config | `bash scripts/validate.sh` | Exit 0 |
 
 ## Scope
@@ -60,8 +60,9 @@ networks, path portability, or Funnel boot behavior.
 
 ## Steps
 
-1. Apply identical `Type=oneshot`, `RemainAfterExit=yes`, and detached
-   `ExecStart` semantics to every unit. Keep `ExecStop` and working directories.
+1. Apply identical `Type=oneshot`, `RemainAfterExit=yes`, 15-minute startup
+   timeout, and detached `ExecStart` semantics to every unit. Keep `ExecStop`
+   and working directories.
 2. Re-evaluate `Restart=on-failure`: oneshot units with `RemainAfterExit` may
    use it for startup failures, but confirm systemd accepts the combination.
    Preserve it if valid; do not invent a timer or polling loop.
