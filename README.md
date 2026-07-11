@@ -98,6 +98,16 @@ Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./dat
 
 Networks are isolated by design (for example media on `172.39.0.0/24`, monitoring on `172.39.1.0/24`, analytics on `172.39.2.0/24`, AdGuard Home on `172.39.5.0/24`, and management on `172.39.8.0/24`). Adjust subnets in `.env` if they clash with your LAN or other projects.
 
+## Validate configuration
+
+Run the repository-wide validation gate to validate every stack from its committed `.env.example` without starting containers or printing rendered configuration. It reports one pass or fail per stack and exits non-zero when any Compose configuration is invalid.
+
+```bash
+bash scripts/validate.sh
+```
+
+Use `bash scripts/validate.sh --list` to show the discovered stack directories.
+
 ## Media
 
 See **[media/README.md](media/README.md)** for environment variables, ports, qBittorrent/VPN notes, an **example `/data` directory tree** (libraries and download folders), and **optional persistent CIFS mounts** when movies and TV live on a remote NAS under `/data`.
