@@ -39,7 +39,7 @@ Docker Compose stack for [**Homepage**](https://gethomepage.dev) — a self-host
 ## Services
 
 - **`homepage`** — the dashboard itself. Config lives in `./data/homepage/config/`, images in `./data/homepage/images/`.
-- **`dockerproxy`** — [Tecnativa Docker Socket Proxy](https://github.com/Tecnativa/docker-socket-proxy) — exposes a read-only Docker API to Homepage without granting full socket access. `POST=0` ensures no write operations are possible.
+- **`dockerproxy`** — [Tecnativa Docker Socket Proxy](https://github.com/Tecnativa/docker-socket-proxy) — exposes a read-only Docker API at `dockerproxy:2375`. Homepage accesses Docker only through this proxy; the raw Docker socket is mounted only in the proxy container. `POST=0` ensures no write operations are possible.
 
 ## Configuration files
 
@@ -99,7 +99,7 @@ The Monitoring section includes a Dockge card with Docker status. Set `HOMEPAGE_
 
 ## Docker integration
 
-`docker.yaml` points Homepage at the dockerproxy sidecar:
+`docker.yaml` points Homepage at the `dockerproxy` sidecar. Homepage has no direct Docker socket mount; only `dockerproxy` mounts the raw socket:
 
 ```yaml
 docker:
