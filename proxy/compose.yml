@@ -5,7 +5,7 @@ services:
     command: tunnel --no-autoupdate run --protocol http2 --token ${CLOUDFLARED_TOKEN}
     restart: unless-stopped
     env_file:
-      - .env
+      - ${SERVICE_ENV_FILE:-.env}
     networks:
       - proxynetwork
 

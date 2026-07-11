@@ -43,7 +43,7 @@ services:
       - ./data/pia:/pia
       - ./data/pia-shared:/pia-shared
     env_file:
-      - .env
+      - ${SERVICE_ENV_FILE:-.env}
     environment:
       - LOC=${PIA_LOC:-swiss}
       - USER=${OPENVPN_USER}
