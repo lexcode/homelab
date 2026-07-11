@@ -16,7 +16,7 @@ Docker Compose stack for [Dockge](https://github.com/louislam/dockge), a web int
    cp .env.example .env
    ```
 
-   Set `HOMELAB_ROOT` to the absolute path of this repository on the Docker host. The same path is mounted inside Dockge because its interactive Compose console requires host and container paths to match.
+   Set `HOMELAB_ROOT` to the absolute path of this repository on the Docker host. The same path is mounted inside Dockge because its interactive Compose console requires host and container paths to match. Dockge binds to loopback by default; set `DOCKGE_BIND_ADDRESS` to one trusted LAN address if you need direct access from another machine.
 
 2. Create the persistent data directory before starting the container:
 
@@ -31,7 +31,7 @@ Docker Compose stack for [Dockge](https://github.com/louislam/dockge), a web int
    docker compose up -d
    ```
 
-4. Open `http://<host-lan-ip>:5002` and create the initial administrator account.
+4. Open `http://127.0.0.1:5002` on the Docker host and create the initial administrator account. For remote administration, use the reverse proxy or set `DOCKGE_BIND_ADDRESS` to the host's trusted LAN address and open `http://<that-address>:5002`.
 
 Dockge automatically discovers directories beneath `HOMELAB_ROOT` that contain a supported Compose file. Use a stack's **Update** action to pull its configured images and recreate changed containers.
 
@@ -40,6 +40,7 @@ Dockge automatically discovers directories beneath `HOMELAB_ROOT` that contain a
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `HOMELAB_ROOT` | `/home/lexcode/code/homelab` | Absolute host path to this repository and Dockge's stacks directory. |
+| `DOCKGE_BIND_ADDRESS` | `127.0.0.1` | Host address that publishes the Dockge UI. Use one trusted LAN address for direct remote access. |
 | `DOCKGE_PORT` | `5002` | Host port for the Dockge UI; container port `5001` is fixed. |
 | `MANAGEMENT_SUBNET` | `172.39.8.0/24` | CIDR for `managementnetwork`. |
 
@@ -62,4 +63,4 @@ The proxy stack joins `managementnetwork`, allowing Nginx Proxy Manager to forwa
 
 ## Security
 
-Dockge mounts `/var/run/docker.sock` with write access. This is required to create and update containers, but it effectively grants Dockge administrative control of the Docker host. Keep Dockge on a trusted LAN or behind authenticated private access, use a strong administrator password, and do not expose port `5002` directly to the internet.
+Dockge mounts `/var/run/docker.sock` with write access. This is required to create and update containers, but it effectively grants Dockge administrative control of the Docker host. Keep the default loopback bind or use a single trusted LAN address, place any reverse-proxied access behind authenticated private access, and use a strong administrator password. Setting `DOCKGE_BIND_ADDRESS=0.0.0.0` restores broad exposure on every IPv4 interface and is not recommended.
