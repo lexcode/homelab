@@ -12,7 +12,9 @@ Docker Compose stack combining [**Gotify**](https://github.com/gotify/server) (s
    cp .env.example .env
    ```
 
-   Set `GOTIFY_DEFAULTUSER_PASS` before the first `docker compose up` if you do not want the default placeholder. The password is applied only on initial database creation.
+   Set `GOTIFY_DEFAULTUSER_PASS` to a strong, unique value before the first `docker compose up`. Compose refuses to render the stack when this value is missing or empty.
+
+   Gotify applies this variable only when it creates the administrator account on first run. For an existing installation, changing `.env` does not update the password already stored in Gotify's database; rotate that password through the Gotify UI or the supported upstream procedure.
 
 2. **Create the folder structure**
 

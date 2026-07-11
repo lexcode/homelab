@@ -12,7 +12,7 @@ update the corresponding status row when done.
 | 005 | Add a repository-wide configuration validation gate | P1 | S | - | DONE |
 | 001 | Make Tailscale Funnel explicitly opt-in | P1 | S | 005 | DONE |
 | 002 | Remove Homepage's direct Docker socket access | P1 | S | 005 | DONE |
-| 003 | Require an explicit Gotify administrator password | P1 | S | 005 | TODO |
+| 003 | Require an explicit Gotify administrator password | P1 | S | 005 | DONE |
 | 004 | Make Google cloud credentials an explicit opt-in | P1 | S | 005 | TODO |
 | 006 | Make proxy startup wait for external Docker networks | P1 | M | 005 | TODO |
 | 007 | Restrict high-authority administration ports | P1 | M | 005 | TODO |
