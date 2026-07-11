@@ -17,16 +17,18 @@ Docker Compose stack for [**Your Spotify**](https://github.com/Yooooomi/your_spo
    ```
 
    Edit `.env` and set at minimum:
-   - `YOUR_SPOTIFY_API_ENDPOINT` — public HTTPS URL of the server (e.g. `https://api.spotify.yourdomain.com`)
-   - `YOUR_SPOTIFY_CLIENT_ENDPOINT` — public HTTPS URL of the client UI (e.g. `https://spotify.yourdomain.com`)
+   - `YOUR_SPOTIFY_API_ENDPOINT` — public HTTPS URL of the server (the example uses `https://api-spotify.example.com`)
+   - `YOUR_SPOTIFY_CLIENT_ENDPOINT` — public HTTPS URL of the client UI (the example uses `https://spotify.example.com`)
    - `SPOTIFY_PUBLIC` / `SPOTIFY_SECRET` — from your Spotify developer dashboard
+
+   Replace both example hostnames with domains configured in your reverse proxy or tunnel. The API origin must also match the callback registered in the Spotify developer app.
 
 2. **Spotify developer app**
 
    In the [Spotify developer dashboard](https://developer.spotify.com/dashboard), add this exact redirect URI:
 
    ```
-   https://api.spotify.yourdomain.com/oauth/spotify/callback
+   https://api-spotify.example.com/oauth/spotify/callback
    ```
 
    The app appends `/oauth/spotify/callback` automatically — do not include it in `YOUR_SPOTIFY_API_ENDPOINT`.
@@ -91,8 +93,8 @@ This stack is designed to run behind a Cloudflare Tunnel. Configure two public h
 
 | Public hostname              | Service                                                             |
 | ---------------------------- | ------------------------------------------------------------------- |
-| `spotify.yourdomain.com`     | `http://localhost:3000` (client)                                    |
-| `api.spotify.yourdomain.com` | `http://localhost:8282` (server — use your `YOUR_SPOTIFY_API_PORT`) |
+| `spotify.example.com`        | `http://localhost:3000` (client)                                    |
+| `api-spotify.example.com`    | `http://localhost:8282` (server — use your `YOUR_SPOTIFY_API_PORT`) |
 
 If Cloudflare Web Analytics is enabled on your domain, the app's strict CSP will block the injected beacon script on the client page. Disable analytics injection for the client subdomain via a Cloudflare Configuration Rule or by removing the hostname from Web Analytics.
 
