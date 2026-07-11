@@ -9,11 +9,12 @@ services:
     networks:
       - proxynetwork
 
-  # Optional: Tailscale Funnel — publicly expose ONE service (e.g. Jellyfin) via Tailscale's edge
-  # without port forwarding and without putting heavy traffic through Cloudflare. Leave commented
-  # if you do not need it; the rest of the stack keeps working without this container.
+  # Optional: Tailscale Funnel — enable the `tailscale` profile to publicly expose ONE service
+  # (e.g. Jellyfin) without port forwarding or putting heavy traffic through Cloudflare.
   # Docs: https://tailscale.com/kb/1223/funnel and https://tailscale.com/kb/1282/docker
   tailscale-funnel:
+    profiles:
+      - tailscale
     container_name: tailscale-funnel
     image: tailscale/tailscale:latest
     hostname: ${TS_HOSTNAME:-jellyfin}
