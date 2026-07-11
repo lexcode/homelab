@@ -81,4 +81,3 @@ and returns non-zero after checking all stacks if any failed. A missing
   fixture without changing tracked stack files.
 - Run each changed stack's `docker compose config --quiet`, then
   `git diff --check` and a scope review.
-
