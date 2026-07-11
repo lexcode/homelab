@@ -8,6 +8,8 @@
 
 ## Status
 
+- **Decision**: REJECTED — iGotify is required for this deployment and must
+  continue to start with the default Compose and systemd commands.
 - **Priority**: P2
 - **Effort**: S
 - **Risk**: LOW
