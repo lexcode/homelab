@@ -182,8 +182,6 @@ services:
       LOG_LEVEL: "info" # Optional: debug, warn, error
     volumes:
       - /data/documents/paperless/paperless-gpt/prompts:/app/prompts # Mount the prompts directory
-      # For Google Document AI:
-      - ${HOME}/.config/gcloud/application_default_credentials.json:/app/credentials.json
       # For local hOCR and PDF saving:
       - ./data/paperless-gpt/hocr:/app/hocr # Only if CREATE_LOCAL_HOCR is true
       - ./data/paperless-gpt/pdf:/app/pdf # Only if CREATE_LOCAL_PDF is true

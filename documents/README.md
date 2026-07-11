@@ -123,6 +123,23 @@ docker compose up -d
 | `http://<pi-ip>:3001` | paperless-ai UI  |
 | `http://<pi-ip>:8811` | paperless-gpt UI |
 
+## Optional Google Document AI credentials
+
+The default stack uses Ollama and does not mount Google Cloud credentials. To
+use Google Document AI, set `GOOGLE_APPLICATION_CREDENTIALS_HOST` in `.env` to
+the host path of the dedicated credential file, configure the Google Document
+AI environment values under `paperless-gpt` in `compose.yml`, and include the
+opt-in override when starting the stack:
+
+```bash
+docker compose -f compose.yml -f compose.google-docai.yml up -d
+```
+
+The override requires the host path and mounts the file read-only at
+`/app/credentials.json`. If this stack previously ran with Google credentials
+mounted, assess and rotate those credentials according to your cloud security
+policy.
+
 ## Usage
 
 paperless-gpt processes documents by tag:
@@ -165,6 +182,7 @@ Storage is split between the Pi's local SD card (small, fast-access) and a remot
 ```
 documents/
 ├── compose.yml
+├── compose.google-docai.yml # optional Google Document AI credential mount
 ├── .env                  # not committed
 ├── .env.example
 └── data/                 # not committed (gitignored)
