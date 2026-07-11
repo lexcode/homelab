@@ -4,13 +4,16 @@ set -u
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 mapfile -t stacks < <(
-  find "$repo_root" -mindepth 2 -maxdepth 2 -name compose.yml -printf '%h\n' |
-    sort |
-    sed "s#^$repo_root/##"
+  cd "$repo_root" &&
+    find . -mindepth 2 -maxdepth 2 -name compose.yml -printf '%h\n' |
+      sort |
+      sed 's#^\./##'
 )
 
-if [[ ${1:-} == "--list" ]]; then
-  printf '%s\n' "${stacks[@]}"
+if [[ $# -eq 1 && $1 == "--list" ]]; then
+  if [[ ${#stacks[@]} -gt 0 ]]; then
+    printf '%s\n' "${stacks[@]}"
+  fi
   exit 0
 fi
 
@@ -20,6 +23,11 @@ if [[ $# -ne 0 ]]; then
 fi
 
 status=0
+
+if [[ ${#stacks[@]} -eq 0 ]]; then
+  printf 'FAIL no-stacks\n'
+  exit 1
+fi
 
 for stack in "${stacks[@]}"; do
   if [[ ! -f "$repo_root/$stack/.env.example" ]]; then
