@@ -218,6 +218,10 @@ cp .env.example .env   # set CLOUDFLARED_TOKEN; TS_AUTHKEY only if using Tailsca
 docker compose up -d
 ```
 
+This starts Cloudflare Tunnel and Nginx Proxy Manager only. After configuring
+the optional variables, enable [Tailscale Funnel](proxy/README.md#tailscale-funnel-optional)
+with `docker compose --profile tailscale up -d`.
+
 ## DNS (AdGuard Home)
 
 See **[dns/README.md](dns/README.md)** for bridge networking, port defaults vs NPM, systemd-resolved, and **UniFi DMP** DHCP DNS (**primary** = Pi `dns/` stack, **secondary** = Unraid AdGuard).
@@ -233,6 +237,9 @@ docker compose up -d
 ## Boot with systemd (optional)
 
 Unit files live in [`systemd/`](systemd/). They run each stack with `docker compose up` from the matching directory and are suitable for enabling stacks at boot on a single host.
+
+The default `proxy.service` startup excludes the optional Tailscale Funnel
+profile.
 
 **Install (paths assume this repo at `/home/lexcode/code/homelab`; edit the unit files if your clone lives elsewhere):**
 

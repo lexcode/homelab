@@ -35,6 +35,9 @@ Two ingress paths feed into NPM:
    docker compose up -d
    ```
 
+   This starts Cloudflare Tunnel and Nginx Proxy Manager only. Tailscale Funnel
+   is excluded by default through the `tailscale` Compose profile.
+
 5. **NPM admin:** open `http://<host-ip>:81` and complete the first-run wizard.
 
 ## Public hostnames
@@ -110,11 +113,17 @@ In this stack it runs alongside `cloudflared` and forwards incoming Funnel traff
 
    ```bash
    cd proxy
-   docker compose up -d tailscale-funnel
+   docker compose --profile tailscale up -d
    docker logs -f tailscale-funnel
    ```
 
-   You’ll see a line like `Available on the internet: https://jellyfin.tail-xxxx.ts.net/`. That is your public URL.
+   This starts or updates the complete proxy stack with Funnel enabled. You’ll
+   see a line like `Available on the internet: https://jellyfin.tail-xxxx.ts.net/`.
+   That is your public URL.
+
+   The repository's `proxy.service` uses the default Compose startup and does
+   not enable Funnel. Enabling Funnel at boot requires a separately reviewed
+   systemd customization.
 
 5. **Add a Proxy Host in NPM** for the Funnel hostname so NPM routes it to the right backend:
 
