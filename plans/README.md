@@ -14,7 +14,7 @@ update the corresponding status row when done.
 | 002 | Remove Homepage's direct Docker socket access | P1 | S | 005 | DONE |
 | 003 | Require an explicit Gotify administrator password | P1 | S | 005 | DONE |
 | 004 | Make Google cloud credentials an explicit opt-in | P1 | S | 005 | DONE |
-| 006 | Make proxy startup wait for external Docker networks | P1 | M | 005 | TODO |
+| 006 | Make proxy startup wait for external Docker networks | P1 | M | 005 | DONE |
 | 007 | Restrict high-authority administration ports | P1 | M | 005 | TODO |
 | 012 | Define one authoritative Paperless AI API URL | P2 | S | 005 | TODO |
 | 013 | Align Your Spotify examples with HTTPS OAuth requirements | P2 | S | 005 | TODO |

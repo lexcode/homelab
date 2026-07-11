@@ -82,11 +82,11 @@ networks, path portability, or Funnel boot behavior.
 
 ## Done criteria
 
-- [ ] Every unit has consistent oneshot/detached semantics.
-- [ ] Successful producer activation occurs after `compose up -d` returns.
-- [ ] Proxy ordering and external network inventory remain aligned.
-- [ ] Static unit and Compose validation pass.
-- [ ] No host systemd or Docker state changed; Plan 006 is `DONE`.
+- [x] Every unit has consistent oneshot/detached semantics.
+- [x] Successful producer activation occurs after `compose up -d` returns.
+- [x] Proxy ordering and external network inventory remain aligned.
+- [x] Static unit and Compose validation pass.
+- [x] No host systemd or Docker state changed; Plan 006 is `DONE`.
 
 ## STOP conditions
 
