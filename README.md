@@ -3,63 +3,58 @@
 Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, container management, analytics, push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
 
 ```mermaid
-graph LR
-    subgraph pi["🖥️  Raspberry Pi 5"]
-        direction TB
-        subgraph docs["📄  documents/"]
-            pngx[paperless-ngx :8001]
-            pai[paperless-ai :3001]
-            pgpt[paperless-gpt :8811]
-            pg[(postgres)]
-            rd[(redis broker)]
-        end
-        subgraph med["🎬  media/"]
-            subgraph vpnnet["🔒  WireGuard VPN"]
-                qbt[qBittorrent :8080]
-                prowlarr[Prowlarr :9696]
-                flare[FlareSolverr :8191]
-            end
-            sonarr[Sonarr :8989]
-            radarr[Radarr :7878]
-            lidarr[Lidarr :8686]
-            bazarr[Bazarr :6767]
-            seerr[Seerr :5055]
-            suggestarr[SuggestArr :5000]
-        end
-        subgraph mon["📊  monitoring/"]
-            beszel[Beszel :8090]
-            dozzle[Dozzle :8181]
-            beszelagent[beszel-agent]
-        end
-        subgraph mgmt["🐳  management/"]
-            dockge[Dockge :5002]
-        end
-        subgraph ana["📈  analytics/"]
-            yss[your_spotify_server :8080]
-            ysc[your_spotify_client :3000]
-            ysm[(mongo)]
-        end
-        subgraph term["💻  terminal/"]
-            atuin[Atuin :8888]
-            atuinpg[(postgres)]
-            atuinbkp[/db backup/]
-        end
-        subgraph home["🏠  homepage/"]
-            hp[Homepage :3003]
-            dp[dockerproxy :2375]
-        end
-        subgraph dns["🛡️  dns/"]
-            ag[AdGuard Home :3005]
-        end
-        subgraph notif["🔔 notifications/"]
-            gotify[Gotify :8688]
-            igotify[iGotify :8681]
-            cd[changedetection :5001]
-        end
-        cf[☁️  proxy/cloudflared]
-        ts[🔗 proxy/tailscale-funnel]
-        npm[proxy/nginx-proxy-manager]
+flowchart LR
+    subgraph docs["📄  documents/"]
+        pngx[paperless-ngx :8001]
+        pai[paperless-ai :3001]
+        pgpt[paperless-gpt :8811]
+        pg[(postgres)]
+        rd[(redis broker)]
     end
+    subgraph med["🎬  media/"]
+        qbt[qBittorrent :8080 via WireGuard]
+        prowlarr[Prowlarr :9696 via WireGuard]
+        flare[FlareSolverr :8191 via WireGuard]
+        sonarr[Sonarr :8989]
+        radarr[Radarr :7878]
+        lidarr[Lidarr :8686]
+        bazarr[Bazarr :6767]
+        seerr[Seerr :5055]
+        suggestarr[SuggestArr :5000]
+    end
+    subgraph mon["📊  monitoring/"]
+        beszel[Beszel :8090]
+        dozzle[Dozzle :8181]
+        beszelagent[beszel-agent]
+    end
+    subgraph mgmt["🐳  management/"]
+        dockge[Dockge :5002]
+    end
+    subgraph ana["📈  analytics/"]
+        yss[your_spotify_server :8080]
+        ysc[your_spotify_client :3000]
+        ysm[(mongo)]
+    end
+    subgraph term["💻  terminal/"]
+        atuin[Atuin :8888]
+        atuinpg[(postgres)]
+        atuinbkp[/db backup/]
+    end
+    subgraph home["🏠  homepage/"]
+        hp[Homepage :3003]
+        dp[dockerproxy :2375]
+    end
+    subgraph dns["🛡️  dns/"]
+        ag[AdGuard Home :3005]
+    end
+    subgraph notif["🔔 notifications/"]
+        gotify[Gotify :8688]
+        igotify[iGotify :8681]
+        cd[changedetection :5001]
+    end
+    cf[☁️  proxy/cloudflared]
+    ts[🔗 proxy/tailscale-funnel]
+    npm[proxy/nginx-proxy-manager]
     subgraph desktop["🖥️  Desktop (LAN)"]
         ollama[Ollama :11434]
     end
