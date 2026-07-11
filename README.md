@@ -249,6 +249,21 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service dns.service proxy.service
 ```
 
+**After pulling systemd unit updates:** The files in this repository are source
+copies; systemd uses the installed copies under `/etc/systemd/system/`. Reinstall
+them and reload systemd after pulling changes:
+
+```bash
+git pull
+sudo cp systemd/*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+```
+
+Already-enabled units do not need to be enabled again. Updated behavior takes
+effect the next time each unit starts, such as after a reboot. To apply changes
+immediately, restart the affected units during a maintenance window; restarting
+one of these units runs `docker compose down` before starting it again.
+
 **Why `proxy.service` lists other stacks in `After=`:** The proxy stack includes [Nginx Proxy Manager](https://nginxproxymanager.com/) joined to **external** Docker networks (`servarrnetwork`, `documentsnetwork`, etc.). Those networks are created when each respective `docker compose` stack starts. If `proxy.service` runs first, Compose fails with “network … not found.” The producer units use oneshot activation, so their `After=` ordering holds proxy startup until each `docker compose up -d` command has completed and created its network.
 
 Order is encoded only in `proxy.service`; other units only need `After=docker.service` and `Requires=docker.service`.
