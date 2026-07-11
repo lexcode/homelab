@@ -4,7 +4,7 @@ services:
     container_name: dockge
     restart: unless-stopped
     ports:
-      - "${DOCKGE_PORT:-5002}:5001"
+      - "${DOCKGE_BIND_ADDRESS:-127.0.0.1}:${DOCKGE_PORT:-5002}:5001"
     environment:
       - DOCKGE_STACKS_DIR=${HOMELAB_ROOT:?Set HOMELAB_ROOT in management/.env}
     volumes:
