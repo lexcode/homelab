@@ -77,6 +77,12 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
 
 **SuggestArr** uses the host network so outbound calls to Jellyfin/Plex on the LAN use the host’s source address (avoids LAN firewalls that drop traffic from the Docker bridge range).
 
+## Seerr logging
+
+Seerr defaults to informational logging through `SEERR_LOG_LEVEL=info`. When
+troubleshooting, set `SEERR_LOG_LEVEL=debug`, reproduce the issue, then restore
+`info` to avoid unnecessary log volume and disk I/O.
+
 ## deunhealth (container watchdog)
 
 [**deunhealth**](https://github.com/qdm12/deunhealth) watches for containers that become unhealthy and restarts them. It uses `network_mode: none` (no network access needed) and mounts the Docker socket read-only. Services that should be restarted on unhealthy status carry the label `deunhealth.restart.on.unhealthy=true` in `compose.yml` — currently applied to the `vpn` container. If the WireGuard health check fails (e.g. connectivity loss), deunhealth triggers a restart automatically rather than leaving the VPN container stuck and all dependent services unreachable.
