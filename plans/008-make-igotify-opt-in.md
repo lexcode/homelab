@@ -70,10 +70,10 @@ port binding policy, Gotify password mechanics beyond Plan 003, or containers.
 
 ## Done criteria
 
-- [ ] Bare startup excludes iGotify.
-- [ ] Profile startup includes all three services.
-- [ ] Docs give exact commands and accurate systemd semantics.
-- [ ] No token or runtime state changed; Plan 008 is `DONE`.
+- [x] Bare startup excludes iGotify.
+- [x] Profile startup includes all three services.
+- [x] Docs give exact commands and accurate systemd semantics.
+- [x] No token or runtime state changed; Plan 008 is `DONE`.
 
 ## STOP conditions
 

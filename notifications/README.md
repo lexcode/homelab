@@ -25,10 +25,16 @@ Docker Compose stack combining [**Gotify**](https://github.com/gotify/server) (s
      data/changedetection
    ```
 
-3. **Start**
+3. **Start Gotify and changedetection.io**
 
    ```bash
    docker compose up -d
+   ```
+
+   To also start the optional iGotify assistant for iOS notifications:
+
+   ```bash
+   docker compose --profile igotify up -d
    ```
 
 4. **Web UI:** `http://<host-lan-ip>:8688` (or `GOTIFY_HTTP_PORT`). Log in as **`admin`** with the password from `.env`, then change it in the UI.
@@ -37,7 +43,7 @@ Docker Compose stack combining [**Gotify**](https://github.com/gotify/server) (s
 
 ## Data and backups
 
-Persistent state lives under **`./data/gotify/`**, **`./data/igotify/`**, and **`./data/changedetection/`** (bind-mounted into their respective containers). Gotify holds the SQLite DB and uploads; iGotify holds assistant state; changedetection holds its datastore. Include all three in backups.
+Persistent state lives under **`./data/gotify/`**, **`./data/igotify/`**, and **`./data/changedetection/`** (bind-mounted into their respective containers). Gotify holds the SQLite DB and uploads; iGotify holds assistant state when its profile is enabled; changedetection holds its datastore. Include the directories for every service you use in backups.
 
 ## Ports
 
@@ -51,6 +57,8 @@ If you put Gotify behind [Nginx Proxy Manager](../proxy/README.md), publish only
 
 ### iGotify assistant “UI” (Scalar API)
 
+The assistant is opt-in. Start it with `docker compose --profile igotify up -d`; bare `docker compose up -d` does not create it.
+
 The assistant mounts the HTTP API under **`/api`** (see [upstream `Program.cs`](https://github.com/androidseb25/iGotify-Notification-Assistent/blob/main/Program.cs)). There is no useful page at the root URL.
 
 - **API docs (Scalar):** `http://<host>:8681/api/scalar/v1` (adjust host port if you changed `IGOTIFY_HTTP_PORT`).
@@ -63,6 +71,8 @@ The log line `Failed to determine the https port for redirect` is a common ASP.N
 **Networking:** Docker bridge **`notificationsnetwork`** (same pattern as `homepagenetwork` / `terminalnetwork` in this repo). Services reach each other at **`http://gotify:80`** for `GOTIFY_URLS`.
 
 **Compose layout** follows the [upstream `docker-compose.yaml`](https://github.com/androidseb25/iGotify-Notification-Assistent/blob/main/docker-compose.yaml) (healthchecks, images, `security_opt`). This repo uses **bind mounts** and **ports** `8688` / `8681` by default instead of named volumes / `8680`. The healthcheck targets **`/api/Version`** to match the assistant’s `UsePathBase("/api")`; older upstream examples used `/Version` only.
+
+The repository's `systemd/notifications.service` uses the default bare Compose command, so boot-time startup includes Gotify and changedetection.io but excludes iGotify. Enabling iGotify at boot requires a separately reviewed systemd override that adds `--profile igotify`; repository updates may otherwise replace local unit edits.
 
 ### iGotify environment variables
 
