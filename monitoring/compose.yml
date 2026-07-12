@@ -49,7 +49,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data/dozzle_data:/data
     ports:
-      - "${DOZZLE_BIND_ADDRESS:-127.0.0.1}:8181:8080"
+      - "8181:8080"
     networks:
       monitoringnetwork:
         ipv4_address: ${DOZZLE_IP:-172.39.1.3}
@@ -64,4 +64,4 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
-      - "${DOZZLE_AGENT_BIND_ADDRESS:?Set DOZZLE_AGENT_BIND_ADDRESS to this host's trusted LAN address}:7007:7007"
+      - "7007:7007"

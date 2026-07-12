@@ -79,11 +79,11 @@ or starting containers.
 
 ## Done criteria
 
-- [x] All four sensitive endpoints have explicit configurable host binds.
-- [x] Example configuration avoids all-interface exposure.
-- [x] Remote-agent LAN setup is documented.
-- [x] NPM public 80/443 behavior is unchanged.
-- [x] All affected stacks validate; Plan 007 is `DONE`.
+- [ ] All four sensitive endpoints have explicit configurable host binds.
+- [ ] Example configuration avoids all-interface exposure.
+- [ ] Remote-agent LAN setup is documented.
+- [ ] NPM public 80/443 behavior is unchanged.
+- [ ] All affected stacks validate; Plan 007 is `DONE`.
 
 ## STOP conditions
 
