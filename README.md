@@ -89,6 +89,7 @@ Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./dat
 ## Requirements
 
 - Docker and Docker Compose v2
+- `jq` for the read-only stack status command
 - Separate `.env` files per stack (copy from each `.env.example`)
 
 Networks are isolated by design (for example media on `172.39.0.0/24`, monitoring on `172.39.1.0/24`, analytics on `172.39.2.0/24`, AdGuard Home on `172.39.5.0/24`, and management on `172.39.8.0/24`). Adjust subnets in `.env` if they clash with your LAN or other projects.
@@ -102,6 +103,26 @@ bash scripts/validate.sh
 ```
 
 Use `bash scripts/validate.sh --list` to show the discovered stack directories.
+
+## Check stack status
+
+Use the read-only status command to compare the services selected by the
+rendered Compose configuration with the containers Docker reports. It exits
+non-zero when an expected service is missing, exited, restarting, or unhealthy.
+Services without a healthcheck are reported as `no-healthcheck`.
+
+```bash
+bash scripts/status.sh analytics
+bash scripts/status.sh --all
+```
+
+Compose profiles are opt-in here just as they are during startup. Pass each
+profile explicitly when its services should be expected; otherwise optional
+services are excluded and cannot cause false missing-service failures.
+
+```bash
+bash scripts/status.sh --profile tailscale proxy
+```
 
 ## Media
 
@@ -237,6 +258,12 @@ docker compose up -d
 ## Boot with systemd (optional)
 
 Unit files live in [`systemd/`](systemd/). They run each stack with `docker compose up -d` from the matching directory as oneshot services and are suitable for enabling stacks at boot on a single host. Successful activation means detached Compose startup completed; container health and restart behavior remain Docker/Compose responsibilities.
+
+An active unit is therefore an orchestration result, not a health assertion.
+Use `bash scripts/status.sh <stack>` (or `--all`) as the repository health
+authority. The units intentionally have no `ExecStartPost` health hook because
+application warm-up times vary, and a fixed delay or immediate health check
+would turn normal startup into an unreliable unit failure.
 
 The default `proxy.service` startup excludes the optional Tailscale Funnel
 profile.

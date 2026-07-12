@@ -84,11 +84,11 @@ profile defaults, or replacing monitoring tools.
 
 ## Done criteria
 
-- [ ] One read-only command reports all stack service states.
-- [ ] Failure exit codes cover missing/exited/restarting/unhealthy services.
-- [ ] Optional profiles are not false failures.
-- [ ] Systemd/Docker ownership boundary is documented accurately.
-- [ ] No live services changed; Plan 011 is `DONE`.
+- [x] One read-only command reports all stack service states.
+- [x] Failure exit codes cover missing/exited/restarting/unhealthy services.
+- [x] Optional profiles are not false failures.
+- [x] Systemd/Docker ownership boundary is documented accurately.
+- [x] No live services changed; Plan 011 is `DONE`.
 
 ## STOP conditions
 
