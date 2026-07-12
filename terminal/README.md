@@ -2,6 +2,12 @@
 
 Docker Compose stack for [Atuin](https://atuin.sh/): a sync server for encrypted shell history. The server listens on **port 8888**; Postgres **18** stores metadata under `./data/database`, and Atuin server config under `./data/config`. A sidecar runs [postgres-backup-local](https://github.com/prodrigestivill/docker-postgres-backup-local) on **`@daily`** and writes compressed dumps to **`./data/db_dumps`**.
 
+Atuin and the backup sidecar wait for PostgreSQL's native readiness check
+before starting. The backup sidecar also restarts unless explicitly stopped,
+so a transient startup failure does not disable later scheduled backups. A
+healthy database status confirms that PostgreSQL accepts connections; it does
+not verify data integrity or that a backup can be restored.
+
 ## Prerequisites
 
 - Docker and Docker Compose v2

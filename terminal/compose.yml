@@ -14,7 +14,8 @@ services:
       ATUIN_DB_URI: postgres://$ATUIN_DB_USERNAME:$ATUIN_DB_PASSWORD@db/$ATUIN_DB_NAME
       RUST_LOG: info,atuin_server=debug
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - terminalnetwork
 
@@ -22,6 +23,12 @@ services:
     container_name: atuin_db
     image: postgres:18
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - terminalnetwork
     volumes: # PG 18+: mount parent dir (cluster lives in .../18/docker). See postgres Docker README.
@@ -35,6 +42,7 @@ services:
   backup:
     container_name: atuin_db_dumper
     image: prodrigestivill/postgres-backup-local
+    restart: unless-stopped
     env_file:
       - ${SERVICE_ENV_FILE:-.env}
     environment:
@@ -47,7 +55,8 @@ services:
     volumes:
       - ./data/db_dumps:/db_dumps
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - terminalnetwork
 

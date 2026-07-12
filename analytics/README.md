@@ -71,6 +71,10 @@ Docker Compose stack for [**Your Spotify**](https://github.com/Yooooomi/your_spo
 - **`your_spotify_client`** — React SPA served as a static bundle. `API_ENDPOINT` is baked into the JS bundle at container start — changing it requires a full container recreation (`docker compose up -d --force-recreate`), not just a restart.
 - **`your_spotify_mongo`** — MongoDB instance. Data persisted in `./data/mongo`.
 
+The server waits for MongoDB's native ping healthcheck before starting. This
+prevents normal cold-start connection races, but a healthy status only proves
+that MongoDB accepts commands; it does not verify the integrity of stored data.
+
 ## DNS note
 
 The server container makes outbound HTTPS calls to `accounts.spotify.com` for OAuth token exchange. Docker's embedded DNS resolver can fail for external hostnames on custom bridge networks (`EAI_AGAIN`). The recommended fix is to configure DNS at the Docker daemon level in `/etc/docker/daemon.json`:
