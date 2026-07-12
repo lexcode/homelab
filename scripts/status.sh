@@ -102,8 +102,21 @@ for stack in "${stacks[@]}"; do
   fi
   mapfile -t expected_services <<<"$expected_output"
 
-  if ! ps_json=$(cd "$stack_dir" && docker compose "${profile_args[@]}" ps --all --format json 2>/dev/null); then
+  if ! ps_output=$(cd "$stack_dir" && docker compose "${profile_args[@]}" ps --all --format json 2>/dev/null); then
     printf 'FAIL %s compose-status-error\n' "$stack"
+    status=1
+    continue
+  fi
+  if [[ -z $ps_output ]]; then
+    ps_json='[]'
+  elif ! ps_json=$(jq -sc '
+      if length == 1 and (.[0] | type) == "array" then
+        .[0]
+      else
+        .
+      end
+    ' <<<"$ps_output"); then
+    printf 'FAIL %s invalid-status-json\n' "$stack"
     status=1
     continue
   fi

@@ -31,7 +31,9 @@ case "$1 $2" in
   "ps --all")
     case "${STATUS_SCENARIO:-healthy}" in
       healthy)
-        printf '%s\n' '[{"Service":"healthy","State":"running","Health":"healthy"},{"Service":"plain","State":"running","Health":""}]'
+        printf '%s\n' \
+          '{"Service":"healthy","State":"running","Health":"healthy"}' \
+          '{"Service":"plain","State":"running","Health":""}'
         ;;
       unhealthy)
         printf '%s\n' '[{"Service":"healthy","State":"running","Health":"unhealthy"},{"Service":"plain","State":"running","Health":""}]'
@@ -44,6 +46,8 @@ case "$1 $2" in
         ;;
       missing)
         printf '%s\n' '[{"Service":"plain","State":"running","Health":""}]'
+        ;;
+      empty)
         ;;
       optional)
         printf '%s\n' '[{"Service":"healthy","State":"running","Health":"healthy"},{"Service":"plain","State":"running","Health":""},{"Service":"optional","State":"running","Health":""}]'
@@ -130,6 +134,11 @@ assert_contains 'FAIL analytics healthy exited'
 run_status missing analytics
 assert_status 1
 assert_contains 'FAIL analytics healthy missing'
+
+run_status empty analytics
+assert_status 1
+assert_contains 'FAIL analytics healthy missing'
+assert_contains 'FAIL analytics plain missing'
 
 run_status optional analytics
 assert_status 0
