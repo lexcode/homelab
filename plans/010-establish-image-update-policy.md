@@ -8,6 +8,9 @@
 
 ## Status
 
+- **Decision**: REJECTED — the operator prefers the current floating-image
+  workflow and does not want the ongoing release-review and digest-maintenance
+  overhead required by this migration.
 - **Priority**: P2
 - **Effort**: M
 - **Risk**: MED
