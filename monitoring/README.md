@@ -18,10 +18,6 @@ Docker Compose stack combining:
    cp .env.example .env
    ```
 
-   Set `DOZZLE_AGENT_BIND_ADDRESS` to this host's trusted LAN address before
-   starting the stack. It is intentionally blank in `.env.example` so copying
-   the file cannot publish the Docker-log agent accidentally.
-
 2. **Create the folder structure**
 
    If you're using bind mounts (like this stack does), create the directories up front so Docker doesn't create them as root.
@@ -63,8 +59,6 @@ Docker Compose stack combining:
 | `BESZEL_AGENT_TOKEN`  | Agent token from the Beszel UI. **This token is unique per registered system** — remote machines each need their own token from the hub.                                                                                                                              |
 | `BESZEL_AGENT_LISTEN` | Agent listen port (default `45876`); traffic reaches the agent via `network_mode: service:beszel`.                                                                                                                                                                    |
 | `DOZZLE_IP`           | Static IPv4 for the `dozzle` container on `monitoringnetwork`.                                                                                                                                                                                                        |
-| `DOZZLE_BIND_ADDRESS` | Host address for the Dozzle UI. Defaults to `127.0.0.1`; use one trusted LAN address for direct remote access.                                                                                                                                                       |
-| `DOZZLE_AGENT_BIND_ADDRESS` | Required trusted LAN address that exposes the Dozzle agent to other machines.                                                                                                                                                                                |
 | `DOZZLE_HOSTNAME`     | Display name for this machine in the Dozzle UI (e.g. `omarchy`). Shared by both `dozzle` and `dozzle-agent`.                                                                                                                                                          |
 | `DOZZLE_REMOTE_AGENT` | Comma-separated `host:7007` addresses of **other** machines running `dozzle-agent`. Do not include this machine's own IP.                                                                                                                                             |
 
@@ -76,8 +70,8 @@ Docker Compose stack combining:
 
 - **`beszel`**: Hub UI + API, data in `./data/beszel_data`.
 - **`beszelagent`**: `network_mode: service:beszel` so the agent shares the hub's network namespace; no separate published ports for the agent process.
-- **`dozzle`**: Log viewer UI on port `8181`, bound to loopback by default, and connects to remote agents via `DOZZLE_REMOTE_AGENT`.
-- **`dozzle-agent`**: Exposes this machine's Docker socket to other Dozzle UIs on port `7007`, bound only to the required trusted LAN address.
+- **`dozzle`**: Log viewer UI on port `8181`, connects to remote agents via `DOZZLE_REMOTE_AGENT`.
+- **`dozzle-agent`**: Exposes this machine's Docker socket to other Dozzle UIs on port `7007`.
 - **Volumes**: `./data/beszel_agent_data` holds agent state; `./data/beszel_data` is the hub database and keys; `./data/dozzle_data` holds Dozzle session and auth data.
 
 ## Extra disks or file systems
@@ -109,8 +103,6 @@ On **each machine** running this compose, set in `.env`:
 
 | Variable              | Description                                                                                                         |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `DOZZLE_BIND_ADDRESS` | Keep `127.0.0.1` for local or reverse-proxied UI access, or set this host's trusted LAN address for direct access. |
-| `DOZZLE_AGENT_BIND_ADDRESS` | This host's trusted LAN address; remote Dozzle UIs connect to this address on port `7007`.                    |
 | `DOZZLE_HOSTNAME`     | Display name shown in the UI for this machine (e.g. `omarchy`, `raspberry-pi`).                                     |
 | `DOZZLE_REMOTE_AGENT` | Comma-separated `host:7007` list of **other** machines running `dozzle-agent`. Never include this machine's own IP. |
 
@@ -118,14 +110,12 @@ Example `.env` values per machine:
 
 ```
 # On PC (Omarchy)
-DOZZLE_AGENT_BIND_ADDRESS=192.168.0.10
 DOZZLE_HOSTNAME=omarchy
-DOZZLE_REMOTE_AGENT=192.168.0.24:7007
+DOZZLE_REMOTE_AGENT=192.168.0.x:7007,192.168.0.x:7007
 
 # On Raspberry Pi
-DOZZLE_AGENT_BIND_ADDRESS=192.168.0.24
 DOZZLE_HOSTNAME=raspberry-pi
-DOZZLE_REMOTE_AGENT=192.168.0.10:7007
+DOZZLE_REMOTE_AGENT=192.168.0.x:7007,192.168.0.x:7007
 ```
 
 ### Machines not running this compose (e.g. Unraid)
@@ -138,13 +128,11 @@ docker run -d \
   --restart unless-stopped \
   -e DOZZLE_HOSTNAME=unraid \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  -p 192.168.1.30:7007:7007 \
+  -p 7007:7007 \
   amir20/dozzle:latest agent
 ```
 
 Then add that machine's IP to `DOZZLE_REMOTE_AGENT` on the machines running the full compose.
-
-The UI and agent both expose Docker-host information. Binding `DOZZLE_BIND_ADDRESS` or `DOZZLE_AGENT_BIND_ADDRESS` to `0.0.0.0` restores broad exposure on every IPv4 interface; prefer loopback for the UI and one trusted LAN address for the agent. These binds reduce reachability but do not replace authentication or firewall policy.
 
 ## Layout
 

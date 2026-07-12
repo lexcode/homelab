@@ -39,7 +39,6 @@ for stack in "${stacks[@]}"; do
   if (
     cd "$repo_root/$stack" &&
       GOTIFY_DEFAULTUSER_PASS=test-only-placeholder \
-      DOZZLE_AGENT_BIND_ADDRESS=192.0.2.10 \
       SERVICE_ENV_FILE=.env.example \
         docker compose --env-file .env.example config --quiet >/dev/null 2>&1
   ); then
