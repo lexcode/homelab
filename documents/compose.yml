@@ -1,7 +1,7 @@
 services:
   broker:
     container_name: broker
-    image: docker.io/library/redis:7
+    image: docker.io/library/redis:7@sha256:b2b95679e3b46fb51864949ed25ea976fc3a6bcc00a40a1bc00d568cb2822e50
     restart: unless-stopped
     volumes:
       - ./data/paperless-ngx/redis:/data
@@ -12,7 +12,7 @@ services:
     container_name: paperless-ngx
     networks:
       - documentsnetwork
-    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15@sha256:6c86cad803970ea782683a8e80e7403444c5bf3cf70de63b4d3c8e87500db92f
     restart: unless-stopped
     depends_on:
       - broker
@@ -45,7 +45,7 @@ services:
   # postgres database for paperless-ngx
   postgresql-paperless-ngx:
     container_name: postgresql-paperless-ngx
-    image: postgres:18
+    image: postgres:18@sha256:22c89fe0d0f507606260237fd55e51f6137f58b2d5bcf6152242b96d9fe8f9a4
     restart: unless-stopped
     networks:
       - documentsnetwork
@@ -59,7 +59,7 @@ services:
   # paperless-ai service
   paperless-ai:
     container_name: paperless-ai
-    image: clusterzx/paperless-ai:latest
+    image: clusterzx/paperless-ai:3.0.9@sha256:2b65888163fd59716f1c8285b31c5bd0b30c9c3c192c42b516688e3887d4ba60
     restart: unless-stopped
     depends_on:
       broker:
@@ -89,7 +89,7 @@ services:
     networks:
       - documentsnetwork
     # Use one of these image sources:
-    image: icereed/paperless-gpt:latest # Docker Hub
+    image: icereed/paperless-gpt:v0.26.1@sha256:6b9024d1adebfcd6bd7ec5e9da2ca17f9879b1fb5ce749d72905bbb121091ef8 # Docker Hub
     # image: ghcr.io/icereed/paperless-gpt:latest  # GitHub Container Registry
     environment:
       PAPERLESS_BASE_URL: "${PAPERLESS_BASE_URL}"

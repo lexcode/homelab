@@ -2,6 +2,13 @@
 
 Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, and deunhealth. Config lives under `./data/`; libraries and downloads are expected on the host at **`/data`** (bind-mounted into the containers).
 
+## Image updates
+
+All images use reviewed release/build tags and immutable digests. Back up the
+service configuration under `./data`, review each upstream migration note, and
+follow the repository [image update policy](../docs/IMAGE-UPDATES.md). After
+deployment, verify the VPN exit IP before testing qBittorrent or indexers.
+
 ## Prerequisites
 
 - Docker and Docker Compose v2

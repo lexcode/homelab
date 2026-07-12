@@ -2,7 +2,7 @@ services:
   atuin:
     container_name: atuin
     restart: always
-    image: ghcr.io/atuinsh/atuin:c28ac1b
+    image: ghcr.io/atuinsh/atuin:c28ac1b@sha256:2aac9dea56a4ed9cd8b5869a4317c44d4b1d447c030ef16aa5ecb5c4886befe8
     command: server start
     volumes:
       - "./data/config:/config"
@@ -21,7 +21,7 @@ services:
 
   db:
     container_name: atuin_db
-    image: postgres:18
+    image: postgres:18@sha256:22c89fe0d0f507606260237fd55e51f6137f58b2d5bcf6152242b96d9fe8f9a4
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
@@ -41,7 +41,7 @@ services:
   # Backup service for atuin database
   backup:
     container_name: atuin_db_dumper
-    image: prodrigestivill/postgres-backup-local
+    image: prodrigestivill/postgres-backup-local:18-debian-d257e5d@sha256:f70742ebe42b2277689b028d1fd15aa80f77cffa01da163cc9f85a6ff1866e7f
     restart: unless-stopped
     env_file:
       - ${SERVICE_ENV_FILE:-.env}

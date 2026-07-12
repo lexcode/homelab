@@ -9,6 +9,13 @@ Two ingress paths feed into NPM:
 
 **Networks:** NPM joins `servarrnetwork`, `analyticsnetwork`, `monitoringnetwork`, `documentsnetwork`, `terminalnetwork`, `homepagenetwork`, and `managementnetwork` as `external: true` networks. Those networks must already exist—start the corresponding stacks once before bringing up the proxy stack, or use the [`systemd/`](../systemd/) units (see the root [README.md](../README.md#boot-with-systemd-optional)) so `proxy.service` starts after the other stacks.
 
+## Image updates
+
+All ingress images use reviewed tags and immutable digests. Back up NPM and
+Tailscale state, follow the repository
+[image update policy](../docs/IMAGE-UPDATES.md), and verify one proxied hostname
+before expanding an update rollout.
+
 ## Prerequisites
 
 - A Cloudflare account with a domain

@@ -21,7 +21,7 @@ update the corresponding status row when done.
 | 014 | Default Seerr to informational logging | P3 | S | 005 | DONE |
 | 008 | Make iGotify explicitly opt-in | P2 | S | 003, 005 | REJECTED — required for this deployment |
 | 009 | Gate database clients on readiness and restart backups | P2 | S | 005 | DONE |
-| 010 | Establish reproducible container image updates | P2 | M | 005 | TODO |
+| 010 | Establish reproducible container image updates | P2 | M | 005 | DONE |
 | 011 | Align systemd state with Compose stack health | P2 | M | 006 | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |

@@ -7,7 +7,7 @@ networks:
 
 services:
   your_spotify_server:
-    image: yooooomi/your_spotify_server:latest
+    image: yooooomi/your_spotify_server:1.20.0@sha256:624ea009f2ef9d877989bee9c7913ac66840449f566517871696c31a8ea13ddf
     container_name: your_spotify_server
     restart: unless-stopped
     ports:
@@ -30,7 +30,7 @@ services:
         ipv4_address: ${YOUR_SPOTIFY_SERVER_IP:-172.39.2.2}
 
   your_spotify_client:
-    image: yooooomi/your_spotify_client:latest
+    image: yooooomi/your_spotify_client:1.20.0@sha256:e4da90a0634c7862f9f4e893026ee8cd91380234fa2125b88b26c6fb9da3d47e
     container_name: your_spotify_client
     restart: unless-stopped
     ports:
@@ -44,7 +44,7 @@ services:
         ipv4_address: ${YOUR_SPOTIFY_CLIENT_IP:-172.39.2.3}
 
   your_spotify_mongo:
-    image: mongo:4.4 # ARM (Raspberry Pi) — use mongo:6 on x86_64
+    image: mongo:4.4@sha256:4be76f674fc4b27859816811b8baa3c51830eb1dbf4ca81a51e26b79edd662ef # ARM (Raspberry Pi) — use mongo:6 on x86_64
     container_name: your_spotify_mongo
     restart: unless-stopped
     healthcheck:

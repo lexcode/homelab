@@ -86,11 +86,11 @@ or weakening backups/security.
 
 ## Done criteria
 
-- [ ] Every image is inventoried and classified.
-- [ ] Tier-1 images are immutable pins; other images use deliberate releases.
-- [ ] No database major changed.
-- [ ] Update and rollback policy is documented.
-- [ ] All stacks validate; Plan 010 is `DONE`.
+- [x] Every image is inventoried and classified.
+- [x] Tier-1 images are immutable pins; other images use deliberate releases.
+- [x] No database major changed.
+- [x] Update and rollback policy is documented.
+- [x] All stacks validate; Plan 010 is `DONE`.
 
 ## STOP conditions
 

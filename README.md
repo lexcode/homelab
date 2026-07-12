@@ -103,6 +103,14 @@ bash scripts/validate.sh
 
 Use `bash scripts/validate.sh --list` to show the discovered stack directories.
 
+## Update container images
+
+Images are pinned to reviewed release tags and immutable digests. Follow
+[`docs/IMAGE-UPDATES.md`](docs/IMAGE-UPDATES.md) to verify ARM support, preserve
+database majors, validate a candidate, smoke-test the changed stack, and roll
+back safely. Image updates are intentional repository changes; no automatic
+updater is deployed.
+
 ## Media
 
 See **[media/README.md](media/README.md)** for environment variables, ports, qBittorrent/VPN notes, an **example `/data` directory tree** (libraries and download folders), and **optional persistent CIFS mounts** when movies and TV live on a remote NAS under `/data`.

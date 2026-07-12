@@ -18,7 +18,7 @@ services:
   # PIA WireGuard — ./pia and ./pia-shared on the host
   # Stays on servarrnetwork at ${VPN_IP} so other containers can reach qBittorrent at http://${VPN_IP}:${WEBUI_PORT}
   vpn:
-    image: thrnz/docker-wireguard-pia
+    image: thrnz/docker-wireguard-pia:20260701_master_835e5bc@sha256:a65fcfd4597c7af6c52ef9dc781e2a7df0089a7f7ff0f41b6ba8f3f957068e03
     container_name: vpn
     dns:
       - 1.1.1.1
@@ -93,7 +93,7 @@ services:
   # container). Use IPv4 only if stalls persist (IPv6 disabled on vpn sysctls). Gluetun/OpenVPN
   # typically uses tun0 instead of wg0.
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
+    image: lscr.io/linuxserver/qbittorrent:version-5.2.3_v2.0.13@sha256:352371a7242e8b4aa10958ca02076d1023758070519b89a10251475fb9f1a35a
     container_name: qbittorrent
     restart: unless-stopped
     labels:
@@ -122,7 +122,7 @@ services:
       timeout: 10s
 
   deunhealth:
-    image: qmcgaw/deunhealth
+    image: qmcgaw/deunhealth:v0.3.0@sha256:4102bf5d788fd0580ee5adb367cf48fc269a154b8fd284e6315e0dd8b24bb03c
     container_name: deunhealth
     network_mode: "none"
     environment:
@@ -135,7 +135,7 @@ services:
 
   sonarr:
     <<: *arr-dns
-    image: lscr.io/linuxserver/sonarr:latest
+    image: lscr.io/linuxserver/sonarr:version-4.0.19.2979@sha256:4b025354d338999e03bf6dbdadcdde94815d39d4a5aba5de3cdc86a56d7d6c51
     container_name: sonarr
     restart: unless-stopped
     environment:
@@ -161,7 +161,7 @@ services:
 
   radarr:
     <<: *arr-dns
-    image: lscr.io/linuxserver/radarr:latest
+    image: lscr.io/linuxserver/radarr:version-6.2.1.10461@sha256:28852d0eacababc206762af48fe86d78594a4f434cc46b358f9764a857098662
     container_name: radarr
     restart: unless-stopped
     environment:
@@ -183,7 +183,7 @@ services:
 
   lidarr:
     <<: *arr-dns
-    image: lscr.io/linuxserver/lidarr:latest
+    image: lscr.io/linuxserver/lidarr:version-3.1.0.4875@sha256:94a876d1581f2ae5af5b846320d5f6f7a102a4755939ce0b43b01c60f9f86056
     container_name: lidarr
     restart: unless-stopped
     volumes:
@@ -209,7 +209,7 @@ services:
 
   bazarr:
     <<: *arr-dns
-    image: lscr.io/linuxserver/bazarr:latest
+    image: lscr.io/linuxserver/bazarr:version-v1.6.0@sha256:5d916d07404296ec35ee726e13e0e558f05952724cf494a7f009d913fb2b12f3
     container_name: bazarr
     restart: unless-stopped
     environment:
@@ -233,7 +233,7 @@ services:
   seerr:
     <<: *arr-dns
     container_name: seerr
-    image: ghcr.io/seerr-team/seerr:latest
+    image: ghcr.io/seerr-team/seerr:v3.3.0@sha256:c92d2dc117f62185e7bcb88cd56efd374ea79210eaf433275449e8d5988eb5a8
     environment:
       - LOG_LEVEL=${SEERR_LOG_LEVEL:-info}
       - PUID=${PUID}
@@ -255,7 +255,7 @@ services:
         ipv4_address: ${SEERR_IP:-172.39.0.7}
 
   prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
+    image: lscr.io/linuxserver/prowlarr:version-2.4.0.5397@sha256:536036aeb2c740d1a660ccf143b58a8bd6222f09010258fdfc10a538af7bec78
     container_name: prowlarr
     environment:
       - PUID=${PUID}
@@ -275,7 +275,7 @@ services:
   # On a bridged custom network, TCP can leave with source 172.39.0.x; LAN-only firewalls
   # (common on Unraid) then block :8096 while ping still works — same symptom as your wget timeout.
   suggestarr:
-    image: ciuse99/suggestarr:latest
+    image: ciuse99/suggestarr:v2.9.1@sha256:cfa4fb77862f6cea57f164bf44204c958fb96842815d601e09c92c17dd75d173
     container_name: suggestarr
     restart: unless-stopped
     network_mode: host
@@ -286,7 +286,7 @@ services:
       - SUGGESTARR_PORT=${SUGGESTARR_PORT:-5000}
 
   flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
+    image: ghcr.io/flaresolverr/flaresolverr:v3.5.0@sha256:139dfee1c6f89249c8d665d1333a42e8ec74ec0a86bc6bb1c8461e10d3a66a47
     container_name: flaresolverr
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-info}

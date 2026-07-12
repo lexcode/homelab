@@ -4,6 +4,13 @@ Docker Compose stack combining [**Gotify**](https://github.com/gotify/server) (s
 
 **Upstream:** [Gotify install](https://gotify.net/docs/install), [Gotify config](https://gotify.net/docs/config), [iGotify wiki](https://github.com/androidseb25/iGotify-Notification-Assistent/wiki).
 
+## Image updates
+
+All notification images use reviewed tags and immutable digests. Back up the
+three service data directories and follow the repository
+[image update policy](../docs/IMAGE-UPDATES.md), including a test notification
+and the iGotify version endpoint smoke check.
+
 ## Quick start
 
 1. **Environment**

@@ -83,6 +83,9 @@ Use a strong password in `.env`. Avoid characters that are special in URLs (`@`,
 
 `compose.yml` sets `ATUIN_OPEN_REGISTRATION=true`, which allows anyone who can reach the service to create accounts. For a homelab behind your LAN or a reverse proxy with auth, that may be fine. For anything internet-exposed, turn registration off after creating your user (set `ATUIN_OPEN_REGISTRATION=false` and restart) and rely on your existing accounts.
 
-## Image pin
+## Image updates
 
-The Atuin image is pinned to a specific digest tag (`ghcr.io/atuinsh/atuin:c28ac1b`) for reproducibility. Bump it deliberately when you want to upgrade.
+The Atuin image retains its reviewed commit tag and now also uses an immutable
+manifest digest. Postgres and the backup sidecar are pinned the same way. Follow
+the repository [image update policy](../docs/IMAGE-UPDATES.md) for backups,
+validation, smoke checks, and rollback before changing any reference.

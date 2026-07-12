@@ -6,6 +6,12 @@ Docker Compose stack for LAN DNS with ad blocking and filtering. Right now it ru
 
 **Upstream image docs:** [adguard/adguardhome on Docker Hub](https://hub.docker.com/r/adguard/adguardhome) — volumes (`work` / `conf`), full port list, updates, dev tags (`edge` / `beta`), DHCP on `host` networking, and **systemd-resolved** (`DNSStubListener`) are documented there.
 
+## Image updates
+
+AdGuard Home uses a reviewed release tag and immutable digest. Back up
+`./data/conf` and `./data/work`, then follow the repository
+[image update policy](../docs/IMAGE-UPDATES.md) and verify DNS from a LAN client.
+
 ## Why `dns/` and not `proxy/`?
 
 [`proxy/`](../proxy/) is **Cloudflare Tunnel + Nginx Proxy Manager** (HTTPS, hostnames, upstream routing). This stack is **DNS** (UDP/TCP 53, filtering, optional DHCP). They solve different problems. Putting DNS inside `proxy/` would bundle unrelated services and make port planning harder (NPM already uses host `80`/`443`/`81`).

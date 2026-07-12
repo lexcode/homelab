@@ -2,6 +2,12 @@
 
 Docker Compose stack for [**Homepage**](https://gethomepage.dev) — a self-hosted dashboard with service widgets, Docker integration, and resource monitoring.
 
+## Image updates
+
+Homepage and its Docker socket proxy use reviewed tags and immutable digests.
+Follow the repository [image update policy](../docs/IMAGE-UPDATES.md), then
+confirm the dashboard and Docker-backed widgets both populate.
+
 ## Prerequisites
 
 - Docker and Docker Compose v2

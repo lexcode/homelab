@@ -2,6 +2,12 @@
 
 AI-powered document management. [paperless-ngx](https://docs.paperless-ngx.com/) handles storage, search, and the web UI. [paperless-ai](https://github.com/clusterzx/paperless-ai) automatically analyses and tags new documents using an LLM. [paperless-gpt](https://github.com/icereed/paperless-gpt) provides manual-review OCR, title, tag, and correspondent generation.
 
+## Image updates
+
+All images use reviewed tags and immutable digests. Confirm document and
+database backups, keep Postgres 18 and Redis 7 on their current majors, and
+follow the repository [image update policy](../docs/IMAGE-UPDATES.md).
+
 ## Architecture
 
 ```

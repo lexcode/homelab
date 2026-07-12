@@ -5,6 +5,13 @@ Docker Compose stack combining:
 - [**Beszel**](https://github.com/henrygd/beszel) — lightweight hub for system metrics and alerts, with a local agent reporting CPU, memory, disk, and Docker containers.
 - [**Dozzle**](https://dozzle.dev) — real-time log viewer for Docker containers, with multi-host support via agents.
 
+## Image updates
+
+Beszel, its agent, and Dozzle use reviewed tags and immutable digests. Back up
+Beszel state and follow the repository
+[image update policy](../docs/IMAGE-UPDATES.md), then verify metrics ingestion
+and Docker log access.
+
 ## Prerequisites
 
 - Docker and Docker Compose v2

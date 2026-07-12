@@ -2,6 +2,12 @@
 
 Docker Compose stack for [**Your Spotify**](https://github.com/Yooooomi/your_spotify) — a self-hosted Spotify listening statistics tracker. Stores your play history in MongoDB and exposes a web dashboard.
 
+## Image updates
+
+The application and MongoDB images use reviewed tags and immutable digests.
+Back up `./data/mongo`, preserve the MongoDB 4.4 major, and follow the repository
+[image update policy](../docs/IMAGE-UPDATES.md) before changing them.
+
 ## Prerequisites
 
 - Docker and Docker Compose v2

@@ -1,7 +1,7 @@
 services:
   cloudflared:
     container_name: cloudflare-tunnel
-    image: cloudflare/cloudflared:latest
+    image: cloudflare/cloudflared:2026.7.1@sha256:188bb03589a32affed3cf4d0590565ffe67b78866e6b5582574afab2b705bafe
     command: tunnel --no-autoupdate run --protocol http2 --token ${CLOUDFLARED_TOKEN}
     restart: unless-stopped
     env_file:
@@ -16,7 +16,7 @@ services:
     profiles:
       - tailscale
     container_name: tailscale-funnel
-    image: tailscale/tailscale:latest
+    image: tailscale/tailscale:v1.98.8@sha256:d54b2e6a9c09f0e5ec52e82b9ad4af3d446b54a7c08075e92f11c39dd410105f
     hostname: ${TS_HOSTNAME:-jellyfin}
     restart: unless-stopped
     environment:
@@ -41,7 +41,7 @@ services:
 
   nginx-proxy-manager:
     container_name: nginx-proxy-manager
-    image: jc21/nginx-proxy-manager:latest
+    image: jc21/nginx-proxy-manager:2.15.1@sha256:52b2c59994f3d36acfcf70a1626f29734df0ed8c71bacc0269f78b6f939858bb
     restart: unless-stopped
     ports:
       - "80:80"

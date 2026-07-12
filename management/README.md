@@ -2,6 +2,13 @@
 
 Docker Compose stack for [Dockge](https://github.com/louislam/dockge), a web interface for managing Compose stacks. Dockge reads the existing stack directories in this repository, so Compose files remain the source of truth on disk and can still be managed with the Docker CLI or Git.
 
+## Image updates
+
+Dockge uses a reviewed release tag and immutable digest because it controls the
+Docker host. Back up `./data`, follow the repository
+[image update policy](../docs/IMAGE-UPDATES.md), and verify stack discovery
+without applying changes.
+
 ## Prerequisites
 
 - Docker and Docker Compose v2
