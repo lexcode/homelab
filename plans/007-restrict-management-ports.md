@@ -9,6 +9,8 @@
 
 ## Status
 
+- **Decision**: REJECTED — the restricted binds caused operational access and
+  multi-host Dozzle issues, so this deployment retains broad LAN publishing.
 - **Priority**: P1
 - **Effort**: M
 - **Risk**: MED
