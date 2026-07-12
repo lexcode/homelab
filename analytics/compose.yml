@@ -23,7 +23,8 @@ services:
       - COOKIE_VALIDITY_MS=8h
       - MAX_IMPORT_CACHE_SIZE=100000
     depends_on:
-      - your_spotify_mongo
+      your_spotify_mongo:
+        condition: service_healthy
     networks:
       analyticsnetwork:
         ipv4_address: ${YOUR_SPOTIFY_SERVER_IP:-172.39.2.2}
@@ -46,6 +47,12 @@ services:
     image: mongo:4.4 # ARM (Raspberry Pi) — use mongo:6 on x86_64
     container_name: your_spotify_mongo
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "if command -v mongosh >/dev/null 2>&1; then mongosh --quiet --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)'; else mongo --quiet --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)'; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     volumes:
       - ./data/mongo:/data/db
     networks:

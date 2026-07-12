@@ -74,11 +74,11 @@ backup restore design, credential encoding, data mounts, application changes.
 
 ## Done criteria
 
-- [ ] Mongo and Postgres have valid native healthchecks.
-- [ ] Applications and backup wait for healthy databases.
-- [ ] Atuin backup restarts unless stopped.
-- [ ] No image, mount, or credential changes occurred.
-- [ ] Both stacks validate; Plan 009 is `DONE`.
+- [x] Mongo and Postgres have valid native healthchecks.
+- [x] Applications and backup wait for healthy databases.
+- [x] Atuin backup restarts unless stopped.
+- [x] No image, mount, or credential changes occurred.
+- [x] Both stacks validate; Plan 009 is `DONE`.
 
 ## STOP conditions
 
