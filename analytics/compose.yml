@@ -48,7 +48,7 @@ services:
     container_name: your_spotify_mongo
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongo", "--quiet", "--eval", "quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)"]
+      test: ["CMD-SHELL", "if command -v mongosh >/dev/null 2>&1; then mongosh --quiet --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)'; else mongo --quiet --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)'; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
