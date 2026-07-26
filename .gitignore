@@ -8,5 +8,6 @@
 /terminal/data/*
 /notifications/data/*
 /management/data/*
+/ai/ai-memory/data/*
 .env
 .cursor/*

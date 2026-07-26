@@ -1,6 +1,6 @@
 # Homelab
 
-Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, lightweight host monitoring, container management, analytics, push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
+Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, shared coding-agent memory, lightweight host monitoring, container management, analytics, push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
 
 ```mermaid
 flowchart LR
@@ -52,6 +52,9 @@ flowchart LR
         igotify[iGotify :8681]
         cd[changedetection :5001]
     end
+    subgraph ai["🤖 ai/"]
+        aim[ai-memory :49374]
+    end
     cf[☁️  proxy/cloudflared]
     ts[🔗 proxy/tailscale-funnel]
     npm[proxy/nginx-proxy-manager]
@@ -80,6 +83,7 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | [`analytics/`](analytics/)   | [Your Spotify](https://github.com/Yooooomi/your_spotify) self-hosted Spotify listening statistics — see **[analytics/README.md](analytics/README.md)**.                             |
 | [`homepage/`](homepage/)     | [Homepage](https://gethomepage.dev) self-hosted dashboard with service widgets and Docker integration — see **[homepage/README.md](homepage/README.md)**.                           |
 | [`notifications/`](notifications/) | [Gotify](https://gotify.net/) plus optional [iGotify assistant](https://github.com/androidseb25/iGotify-Notification-Assistent) for iOS push, and [changedetection.io](https://github.com/dgtlmoon/changedetection.io) for web-page change monitoring — see **[notifications/README.md](notifications/README.md)**. |
+| [`ai/ai-memory/`](ai/ai-memory/) | [ai-memory](https://github.com/akitaonrails/ai-memory) server for shared coding-agent context — see **[ai/ai-memory/README.md](ai/ai-memory/README.md)**. |
 | [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager + optional [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) for video/high-bandwidth services — see **[proxy/README.md](proxy/README.md)**.                                                  |
 | [`dns/`](dns/)               | LAN DNS / filtering ([AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)) — **primary** on Raspberry Pi 5, **secondary** on Unraid; DHCP DNS via **UniFi Dream Machine Pro** — see **[dns/README.md](dns/README.md)**. |
 | [`systemd/`](systemd/)       | Optional systemd units to start each stack at boot — see **Boot with systemd** below.                                                                                               |
@@ -227,6 +231,19 @@ cp .env.example .env   # set GOTIFY_DEFAULTUSER_PASS; for Local iGotify set GOTI
 docker compose up -d
 ```
 
+## AI memory
+
+See **[ai/ai-memory/README.md](ai/ai-memory/README.md)** for Raspberry Pi setup, bearer-token configuration, native-data migration, and desktop client integration.
+
+Quick start:
+
+```bash
+cd ai/ai-memory
+cp .env.example .env   # set AI_MEMORY_AUTH_TOKEN and AI_MEMORY_ALLOWED_HOSTS
+mkdir -p data
+docker compose up -d
+```
+
 ## Proxy
 
 See **[proxy/README.md](proxy/README.md)** for Cloudflare Tunnel setup, adding public hostnames, and the optional [Tailscale Funnel](proxy/README.md#tailscale-funnel-optional) sidecar for publicly exposing a single service (for example Jellyfin) outside the Cloudflare CDN — Cloudflare’s terms prohibit proxying video.
@@ -273,7 +290,7 @@ profile.
 ```bash
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service dns.service proxy.service
+sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service dns.service ai-memory.service proxy.service
 ```
 
 **After pulling systemd unit updates:** The files in this repository are source
@@ -299,6 +316,6 @@ Order is encoded only in `proxy.service`; other units only need `After=docker.se
 
 ## Secrets and git
 
-Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `management/data`, `terminal/data`, `analytics/data`, `notifications/data`, `dns/data`, and similar paths are intended to stay local.
+Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `management/data`, `terminal/data`, `analytics/data`, `notifications/data`, `dns/data`, `ai/ai-memory/data`, and similar paths are intended to stay local.
 
 `.cursor/` is listed in `.gitignore` so editor-specific rules stay on your machine and are not shared via the repo; remove that line if you intentionally want to version Cursor project config.

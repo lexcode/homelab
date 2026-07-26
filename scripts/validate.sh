@@ -5,7 +5,7 @@ set -u
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 mapfile -t stacks < <(
   cd "$repo_root" &&
-    find . -mindepth 2 -maxdepth 2 -name compose.yml -printf '%h\n' |
+    find . -mindepth 2 -maxdepth 3 -name compose.yml -printf '%h\n' |
       sort |
       sed 's#^\./##'
 )
@@ -39,6 +39,7 @@ for stack in "${stacks[@]}"; do
   if (
     cd "$repo_root/$stack" &&
       GOTIFY_DEFAULTUSER_PASS=test-only-placeholder \
+      AI_MEMORY_AUTH_TOKEN=test-only-placeholder \
       SERVICE_ENV_FILE=.env.example \
         docker compose --env-file .env.example config --quiet >/dev/null 2>&1
   ); then
