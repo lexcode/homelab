@@ -216,6 +216,7 @@ systemd/
 ├── homepage.service
 ├── notifications.service
 ├── dns.service
+├── ai-memory.service
 └── proxy.service
 ```
 

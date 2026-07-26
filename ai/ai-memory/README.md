@@ -28,7 +28,7 @@ The published Docker image supports `linux/arm64`, including a 64-bit Raspberry 
    openssl rand -hex 32
    ```
 
-   In `.env`, replace `AI_MEMORY_AUTH_TOKEN` with that token and replace
+   In `.env`, set `AI_MEMORY_AUTH_TOKEN` to that token and replace
    `YOUR_PI_IP` in `AI_MEMORY_ALLOWED_HOSTS` with the Pi address clients will
    use. For example:
 
@@ -47,6 +47,15 @@ The published Docker image supports `linux/arm64`, including a 64-bit Raspberry 
    ```
 
 The server listens at `http://<pi-lan-ip>:49374` by default. Do not expose port `49374` directly to the public internet; use the LAN, Tailscale, WireGuard, or an authenticated reverse proxy.
+
+To start this stack automatically with the repository's optional systemd
+workflow, run from the repository root:
+
+```bash
+sudo cp systemd/ai-memory.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now ai-memory.service
+```
 
 ## Configuration
 
@@ -85,8 +94,11 @@ If this Docker stack has already been used, stop it and preserve its current dat
 ```bash
 cd ~/code/homelab/ai/ai-memory
 docker compose down
-mv data "data.before-migration-$(date +%Y%m%d-%H%M%S)"
+backup_dir="$HOME/ai-memory-backups/data-before-migration-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$HOME/ai-memory-backups"
+mv data "$backup_dir"
 mkdir -p data
+printf 'Previous Pi data saved to %s\n' "$backup_dir"
 ```
 
 From the desktop, transfer the complete native data directory:
@@ -238,7 +250,8 @@ TLS-terminating authenticated reverse proxy. Use that VPN or HTTPS address in
 From this stack directory:
 
 ```bash
-docker compose --env-file .env.example config --quiet
+AI_MEMORY_AUTH_TOKEN=test-only-placeholder \
+  docker compose --env-file .env.example config --quiet
 ```
 
 From the repository root:
