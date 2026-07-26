@@ -220,4 +220,4 @@ systemd/
 └── proxy.service
 ```
 
-Edit `WorkingDirectory=` in each unit if your clone is not at `/home/lexcode/code/homelab`.
+Edit `WorkingDirectory=` in each unit if your clone is not at `/home/lexcode/git/homelab`.
