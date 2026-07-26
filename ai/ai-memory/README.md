@@ -65,13 +65,68 @@ sudo systemctl enable --now ai-memory.service
 | `AI_MEMORY_PORT`               | `49374`   | Published host port.                                      |
 | `AI_MEMORY_AUTH_TOKEN`         | —         | Shared bearer token for remote clients.                   |
 | `AI_MEMORY_ALLOWED_HOSTS`      | —         | Comma-separated Pi addresses/names accepted by the server. |
-| `AI_MEMORY_LLM_PROVIDER`       | `none`    | Optional LLM provider; `none` avoids provider calls.      |
-| `AI_MEMORY_EMBEDDING_PROVIDER` | `none`    | Optional embedding provider.                              |
 | `AI_MEMORY_LOG_LEVEL`          | `info`    | Rust log filter passed to the container as `RUST_LOG`.    |
 
 Persistent state is bind-mounted from `./data/` to `/data` in the container. Include the complete directory in backups; it can contain the Markdown wiki, SQLite data, observations, handoffs, audit data, and indexes.
 
+Zero-LLM mode is enabled by omitting `AI_MEMORY_LLM_PROVIDER` and
+`AI_MEMORY_EMBEDDING_PROVIDER`; do not set either variable to `none`. To enable
+a provider, add its supported variables and credentials to the service
+environment as described in the
+[upstream provider documentation](https://github.com/akitaonrails/ai-memory#llm-providers).
+
 The service intentionally has no container healthcheck because the published image is not guaranteed to contain an HTTP probe utility. Repository status reports it as `no-healthcheck`.
+
+## Migrate the existing Docker named volume
+
+Use these steps when an earlier deployment stored its data in the
+`ai-memory-data` Docker volume. Stop the service before copying so that its
+SQLite data is consistent:
+
+```bash
+cd ~/git/homelab/ai/ai-memory
+docker compose down
+```
+
+The destination must be empty. If `./data/` already contains data, preserve it
+before continuing:
+
+```bash
+backup_dir="$HOME/ai-memory-backups/data-before-volume-migration-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$HOME/ai-memory-backups"
+mv data "$backup_dir"
+printf 'Current bind-mount data saved to %s\n' "$backup_dir"
+mkdir -p data
+```
+
+If `./data/` is already empty, only `mkdir -p data` is needed. Copy the complete
+named-volume contents into the bind mount with the source mounted read-only:
+
+```bash
+docker run --rm --user 0:0 \
+  --mount type=volume,src=ai-memory-data,dst=/source,readonly \
+  --mount type=bind,src="$PWD/data",dst=/destination \
+  alpine:3.22 \
+  sh -c 'cp -a /source/. /destination/'
+```
+
+Compare the copied files, then start the bind-mounted stack:
+
+```bash
+docker run --rm \
+  --mount type=volume,src=ai-memory-data,dst=/source,readonly \
+  --mount type=bind,src="$PWD/data",dst=/destination,readonly \
+  alpine:3.22 \
+  diff -qr /source /destination
+
+docker compose up -d
+docker compose logs -f --tail=100
+```
+
+`diff` produces no output when the copy matches. Keep the `ai-memory-data`
+volume as a rollback copy until the web UI and clients show the expected
+projects, observations, and handoffs. The Compose stack now uses `./data/` and
+does not attach or remove the old named volume.
 
 ## Migrate an existing native installation
 
