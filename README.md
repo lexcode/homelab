@@ -239,7 +239,7 @@ Quick start:
 
 ```bash
 cd ai/ai-memory
-cp .env.example .env   # replace AI_MEMORY_AUTH_TOKEN with a generated token
+cp .env.example .env   # set AI_MEMORY_AUTH_TOKEN and AI_MEMORY_ALLOWED_HOSTS
 mkdir -p data
 docker compose up -d
 ```
