@@ -10,9 +10,7 @@ services:
     environment:
       AI_MEMORY_AUTH_TOKEN: ${AI_MEMORY_AUTH_TOKEN:?Set AI_MEMORY_AUTH_TOKEN in ai/ai-memory/.env}
       AI_MEMORY_ALLOWED_HOSTS: ${AI_MEMORY_ALLOWED_HOSTS}
-      # Start without paid LLM or embedding calls.
-      AI_MEMORY_LLM_PROVIDER: ${AI_MEMORY_LLM_PROVIDER:-none}
-      AI_MEMORY_EMBEDDING_PROVIDER: ${AI_MEMORY_EMBEDDING_PROVIDER:-none}
+      # Provider variables are intentionally omitted for zero-LLM mode.
       RUST_LOG: ${AI_MEMORY_LOG_LEVEL:-info}
     volumes:
       - ./data:/data
