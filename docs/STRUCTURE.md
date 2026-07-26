@@ -20,6 +20,8 @@ homelab/
 ├── analytics/                # Your Spotify (API + web + MongoDB)
 ├── homepage/                 # Homepage dashboard + docker socket proxy
 ├── notifications/            # Gotify, iGotify assistant, changedetection.io
+├── ai/
+│   └── ai-memory/            # Shared coding-agent memory server
 ├── proxy/                    # cloudflared + Nginx Proxy Manager (+ optional Tailscale)
 ├── dns/                      # AdGuard Home
 └── systemd/                  # Optional unit files to start stacks at boot
@@ -154,6 +156,19 @@ notifications/
     ├── gotify/
     ├── igotify/
     └── changedetection/
+```
+
+---
+
+## `ai/ai-memory/`
+
+```text
+ai/
+└── ai-memory/
+    ├── compose.yml           # ai-memory server (aimemorynetwork)
+    ├── .env.example
+    ├── README.md             # Pi setup, migration, and client configuration
+    └── data/                 # Wiki, database, logs, and other state (not committed)
 ```
 
 ---

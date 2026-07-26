@@ -5,7 +5,7 @@ set -u
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 mapfile -t stacks < <(
   cd "$repo_root" &&
-    find . -mindepth 2 -maxdepth 2 -name compose.yml -printf '%h\n' |
+    find . -mindepth 2 -maxdepth 3 -name compose.yml -printf '%h\n' |
       sort |
       sed 's#^\./##'
 )

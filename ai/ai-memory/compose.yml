@@ -1,0 +1,23 @@
+services:
+  ai-memory:
+    container_name: ai-memory
+    image: akitaonrails/ai-memory:latest
+    restart: unless-stopped
+    ports:
+      # Expose on the LAN so desktop clients can connect.
+      # Restrict access with the bearer token below.
+      - "${AI_MEMORY_BIND_ADDRESS:-0.0.0.0}:${AI_MEMORY_PORT:-49374}:49374"
+    environment:
+      AI_MEMORY_AUTH_TOKEN: ${AI_MEMORY_AUTH_TOKEN}
+      # Start without paid LLM or embedding calls.
+      AI_MEMORY_LLM_PROVIDER: ${AI_MEMORY_LLM_PROVIDER:-none}
+      AI_MEMORY_EMBEDDING_PROVIDER: ${AI_MEMORY_EMBEDDING_PROVIDER:-none}
+      RUST_LOG: ${AI_MEMORY_LOG_LEVEL:-info}
+    volumes:
+      - ./data:/data
+    networks:
+      - aimemorynetwork
+
+networks:
+  aimemorynetwork:
+    name: aimemorynetwork
