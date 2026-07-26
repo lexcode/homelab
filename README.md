@@ -285,7 +285,7 @@ would turn normal startup into an unreliable unit failure.
 The default `proxy.service` startup excludes the optional Tailscale Funnel
 profile.
 
-**Install (paths assume this repo at `/home/lexcode/code/homelab`; edit the unit files if your clone lives elsewhere):**
+**Install (paths assume this repo at `/home/lexcode/git/homelab`; edit the unit files if your clone lives elsewhere):**
 
 ```bash
 sudo cp systemd/*.service /etc/systemd/system/

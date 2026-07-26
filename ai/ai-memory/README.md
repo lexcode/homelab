@@ -17,7 +17,7 @@ The published Docker image supports `linux/arm64`, including a 64-bit Raspberry 
 2. Create the environment file and persistent-data directory:
 
    ```bash
-   cd ~/code/homelab/ai/ai-memory
+   cd ~/git/homelab/ai/ai-memory
    cp .env.example .env
    mkdir -p data
    ```
@@ -147,7 +147,7 @@ systemctl --user stop ai-memory
 If this Docker stack has already been used, stop it and preserve its current data:
 
 ```bash
-cd ~/code/homelab/ai/ai-memory
+cd ~/git/homelab/ai/ai-memory
 docker compose down
 backup_dir="$HOME/ai-memory-backups/data-before-migration-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$HOME/ai-memory-backups"
@@ -161,13 +161,13 @@ From the desktop, transfer the complete native data directory:
 ```bash
 rsync -aHAX --info=progress2 \
   ~/.local/share/ai-memory/ \
-  lexcode@YOUR_PI_IP:~/code/homelab/ai/ai-memory/data/
+  lexcode@YOUR_PI_IP:~/git/homelab/ai/ai-memory/data/
 ```
 
 Then start the server on the Pi:
 
 ```bash
-cd ~/code/homelab/ai/ai-memory
+cd ~/git/homelab/ai/ai-memory
 sudo chown -R "$(id -u):$(id -g)" data
 docker compose up -d
 docker compose logs -f --tail=100
@@ -187,7 +187,7 @@ must be present in `AI_MEMORY_ALLOWED_HOSTS` on the Pi. After changing the Pi's
 `.env`, apply it with:
 
 ```bash
-cd ~/code/homelab/ai/ai-memory
+cd ~/git/homelab/ai/ai-memory
 docker compose up -d
 ```
 

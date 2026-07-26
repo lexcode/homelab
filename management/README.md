@@ -39,7 +39,7 @@ Dockge automatically discovers directories beneath `HOMELAB_ROOT` that contain a
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `HOMELAB_ROOT` | `/home/lexcode/code/homelab` | Absolute host path to this repository and Dockge's stacks directory. |
+| `HOMELAB_ROOT` | `/home/lexcode/git/homelab` | Absolute host path to this repository and Dockge's stacks directory. |
 | `DOCKGE_PORT` | `5002` | Host port for the Dockge UI; container port `5001` is fixed. |
 | `MANAGEMENT_SUBNET` | `172.39.8.0/24` | CIDR for `managementnetwork`. |
 
