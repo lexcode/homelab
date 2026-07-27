@@ -1,6 +1,6 @@
 # Media stack (Servarr + VPN)
 
-Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, and deunhealth. Config lives under `./data/`; libraries and downloads are expected on the host at **`/data`** (bind-mounted into the containers).
+Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, Maintainerr, and deunhealth. Config lives under `./data/`; libraries and downloads are expected on the host at **`/data`** (bind-mounted into the containers).
 
 ## Prerequisites
 
@@ -39,7 +39,8 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
      data/bazarr \
      data/seerr \
      data/prowlarr \
-     data/suggestarr/config_files
+     data/suggestarr/config_files \
+     data/maintainerr
    ```
 
 3. **PIA WireGuard data** (first run)
@@ -72,10 +73,15 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
 | Prowlarr     | `9696`      | Via VPN container                        |
 | FlareSolverr | `8191`      | Via VPN container                        |
 | SuggestArr   | `5000`      | `network_mode: host` — binds on the host |
+| Maintainerr  | `6246`      | `MAINTAINERR_PORT`                       |
 
 **DNS:** Apps on `servarrnetwork` use public DNS (`1.1.1.1` / `8.8.8.8`) where noted in `compose.yml`, so lookups like Radarr’s API host work reliably. Do not add that YAML anchor to services using `network_mode: service:vpn`.
 
 **SuggestArr** uses the host network so outbound calls to Jellyfin/Plex on the LAN use the host’s source address (avoids LAN firewalls that drop traffic from the Docker bridge range).
+
+## Maintainerr
+
+[**Maintainerr**](https://github.com/maintainerr/maintainerr) automates library cleanup by applying rules (e.g. "unwatched for 30 days") against Plex/Jellyfin, then removing matching media via Radarr/Sonarr. It sits on `servarrnetwork` so it can reach the other *arr apps by container name; set its media-server and *arr connections from the Maintainerr UI (`http://<host>:6246`) after startup. Set `MAINTAINERR_GITHUB_TOKEN` in `.env` if you hit GitHub API rate limits.
 
 ## Seerr logging
 
