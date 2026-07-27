@@ -293,7 +293,7 @@ services:
     restart: unless-stopped
     environment:
       - TZ=${TZ}
-      # - GITHUB_TOKEN=${MAINTAINERR_GITHUB_TOKEN} # Optional: raises GitHub API rate limit (60/hr -> 5000/hr)
+      - GITHUB_TOKEN=${MAINTAINERR_GITHUB_TOKEN:-} # Optional: raises GitHub API rate limit (60/hr -> 5000/hr)
     volumes:
       - ./data/maintainerr:/opt/data
     ports:
