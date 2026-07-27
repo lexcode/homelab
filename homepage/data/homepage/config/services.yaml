@@ -215,7 +215,7 @@
         server: docker
         container: suggestarr
     - Maintainerr:
-        href: "{{HOMEPAGE_VAR_MAINTAINERR}}"
+        href: "{{HOMEPAGE_VAR_MAINTAINERR_URL}}"
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/maintainerr.png
         server: docker
         container: maintainerr
