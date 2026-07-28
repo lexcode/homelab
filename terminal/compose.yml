@@ -1,6 +1,6 @@
 services:
   atuin:
-    container_name: atuin:latest
+    container_name: atuin:18.18.1
     restart: always
     image: ghcr.io/atuinsh/atuin:c28ac1b
     command: server start
