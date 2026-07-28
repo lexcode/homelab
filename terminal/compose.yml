@@ -1,9 +1,9 @@
 services:
   atuin:
-    container_name: atuin:18.18.1
+    container_name: atuin
     restart: always
-    image: ghcr.io/atuinsh/atuin:c28ac1b
-    command: server start
+    image: ghcr.io/atuinsh/atuin:18.18.1
+    command: start
     volumes:
       - "./data/config:/config"
     ports:
