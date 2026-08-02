@@ -105,4 +105,3 @@ networks:
   notificationsnetwork:
     external: true
     name: notificationsnetwork
-
