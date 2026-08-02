@@ -76,7 +76,7 @@ available, inspect the chosen compressed dump, and pipe it into `psql`:
 ```bash
 docker compose stop api worker backup
 gunzip -c data/db_dumps/daily/CHOSEN_DUMP.sql.gz |
-  docker compose exec -T db psql -U pulsearr -d pulsearr
+  docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 docker compose up -d
 ```
 
