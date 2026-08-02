@@ -50,9 +50,9 @@ explicit and idempotent.
 ```bash
 docker compose ps
 curl --fail http://192.168.0.24:8700/api/v1/health
-docker compose exec -T worker pnpm worker status
-docker compose exec -T worker pnpm worker sync
-docker compose exec -T worker pnpm worker sync
+docker compose exec -T worker /app/scripts/container-entrypoint.sh worker status
+docker compose exec -T worker /app/scripts/container-entrypoint.sh worker sync
+docker compose exec -T worker /app/scripts/container-entrypoint.sh worker sync
 ```
 
 The first complete sync establishes the baseline without sending a digest. An
