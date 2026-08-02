@@ -2,6 +2,9 @@
 
 One unit per Docker Compose stack, matching the directory layout under this repo (including `management.service` for [`management/`](../management/README.md), `dns.service` for [`dns/`](../dns/README.md), and `notifications.service` for [`notifications/`](../notifications/README.md)). Each unit runs `docker compose up -d` as a oneshot service and remains active after Compose finishes, so successful activation means detached container startup completed. A 15-minute startup timeout allows initial image pulls and container recreation to finish without permitting an indefinitely stuck Compose process. Container health and restart behavior remain Docker/Compose responsibilities.
 
+`pulsearr.service` starts after `media.service` and `notifications.service`
+because its Compose stack imports the Docker networks created by those stacks.
+
 Unit state deliberately does not mirror container state. An active unit means
 Compose orchestration succeeded; it does not mean every container is still
 running or healthy. Use `bash scripts/status.sh <stack>` from the repository
