@@ -5,10 +5,21 @@ set -euo pipefail
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 readme="$repo_root/pulsearr/README.md"
 compose_file="$repo_root/pulsearr/compose.yml"
+env_example="$repo_root/pulsearr/.env.example"
 compiled_command='docker compose exec -T worker /app/scripts/container-entrypoint.sh worker'
 
 if ! grep -Fq 'command: ["worker", "schedule"]' "$compose_file"; then
   printf 'not ok - Pulsearr worker does not start the internal scheduler\n' >&2
+  exit 1
+fi
+
+if ! grep -Fq 'DATABASE_URL=postgresql://${PULSEARR_DB_USER}:${PULSEARR_DB_PASSWORD}@db:5432/${PULSEARR_DB_NAME}' "$env_example"; then
+  printf 'not ok - Pulsearr DATABASE_URL does not use the configured database identity\n' >&2
+  exit 1
+fi
+
+if ! grep -Fq 'openssl rand -hex 32' "$env_example"; then
+  printf 'not ok - Pulsearr database password guidance is not URL-safe\n' >&2
   exit 1
 fi
 
@@ -19,6 +30,12 @@ fi
 
 if ! grep -Fq "$compiled_command sync" "$readme"; then
   printf 'not ok - Pulsearr sync verification does not use the compiled worker entrypoint\n' >&2
+  exit 1
+fi
+
+sync_count=$(grep -Fc "$compiled_command sync" "$readme")
+if [ "$sync_count" -lt 2 ]; then
+  printf 'not ok - Pulsearr verification does not repeat the sync idempotency check\n' >&2
   exit 1
 fi
 

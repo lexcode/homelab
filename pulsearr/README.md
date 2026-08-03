@@ -27,11 +27,13 @@ on `pulsearrnetwork` only. Jellyfin remains on its separate Unraid host at
    mkdir -p data/database data/db_dumps
    ```
 
-2. Set a strong `PULSEARR_DB_PASSWORD`, the TMDB v4 read-access token, Gotify
+2. Set a strong URL-safe `PULSEARR_DB_PASSWORD` (for example, generate one
+   with `openssl rand -hex 32`), the TMDB v4 read-access token, Gotify
    application token, and Jellyfin API key in `.env`. Keep `.env` local. The
-   worker uses the schedule values in that file: catalogue sync daily at 06:00,
-   Jellyfin refresh every 15 minutes, and the weekly summary at 09:00 on Sunday
-   (all in `APP_TIMEZONE`). Adjust the three cron expressions if needed.
+   database user and name may be changed; `DATABASE_URL` derives from both.
+   The worker uses the schedule values in that file: catalogue sync daily at
+   06:00, Jellyfin refresh every 15 minutes, and the weekly summary at 09:00 on
+   Sunday (all in `APP_TIMEZONE`). Adjust the three cron expressions if needed.
 
 3. Start the dependency stacks, then Pulsearr:
 
@@ -52,6 +54,7 @@ explicit and idempotent.
 docker compose ps
 curl --fail http://192.168.0.24:8700/api/v1/health
 docker compose exec -T worker /app/scripts/container-entrypoint.sh worker status
+docker compose exec -T worker /app/scripts/container-entrypoint.sh worker sync
 docker compose exec -T worker /app/scripts/container-entrypoint.sh worker sync
 docker compose exec -T worker /app/scripts/container-entrypoint.sh worker refresh-library
 ```
