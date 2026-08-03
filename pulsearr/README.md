@@ -27,10 +27,11 @@ on `pulsearrnetwork` only. Jellyfin remains on its separate Unraid host at
    mkdir -p data/database data/db_dumps
    ```
 
-2. Set a strong `PULSEARR_DB_PASSWORD`, the TMDB v4 read-access token, and a
-   Gotify application token in `.env`. Keep `.env` local. Phase 4 does not yet
-   consume the Seerr, Jellyfin, Better Auth, or scheduling values, but their
-   deployed forms are reserved here for the later phases.
+2. Set a strong `PULSEARR_DB_PASSWORD`, the TMDB v4 read-access token, Gotify
+   application token, and Jellyfin API key in `.env`. Keep `.env` local. The
+   worker uses the schedule values in that file: catalogue sync daily at 06:00,
+   Jellyfin refresh every 15 minutes, and the weekly summary at 09:00 on Sunday
+   (all in `APP_TIMEZONE`). Adjust the three cron expressions if needed.
 
 3. Start the dependency stacks, then Pulsearr:
 
@@ -52,13 +53,17 @@ docker compose ps
 curl --fail http://192.168.0.24:8700/api/v1/health
 docker compose exec -T worker /app/scripts/container-entrypoint.sh worker status
 docker compose exec -T worker /app/scripts/container-entrypoint.sh worker sync
-docker compose exec -T worker /app/scripts/container-entrypoint.sh worker sync
+docker compose exec -T worker /app/scripts/container-entrypoint.sh worker refresh-library
 ```
 
-The first complete sync establishes the baseline without sending a digest. An
-immediately repeated sync must report no duplicate arrivals. The worker reaches
-TMDB over its normal outbound connection and Gotify as `http://gotify:80` on
-`notificationsnetwork`.
+The worker runs `worker schedule` continuously and owns all scheduled work; no
+host cron is needed. The first complete sync establishes the baseline without
+sending a digest. An immediately repeated sync must report no duplicate
+arrivals. `worker refresh-library` verifies Jellyfin connectivity and refreshes
+the local library index. To send a weekly summary on demand, run
+`docker compose exec -T worker /app/scripts/container-entrypoint.sh worker weekly`.
+The worker reaches TMDB and Jellyfin over its normal outbound connection and
+Gotify as `http://gotify:80` on `notificationsnetwork`.
 
 For private remote access, run `tailscale up` on both the host and workstation,
 then repeat the health request using the host's Tailscale IP or MagicDNS name.
@@ -95,6 +100,11 @@ state remains available for rollback.
   `GOTIFY_APP_TOKEN` application token.
 - Worker cannot reach TMDB: verify outbound DNS/HTTPS and that
   `TMDB_API_TOKEN` is the v4 read-access token.
+- Worker cannot reach Jellyfin: verify `JELLYFIN_URL`, `JELLYFIN_API_KEY`, and
+  that the homelab host can reach the Unraid Jellyfin address.
+- Scheduled work is not running: inspect `docker compose logs worker`, then
+  verify `SYNC_CRON`, `LIBRARY_REFRESH_CRON`, `WEEKLY_SUMMARY_CRON`, and
+  `APP_TIMEZONE` in `.env`.
 - GHCR pull denied: confirm the package is public; no registry PAT should be
   needed on the host.
 - Tailscale route unavailable: check `tailscale status` on both machines and

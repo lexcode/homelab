@@ -35,7 +35,7 @@ services:
   worker:
     image: ghcr.io/lexcode/pulsearr:latest
     container_name: pulsearr_worker
-    command: ["idle"]
+    command: ["worker", "schedule"]
     init: true
     restart: unless-stopped
     security_opt:
