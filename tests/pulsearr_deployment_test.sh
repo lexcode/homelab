@@ -23,6 +23,18 @@ if ! grep -Fq 'openssl rand -hex 32' "$env_example"; then
   exit 1
 fi
 
+if ! grep -Fq '(cd ../media && docker compose up -d)' "$readme" ||
+  ! grep -Fq '(cd ../notifications && docker compose up -d)' "$readme"; then
+  printf 'not ok - Pulsearr setup does not start dependency stacks from their directories\n' >&2
+  exit 1
+fi
+
+if grep -Fq 'docker compose -f ../media/compose.yml up -d' "$readme" ||
+  grep -Fq 'docker compose -f ../notifications/compose.yml up -d' "$readme"; then
+  printf 'not ok - Pulsearr setup loads dependency Compose files from the wrong directory\n' >&2
+  exit 1
+fi
+
 if ! grep -Fq "$compiled_command status" "$readme"; then
   printf 'not ok - Pulsearr status verification does not use the compiled worker entrypoint\n' >&2
   exit 1

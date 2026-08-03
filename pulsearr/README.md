@@ -38,8 +38,8 @@ on `pulsearrnetwork` only. Jellyfin remains on its separate Unraid host at
 3. Start the dependency stacks, then Pulsearr:
 
    ```bash
-   docker compose -f ../media/compose.yml up -d
-   docker compose -f ../notifications/compose.yml up -d
+   (cd ../media && docker compose up -d)
+   (cd ../notifications && docker compose up -d)
    docker compose pull
    docker compose up -d
    ```
