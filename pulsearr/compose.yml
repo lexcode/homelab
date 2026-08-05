@@ -29,8 +29,9 @@ services:
       retries: 6
       start_period: 30s
     networks:
-      - pulsearrnetwork
-      - servarrnetwork
+      pulsearrnetwork:
+      servarrnetwork:
+        ipv4_address: ${PULSEARR_API_SERVARR_IP:-172.39.0.20}
 
   worker:
     image: ghcr.io/lexcode/pulsearr:latest
@@ -99,6 +100,10 @@ services:
 networks:
   pulsearrnetwork:
     name: pulsearrnetwork
+  # api gets a static IP on this shared network: without one Docker's dynamic IPAM can hand it
+  # an address already reserved by ../media/compose.yml (e.g. vpn's 172.39.0.2), colliding on
+  # every reboot depending on container start order. Keep PULSEARR_API_SERVARR_IP out of
+  # 172.39.0.2-172.39.0.10, which media/compose.yml reserves for its own services.
   servarrnetwork:
     external: true
     name: servarrnetwork
