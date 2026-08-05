@@ -78,9 +78,11 @@ The Proxy section includes a `cloudflared` widget. Set these in `.env`:
 | `HOMEPAGE_VAR_CLOUDFLARED_URL`       | URL to the Cloudflare Zero Trust dashboard                                                      |
 | `HOMEPAGE_VAR_CLOUDFLARED_ACCOUNTID` | Account ID from the Zero Trust dashboard URL: `https://one.dash.cloudflare.com/<accountid>/...` |
 | `HOMEPAGE_VAR_CLOUDFLARED_TUNNELID`  | Tunnel UUID found in Networks → Tunnels → click tunnel name                                     |
-| `HOMEPAGE_VAR_CLOUDFLARED_TOKEN`     | API token with **Account → Cloudflare Tunnel: Read** permission (not a tunnel token)            |
+| `HOMEPAGE_VAR_CLOUDFLARED_TOKEN`     | API token with **Account → Cloudflare Tunnel: Read** permission (not a tunnel token)             |
 
-> The API token must be scoped to **Account**, not a Zone. Create it at https://dash.cloudflare.com/profile/api-tokens.
+> The API token must be scoped to **Account**, not a Zone. Cloudflare's permission is named **"Cloudflare Tunnel"** in current docs, but some Account API Token permission pickers still list the same underlying permission under its legacy name, **"Argo Tunnel (Legacy)"** — if you don't see "Cloudflare Tunnel" as an option, look for that instead.
+>
+> Create the token as an **Account API Token** (Cloudflare's recommended, non-user-associated credential) rather than the deprecated https://dash.cloudflare.com/profile/api-tokens page.
 
 ### Gotify widget
 

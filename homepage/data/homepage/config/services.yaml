@@ -82,9 +82,9 @@
         container: cloudflare-tunnel
         widget:
           type: cloudflared
-          accountid: { { HOMEPAGE_VAR_CLOUDFLARED_ACCOUNTID } } # from zero trust dashboard url e.g. https://one.dash.cloudflare.com/<accountid>/home/quick-start
-          tunnelid: { { HOMEPAGE_VAR_CLOUDFLARED_TUNNELID } } # found in tunnels dashboard under the tunnel name
-          key: { { HOMEPAGE_VAR_CLOUDFLARED_TOKEN } } # api token with `Account.Cloudflare Tunnel:Read` https://dash.cloudflare.com/profile/api-tokens
+          accountid: "{{HOMEPAGE_VAR_CLOUDFLARED_ACCOUNTID}}" # from zero trust dashboard url e.g. https://one.dash.cloudflare.com/<accountid>/home/quick-start
+          tunnelid: "{{HOMEPAGE_VAR_CLOUDFLARED_TUNNELID}}" # found in tunnels dashboard under the tunnel name
+          key: "{{HOMEPAGE_VAR_CLOUDFLARED_TOKEN}}" # api token with `Account.Cloudflare Tunnel:Read` https://dash.cloudflare.com/profile/api-tokens
     - Nginx Proxy Manager:
         href: "{{HOMEPAGE_VAR_NGINX_PROXY_MANAGER_URL}}"
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nginx-proxy-manager.svg
