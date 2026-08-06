@@ -66,14 +66,16 @@ services:
       - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
       # Dashboard: internal-only entrypoint, bound to loopback — never routed through
-      # Cloudflare Tunnel or Tailscale Funnel. Reach it via `ssh -L 8080:localhost:8080`.
+      # Cloudflare Tunnel or Tailscale Funnel. Reach it via `ssh -L 8091:localhost:8091`.
+      # Port 8080 is already claimed by qbittorrent's WEBUI_PORT (published on 0.0.0.0,
+      # which covers loopback too) — 8091 avoids that collision.
       - --api.dashboard=true
       - --api.insecure=false
-      - --entrypoints.traefik.address=:8080
+      - --entrypoints.traefik.address=:8091
     ports:
       - "80:80"
       - "443:443"
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8091:8091"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./data/traefik/letsencrypt:/letsencrypt

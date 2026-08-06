@@ -58,7 +58,7 @@ Traefik discovers routes two ways, matching where the backend actually lives:
 
    This starts Cloudflare Tunnel and Traefik only. Tailscale Funnel is excluded by default through the `tailscale` Compose profile.
 
-5. **Traefik dashboard:** bound to `127.0.0.1:8080` only — never routed through Cloudflare Tunnel or Tailscale Funnel. Reach it with `ssh -L 8080:localhost:8080 <host>` then open `http://localhost:8080/dashboard/`.
+5. **Traefik dashboard:** bound to `127.0.0.1:8091` only — never routed through Cloudflare Tunnel or Tailscale Funnel. (Port `8080` is already used by qbittorrent's WebUI in the `media/` stack.) Reach it with `ssh -L 8091:localhost:8091 <host>` then open `http://localhost:8091/dashboard/`.
 
 ## Public hostnames
 
@@ -164,7 +164,7 @@ The [Homepage](../homepage/) dashboard includes a `cloudflared` widget for this 
 ## Notes
 
 - **cloudflared** uses outbound connections only; no inbound router port forward is required.
-- **Traefik** publishes `80` and `443` on the host for local and tunnel-terminated HTTP(S), and `8080` on `127.0.0.1` only for its dashboard.
+- **Traefik** publishes `80` and `443` on the host for local and tunnel-terminated HTTP(S), and `8091` on `127.0.0.1` only for its dashboard (`8080` is taken by qbittorrent's WebUI).
 - **DNS / AdGuard Home** (LAN resolver / ad blocking) is a separate stack: [`dns/`](../dns/README.md). The **bridge** setup publishes the web UI on **`ADGUARD_HTTP_PORT`** (default **3005**) so it does not fight Traefik for **80**/**443** on the same host.
 - `restart: unless-stopped` ensures the tunnel reconnects after a reboot.
 - To restrict access by country, use Cloudflare WAF Custom Rules (Security → WAF → Custom Rules). Optional for public services; not required for basic tunnel operation.
