@@ -55,7 +55,7 @@ Tailscale Funnel's route (`jellyfin-tailscale`) is the one exception: it has no 
    cp .env.example .env
    ```
 
-   Set `CLOUDFLARED_TOKEN` to the token from the tunnel dashboard, `ACME_EMAIL` to an address for Let's Encrypt expiry notices, and `CF_DNS_API_TOKEN` to the DNS-edit token from Prerequisites above.
+   Set `CLOUDFLARED_TOKEN` to the token from the tunnel dashboard, `ACME_EMAIL` to an address for Let's Encrypt expiry notices, `CF_DNS_API_TOKEN` to the DNS-edit token from Prerequisites above, and `TRAEFIK_DASHBOARD_AUTH` to a `user:hash` pair for the dashboard (generate with `openssl passwd -apr1`, then **double every `$`** — see the note in `.env.example`).
 
 3. **Start other stacks first** (or use systemd ordering) so external Docker networks exist.
 
@@ -67,7 +67,11 @@ Tailscale Funnel's route (`jellyfin-tailscale`) is the one exception: it has no 
 
    This starts Cloudflare Tunnel and Traefik only. Tailscale Funnel is excluded by default through the `tailscale` Compose profile.
 
-5. **Traefik dashboard:** bound to `127.0.0.1:8091` only — never routed through Cloudflare Tunnel or Tailscale Funnel. (Port `8080` is already used by qbittorrent's WebUI in the `media/` stack.) Reach it with `ssh -L 8091:localhost:8091 <host>` then open `http://localhost:8091/dashboard/`.
+5. **Traefik dashboard:** `https://traefik.lexcode.dev/dashboard/`, behind basicauth (`TRAEFIK_DASHBOARD_AUTH`). It is routed like any other backend — `websecure` entrypoint, wildcard cert — and is reachable **on the LAN only**: `*.lexcode.dev` is a DNS-only wildcard pointing at the Docker host, and this hostname is deliberately absent from the Cloudflare Tunnel ingress, so it is not publicly routable.
+
+   The dashboard and its `/api` have **no authentication of their own**, and `/api` returns every router, service and backend address in the lab. The basicauth middleware is the only thing guarding it — don't remove it, and don't add this hostname to the tunnel.
+
+   A **break-glass path** remains for when the cert or the auth middleware is itself what's broken: an unauthenticated router on the `traefik` entrypoint, published on `127.0.0.1:8091` only. (Port `8080` is unavailable — the `vpn` container publishes qbittorrent's WebUI there on `0.0.0.0`.) Reach it with `ssh -L 8091:localhost:8091 <host>`, then open `http://localhost:8091/dashboard/`.
 
 ## Public hostnames
 
@@ -173,7 +177,7 @@ The [Homepage](../homepage/) dashboard includes a `cloudflared` widget for this 
 ## Notes
 
 - **cloudflared** uses outbound connections only; no inbound router port forward is required.
-- **Traefik** publishes `80` and `443` on the host for local and tunnel-terminated HTTP(S), and `8091` on `127.0.0.1` only for its dashboard (`8080` is taken by qbittorrent's WebUI).
+- **Traefik** publishes `80` and `443` on the host for local and tunnel-terminated HTTP(S), and `8091` on `127.0.0.1` only for the unauthenticated break-glass dashboard route (`8080` is taken by qbittorrent's WebUI). The normal dashboard route is `traefik.lexcode.dev` over `443`, behind basicauth.
 - **DNS / AdGuard Home** (LAN resolver / ad blocking) is a separate stack: [`dns/`](../dns/README.md). The **bridge** setup publishes the web UI on **`ADGUARD_HTTP_PORT`** (default **3005**) so it does not fight Traefik for **80**/**443** on the same host.
 - `restart: unless-stopped` ensures the tunnel reconnects after a reboot.
 - To restrict access by country, use Cloudflare WAF Custom Rules (Security → WAF → Custom Rules). Optional for public services; not required for basic tunnel operation.

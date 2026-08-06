@@ -99,10 +99,12 @@ services:
       - --certificatesresolvers.letsencrypt.acme.dnschallenge.delayBeforeCheck=30
       - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-      # Dashboard: internal-only entrypoint, bound to loopback — never routed through
-      # Cloudflare Tunnel or Tailscale Funnel. Reach it via `ssh -L 8091:localhost:8091`.
-      # Port 8080 is already claimed by qbittorrent's WEBUI_PORT (published on 0.0.0.0,
-      # which covers loopback too) — 8091 avoids that collision.
+      # Dashboard: served on websecure at traefik.lexcode.dev like every other backend, behind
+      # basicauth (the dashboard and its /api have no auth of their own). The loopback-only
+      # `traefik` entrypoint below is kept as an unauthenticated break-glass path for when the
+      # cert or the auth middleware is what's broken — reach it via `ssh -L 8091:localhost:8091`.
+      # Port 8080 is already claimed by qbittorrent's WEBUI_PORT (published on 0.0.0.0 by the
+      # `vpn` container, which covers loopback too) — 8091 avoids that collision.
       - --api.dashboard=true
       - --api.insecure=false
       - --entrypoints.traefik.address=:8091
@@ -116,9 +118,22 @@ services:
       - ./config/traefik/dynamic:/etc/traefik/dynamic:ro
     labels:
       - traefik.enable=true
-      - traefik.http.routers.traefik-dashboard.rule=PathPrefix(`/api`) || PathPrefix(`/dashboard`)
-      - traefik.http.routers.traefik-dashboard.entrypoints=traefik
+      # LAN-facing dashboard. *.lexcode.dev is a DNS-only wildcard pointing at this host, so this
+      # name resolves on the LAN but is not publicly routable and is not in the Cloudflare Tunnel
+      # ingress — same exposure as radarr/sonarr. basicauth is what stands between anyone on the
+      # LAN and an unauthenticated admin API that maps every router, service and backend address.
+      - traefik.http.routers.traefik-dashboard.rule=Host(`traefik.lexcode.dev`)
+      - traefik.http.routers.traefik-dashboard.entrypoints=websecure
+      - traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt
       - traefik.http.routers.traefik-dashboard.service=api@internal
+      - traefik.http.routers.traefik-dashboard.middlewares=traefik-auth
+      # The hash's `$` must be written `$$` in .env — Compose interpolates .env values too, so an
+      # un-escaped `$apr1$...` silently loses its salt and every login then fails.
+      - traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}
+      # Break-glass: loopback entrypoint, no auth, no TLS. Only reachable via SSH port-forward.
+      - traefik.http.routers.traefik-dashboard-local.rule=PathPrefix(`/api`) || PathPrefix(`/dashboard`)
+      - traefik.http.routers.traefik-dashboard-local.entrypoints=traefik
+      - traefik.http.routers.traefik-dashboard-local.service=api@internal
     networks:
       - proxynetwork
       - servarrnetwork
