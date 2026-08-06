@@ -88,6 +88,15 @@ services:
       - --entrypoints.websecure.transport.respondingTimeouts.idleTimeout=1h
       - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
       - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
+      # Skip lego's own pre-validation propagation check and just wait a fixed delay before
+      # asking Let's Encrypt to validate directly. The client-side check (querying the container's
+      # own resolver chain, then the zone's authoritative NS) proved unreliable in practice — a
+      # transient SERVFAIL from Cloudflare's own authoritative server, on top of Docker's embedded
+      # DNS being unreliable — even though the TXT record was genuinely live and correct the whole
+      # time. Let's Encrypt does its own independent, authoritative check regardless, so this
+      # local check was pure friction, not a real safety net.
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.disablePropagationCheck=true
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.delayBeforeCheck=30
       - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
       # Dashboard: internal-only entrypoint, bound to loopback — never routed through
