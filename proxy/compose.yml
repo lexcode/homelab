@@ -52,6 +52,13 @@ services:
     # does NOT fix it (Traefik's Docker client doesn't read that env var).
     image: traefik:v3.7.10
     restart: unless-stopped
+    # DNS-01, not HTTP-01: most *.lexcode.dev subdomains are DNS-only records pointing straight
+    # at private LAN IPs (not proxied through Cloudflare), so they're not publicly routable and
+    # HTTP-01 can never validate them — confirmed via a direct DNS-over-HTTPS query bypassing
+    # local/LAN DNS. NPM's actual working setup used exactly this: one *.lexcode.dev wildcard
+    # cert via DNS-01, reused for every host regardless of public reachability (see ADR-0001).
+    environment:
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
     command:
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false
@@ -71,8 +78,8 @@ services:
       - --entrypoints.websecure.transport.respondingTimeouts.readTimeout=1h
       - --entrypoints.websecure.transport.respondingTimeouts.writeTimeout=1h
       - --entrypoints.websecure.transport.respondingTimeouts.idleTimeout=1h
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
       - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
       # Dashboard: internal-only entrypoint, bound to loopback — never routed through

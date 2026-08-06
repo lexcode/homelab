@@ -30,10 +30,19 @@ Traefik discovers routes two ways, matching where the backend actually lives:
 
 - **External-routed backends** — a device or host with no Docker Compose stack in this repo (a NAS, a router, another machine on the LAN). Add a static entry to [`config/traefik/dynamic/external.yml`](./config/traefik/dynamic/external.yml) instead — Traefik's file provider watches that directory and reloads on change, no restart needed.
 
+## TLS: DNS-01, not HTTP-01
+
+Every router shares **one `*.yourdomain.com` wildcard certificate**, obtained via DNS-01 through Cloudflare's API (`CF_DNS_API_TOKEN`) rather than per-host HTTP-01. This isn't a style choice — most homelab subdomains resolve to a private LAN IP (DNS-only, not proxied through Cloudflare) or don't have a public DNS record at all, so they're not reachable from Let's Encrypt's HTTP-01 validation servers and per-host HTTP-01 simply cannot work for them. DNS-01 only needs the API token to prove control of the DNS zone — it doesn't care whether the specific hostname is publicly routable, so one wildcard covers every host uniformly regardless of how (or whether) it resolves publicly.
+
+The wildcard's `domains` (main + SAN) only needs declaring **once** — see the `jellyfin-cloudflare` router in `config/traefik/dynamic/external.yml`. Every other router just references `tls.certresolver: letsencrypt` (or the equivalent label) and Traefik matches it against the already-obtained wildcard by SNI automatically. Don't redeclare `domains` elsewhere — it's unnecessary and would just trigger a redundant ACME request.
+
+Tailscale Funnel's route (`jellyfin-tailscale`) is the one exception: it has no `tls:` block at all, since Tailscale terminates TLS at its own edge before traffic ever reaches Traefik, and `*.ts.net` isn't part of your domain's zone anyway — the wildcard couldn't cover it even if requested.
+
 ## Prerequisites
 
 - A Cloudflare account with a domain
 - A tunnel created in the [Cloudflare Zero Trust dashboard](https://one.dash.cloudflare.com) → Networks → Tunnels
+- A Cloudflare API token scoped to `Zone:DNS:Edit` on your zone (Cloudflare dashboard → My Profile → API Tokens → Create Token → "Edit zone DNS" template) — Traefik uses this for DNS-01 certificate validation. See [TLS: DNS-01, not HTTP-01](#tls-dns-01-not-http-01) for why.
 - Other homelab stacks that define the external networks above (at least once) before the proxy stack, if you rely on Traefik's cross-network routing
 
 ## Quick start
@@ -46,7 +55,7 @@ Traefik discovers routes two ways, matching where the backend actually lives:
    cp .env.example .env
    ```
 
-   Set `CLOUDFLARED_TOKEN` to the token from the tunnel dashboard, and `ACME_EMAIL` to an address for Let's Encrypt expiry notices.
+   Set `CLOUDFLARED_TOKEN` to the token from the tunnel dashboard, `ACME_EMAIL` to an address for Let's Encrypt expiry notices, and `CF_DNS_API_TOKEN` to the DNS-edit token from Prerequisites above.
 
 3. **Start other stacks first** (or use systemd ordering) so external Docker networks exist.
 
@@ -153,7 +162,7 @@ This stack replaced NPM in place. If you're bringing an existing NPM-fronted hom
 1. Recreate each of NPM's proxy hosts as either a Docker-label route (if the backend is a container in this repo) or an entry in `config/traefik/dynamic/external.yml` (if it isn't) — see [Routing model](#routing-model).
 2. Update the Cloudflare Tunnel's public hostname origins in the Zero Trust dashboard from `http://nginx-proxy-manager:80` to `http://traefik:80` (one edit covers every hostname, since Traefik does the per-hostname routing itself).
 3. Update `config/tailscale-funnel/serve.json`'s `Proxy` value the same way, if you run Tailscale Funnel.
-4. Stop `nginx-proxy-manager` before starting `traefik` — both bind `80`/`443` and can't run together. Expect a brief gap while Traefik's HTTP-01 challenge reissues certificates for every host (NPM's certs aren't migrated; Traefik starts from a fresh ACME account).
+4. Stop `nginx-proxy-manager` before starting `traefik` — both bind `80`/`443` and can't run together. Expect a brief gap while Traefik's DNS-01 challenge issues the wildcard certificate (NPM's certs aren't migrated; Traefik starts from a fresh ACME account).
 5. NPM's `block_exploits` (its built-in "block common exploits" nginx snippet) has no Traefik equivalent here and was not replicated — see [ADR-0001](../docs/adr/0001-replace-npm-with-traefik.md) for why.
 6. NPM's data directory (`data/nginx-proxy-manager/`) is left on disk, untouched, as a rollback path — delete it manually once you're confident you don't need it.
 

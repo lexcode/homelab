@@ -1,65 +1,76 @@
 # External-routed backends: devices/hosts with no Docker Compose stack in this repo, so they
 # can't be discovered via Traefik's Docker provider. Docker-routed backends are labeled in
 # their own stack's compose.yml instead — see proxy/README.md.
+#
+# TLS: every router below shares one *.lexcode.dev wildcard cert via DNS-01 (see proxy/compose.yml
+# and ADR-0001) — DNS-01 only needs Cloudflare API access to the zone, not public reachability of
+# the specific hostname, so this works even for the hosts here that only resolve to a private LAN
+# IP or don't resolve publicly at all. The wildcard's `domains` declaration lives on
+# jellyfin-cloudflare below (only needs to be declared once — Traefik reuses it for every SNI
+# match); every other router just references the same certResolver.
 http:
   routers:
-    # Reachable via Cloudflare Tunnel, has a real public DNS record — gets a real LE cert.
     jellyfin-cloudflare:
       rule: "Host(`jellyfin.lexcode.dev`)"
       entrypoints:
         - websecure
       tls:
         certResolver: letsencrypt
+        domains:
+          - main: "lexcode.dev"
+            sans:
+              - "*.lexcode.dev"
       service: jellyfin
 
     # Tailscale terminates TLS at its own edge and forwards already-decrypted HTTP to Traefik's
     # dedicated `tailscale` entrypoint (see proxy/compose.yml) — not `websecure`, which would
-    # both loop through the web(80) redirect and fail ACME (`*.ts.net` has no public DNS Let's
-    # Encrypt can validate against). No `tls:` block: this router serves plain HTTP internally.
+    # both loop through the web(80) redirect and fail ACME (`*.ts.net` isn't part of the
+    # lexcode.dev zone, so the wildcard doesn't cover it either). No `tls:` block: this router
+    # serves plain HTTP internally.
     jellyfin-tailscale:
       rule: "Host(`jellyfin.taile28bc7.ts.net`)"
       entrypoints:
         - tailscale
       service: jellyfin
 
-    # tracearr/unraid/router-ui/adguard2/synology are LAN-only — confirmed no public DNS record
-    # (NXDOMAIN), so a public ACME resolver can never validate them; requesting one anyway just
-    # burns Let's Encrypt's per-hostname failure rate limit. `tls: {}` still terminates TLS with
-    # Traefik's own default self-signed cert (browsers will warn once, same as most self-hosted
-    # LAN admin UIs) without ever calling out to Let's Encrypt.
     tracearr:
       rule: "Host(`tracearr.lexcode.dev`)"
       entrypoints:
         - websecure
-      tls: {}
+      tls:
+        certResolver: letsencrypt
       service: tracearr
 
     unraid:
       rule: "Host(`unraid.lexcode.dev`)"
       entrypoints:
         - websecure
-      tls: {}
+      tls:
+        certResolver: letsencrypt
       service: unraid
 
     router-ui:
       rule: "Host(`ui.lexcode.dev`)"
       entrypoints:
         - websecure
-      tls: {}
+      tls:
+        certResolver: letsencrypt
       service: router-ui
 
     adguard2:
       rule: "Host(`adguard2.lexcode.dev`)"
       entrypoints:
         - websecure
-      tls: {}
+      tls:
+        certResolver: letsencrypt
       service: adguard2
 
     synology:
       rule: "Host(`synology.lexcode.dev`)"
       entrypoints:
         - websecure
-      tls: {}
+      tls:
+        certResolver: letsencrypt
       service: synology
 
   services:
