@@ -58,7 +58,7 @@ docker compose up -d
 
 ## Reverse proxy
 
-The proxy stack joins `managementnetwork`, allowing Nginx Proxy Manager to forward to `http://dockge:5001`. Do not expose Dockge publicly without strong authentication and an additional access-control layer such as Cloudflare Access or a VPN.
+The proxy stack joins `managementnetwork`, and Dockge carries `traefik.*` labels routing `dockge.lexcode.dev` to `http://dockge:5001` (see [Docker-routed backends](../proxy/README.md#routing-model)). Do not expose Dockge publicly without strong authentication and an additional access-control layer such as Cloudflare Access or a VPN.
 
 ## Security
 

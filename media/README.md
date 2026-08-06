@@ -79,6 +79,10 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
 
 **SuggestArr** uses the host network so outbound calls to Jellyfin/Plex on the LAN use the host’s source address (avoids LAN firewalls that drop traffic from the Docker bridge range).
 
+## Reverse proxy
+
+The proxy stack joins `servarrnetwork`. `sonarr`, `radarr`, `lidarr`, `bazarr`, and `maintainerr` each carry `traefik.*` labels routing them at `<name>.lexcode.dev`. `prowlarr` and `qbittorrent` run with `network_mode: service:vpn`, so their routing labels live on the `vpn` container instead (each router declares its own `loadbalancer.server.port` explicitly) — see [Docker-routed backends](../proxy/README.md#routing-model) for why. Seerr and FlareSolverr are not currently routed publicly.
+
 ## Maintainerr
 
 [**Maintainerr**](https://github.com/maintainerr/maintainerr) automates library cleanup by applying rules (e.g. "unwatched for 30 days") against Plex/Jellyfin, then removing matching media via Radarr/Sonarr. It sits on `servarrnetwork` so it can reach the other *arr apps by container name; set its media-server and *arr connections from the Maintainerr UI (`http://<host>:6246`) after startup. Set `MAINTAINERR_GITHUB_TOKEN` in `.env` if you hit GitHub API rate limits.

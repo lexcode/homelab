@@ -84,6 +84,10 @@ By default the agent sees the host disks Docker exposes. To chart specific mount
 
 Mount a **directory** from the host read-only under `/extra-filesystems/<label>`; the exact label convention is described in [Beszel's docs](https://github.com/henrygd/beszel).
 
+## Reverse proxy
+
+The proxy stack joins `monitoringnetwork`. Both `beszel` and `dozzle` carry `traefik.*` labels routing them at `beszel.lexcode.dev` and `dozzle.lexcode.dev` respectively (see [Docker-routed backends](../proxy/README.md#routing-model)). Dozzle exposes live container logs and the Docker socket view — treat its public route with the same care as Dockge's (see [management/README.md](../management/README.md#reverse-proxy)).
+
 ## Remote Beszel agents
 
 This compose file runs **hub + agent on one machine**. Other hosts can run only `henrygd/beszel-agent` pointing `HUB_URL` at your hub's reachable URL; they are not defined here. Each remote machine needs its own token — in the Beszel UI go to **Systems → Add System**, copy the token shown, and set it as `TOKEN` in the agent's environment on that machine. The same `KEY` from this machine's `.env` is reused across all agents.

@@ -47,7 +47,7 @@ Persistent state lives under **`./data/gotify/`**, **`./data/igotify/`**, and **
 | iGotify assistant    | `IGOTIFY_HTTP_PORT` default `8681`              | `8080`    |
 | changedetection.io   | `5001` (hardcoded)                              | `5000`    |
 
-If you put Gotify behind [Nginx Proxy Manager](../proxy/README.md), publish only on localhost or stop publishing the host port and route through the reverse proxy on your LAN or tunnel.
+Gotify is routed publicly at `gotify.lexcode.dev` via a Traefik label on the `gotify` service (see [Docker-routed backends](../proxy/README.md#routing-model) in the proxy stack's README). If you don't want that, remove the `traefik.*` labels from `gotify` in `compose.yml`, publish only on localhost, or stop publishing the host port entirely.
 
 ### iGotify assistant “UI” (Scalar API)
 
