@@ -47,6 +47,13 @@ services:
     container_name: traefik
     image: traefik:v3.3
     restart: unless-stopped
+    # Traefik v3.3's bundled Docker client defaults to an old API version (1.24) instead of
+    # negotiating up to what the daemon actually supports. Recent Docker Engine releases reject
+    # anything below their stated minimum (seen: daemon reports API 1.55, refuses below 1.40),
+    # so the Docker provider fails outright without this pin. Bump alongside the daemon if this
+    # ever starts failing again — check `docker version --format '{{.Server.APIVersion}}'`.
+    environment:
+      - DOCKER_API_VERSION=1.51
     command:
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false
