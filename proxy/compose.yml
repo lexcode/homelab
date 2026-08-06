@@ -39,17 +39,50 @@ services:
     networks:
       - proxynetwork
 
-  nginx-proxy-manager:
-    container_name: nginx-proxy-manager
-    image: jc21/nginx-proxy-manager:latest
+  # Docker-routed backends get a route via `traefik.*` labels on their own container, in their
+  # own stack's compose file (Traefik's Docker provider, exposedByDefault=false — nothing is
+  # routed unless explicitly labeled). Backends with no compose stack in this repo (a NAS, a
+  # router, another host on the LAN) get a static entry in ./config/traefik/dynamic/ instead.
+  traefik:
+    container_name: traefik
+    image: traefik:v3.3
     restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      # Generous timeouts on websecure — NPM's advanced_config gave Jellyfin 1h read/send
+      # timeouts for long transcode/stream sessions; Traefik's equivalent is per-entrypoint.
+      - --entrypoints.websecure.transport.respondingTimeouts.readTimeout=1h
+      - --entrypoints.websecure.transport.respondingTimeouts.writeTimeout=1h
+      - --entrypoints.websecure.transport.respondingTimeouts.idleTimeout=1h
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      # Dashboard: internal-only entrypoint, bound to loopback — never routed through
+      # Cloudflare Tunnel or Tailscale Funnel. Reach it via `ssh -L 8080:localhost:8080`.
+      - --api.dashboard=true
+      - --api.insecure=false
+      - --entrypoints.traefik.address=:8080
     ports:
       - "80:80"
       - "443:443"
-      - "81:81"
+      - "127.0.0.1:8080:8080"
     volumes:
-      - ./data/nginx-proxy-manager/data:/data
-      - ./data/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/traefik/letsencrypt:/letsencrypt
+      - ./config/traefik/dynamic:/etc/traefik/dynamic:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik-dashboard.rule=PathPrefix(`/api`) || PathPrefix(`/dashboard`)
+      - traefik.http.routers.traefik-dashboard.entrypoints=traefik
+      - traefik.http.routers.traefik-dashboard.service=api@internal
     networks:
       - proxynetwork
       - servarrnetwork
@@ -59,6 +92,8 @@ services:
       - terminalnetwork
       - homepagenetwork
       - managementnetwork
+      - adguardnetwork
+      - notificationsnetwork
 
 networks:
   proxynetwork:
@@ -76,4 +111,8 @@ networks:
   homepagenetwork:
     external: true
   managementnetwork:
+    external: true
+  adguardnetwork:
+    external: true
+  notificationsnetwork:
     external: true

@@ -15,6 +15,12 @@ services:
       - LOG_LEVEL=${BESZEL_LOG_LEVEL:-info}
     ports:
       - ${BESZEL_PORT:-8090}:${BESZEL_PORT:-8090}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.beszel.rule=Host(`beszel.lexcode.dev`)
+      - traefik.http.routers.beszel.entrypoints=websecure
+      - traefik.http.routers.beszel.tls.certresolver=letsencrypt
+      - traefik.http.services.beszel.loadbalancer.server.port=${BESZEL_PORT:-8090}
     volumes:
       - ./data/beszel_data:/beszel_data
     networks:
@@ -50,6 +56,12 @@ services:
       - ./data/dozzle_data:/data
     ports:
       - "8181:8080"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dozzle.rule=Host(`dozzle.lexcode.dev`)
+      - traefik.http.routers.dozzle.entrypoints=websecure
+      - traefik.http.routers.dozzle.tls.certresolver=letsencrypt
+      - traefik.http.services.dozzle.loadbalancer.server.port=8080
     networks:
       monitoringnetwork:
         ipv4_address: ${DOZZLE_IP:-172.39.1.3}

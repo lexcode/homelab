@@ -177,14 +177,18 @@ ai/
 
 ```text
 proxy/
-├── compose.yml               # cloudflared, NPM, optional tailscale-funnel, external Docker networks
+├── compose.yml               # cloudflared, traefik, optional tailscale-funnel, external Docker networks
 ├── .env.example
-├── README.md                 # Tunnel token, hostnames, Tailscale Funnel setup
+├── README.md                 # Tunnel token, hostnames, Tailscale Funnel setup, routing model
 ├── config/
+│   ├── traefik/
+│   │   └── dynamic/
+│   │       └── external.yml  # static routes for external-routed (non-Docker) backends (committed)
 │   └── tailscale-funnel/
 │       └── serve.json        # Tailscale Serve/Funnel config (committed template)
-└── data/                     # NPM data, certs, tunnel and tailscale state (not committed)
-    ├── nginx-proxy-manager/
+└── data/                     # Traefik certs, tunnel and tailscale state (not committed)
+    ├── traefik/
+    ├── nginx-proxy-manager/  # former NPM data, left as rollback insurance
     └── tailscale-funnel/
 ```
 

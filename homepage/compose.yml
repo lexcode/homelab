@@ -6,6 +6,12 @@ services:
       - 3003:3000
     networks:
       - homepagenetwork
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.homepage.rule=Host(`homepage.lexcode.dev`)
+      - traefik.http.routers.homepage.entrypoints=websecure
+      - traefik.http.routers.homepage.tls.certresolver=letsencrypt
+      - traefik.http.services.homepage.loadbalancer.server.port=3000
     volumes:
       - ./data/homepage/config:/app/config # Make sure your local config directory exists
       - ./data/homepage/images:/app/public/images

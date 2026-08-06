@@ -57,16 +57,16 @@ flowchart LR
     end
     cf[☁️  proxy/cloudflared]
     ts[🔗 proxy/tailscale-funnel]
-    npm[proxy/nginx-proxy-manager]
+    traefik[proxy/traefik]
     subgraph desktop["🖥️  Desktop (LAN)"]
         ollama[Ollama :11434]
     end
     pai -- LAN --> ollama
     pgpt -- LAN --> ollama
-    cf -- tunnel --> npm
-    ts -- funnel --> npm
-    npm -- HTTP --> hp
-    npm -- HTTP --> ysc
+    cf -- tunnel --> traefik
+    ts -- funnel --> traefik
+    traefik -- HTTP --> hp
+    traefik -- HTTP --> ysc
 ```
 
 ## Layout
@@ -256,13 +256,13 @@ cp .env.example .env   # set CLOUDFLARED_TOKEN; TS_AUTHKEY only if using Tailsca
 docker compose up -d
 ```
 
-This starts Cloudflare Tunnel and Nginx Proxy Manager only. After configuring
+This starts Cloudflare Tunnel and Traefik only. After configuring
 the optional variables, enable [Tailscale Funnel](proxy/README.md#tailscale-funnel-optional)
 with `docker compose --profile tailscale up -d`.
 
 ## DNS (AdGuard Home)
 
-See **[dns/README.md](dns/README.md)** for bridge networking, port defaults vs NPM, systemd-resolved, and **UniFi DMP** DHCP DNS (**primary** = Pi `dns/` stack, **secondary** = Unraid AdGuard).
+See **[dns/README.md](dns/README.md)** for bridge networking, port defaults vs Traefik, systemd-resolved, and **UniFi DMP** DHCP DNS (**primary** = Pi `dns/` stack, **secondary** = Unraid AdGuard).
 
 Quick start:
 

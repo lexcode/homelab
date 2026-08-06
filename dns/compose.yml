@@ -19,6 +19,12 @@ services:
     volumes:
       - ./data/work:/opt/adguardhome/work
       - ./data/conf:/opt/adguardhome/conf
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.adguard.rule=Host(`adguard.lexcode.dev`)
+      - traefik.http.routers.adguard.entrypoints=websecure
+      - traefik.http.routers.adguard.tls.certresolver=letsencrypt
+      - traefik.http.services.adguard.loadbalancer.server.port=3000
     networks:
       adguardnetwork:
         ipv4_address: ${ADGUARD_IP:-172.39.5.2}

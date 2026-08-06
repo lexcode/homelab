@@ -8,7 +8,7 @@ Docker Compose stack for LAN DNS with ad blocking and filtering. Right now it ru
 
 ## Why `dns/` and not `proxy/`?
 
-[`proxy/`](../proxy/) is **Cloudflare Tunnel + Nginx Proxy Manager** (HTTPS, hostnames, upstream routing). This stack is **DNS** (UDP/TCP 53, filtering, optional DHCP). They solve different problems. Putting DNS inside `proxy/` would bundle unrelated services and make port planning harder (NPM already uses host `80`/`443`/`81`).
+[`proxy/`](../proxy/) is **Cloudflare Tunnel + Traefik** (HTTPS, hostnames, upstream routing). This stack is **DNS** (UDP/TCP 53, filtering, optional DHCP). They solve different problems. Putting DNS inside `proxy/` would bundle unrelated services and make port planning harder (Traefik already uses host `80`/`443`).
 
 ## Adding Pi-hole (or another DNS stack) later
 
@@ -64,7 +64,7 @@ Reserve **static LAN IPs** for both AdGuard endpoints in UniFi so they never dri
 
 [Nginx Proxy Manager](../proxy/README.md) uses host `80`, `443`, and `81`. This stack defaults the AdGuard web UI to **3005** so you can run both on one machine without a port collision.
 
-If you later enable HTTPS for the AdGuard UI, DNS-over-HTTPS, or DNS-over-TLS inside AdGuard, add the image’s additional port mappings in `compose.yml` (see the [Docker Hub quick start](https://hub.docker.com/r/adguard/adguardhome))—do not blindly map host `80`/`443` if NPM is already there.
+If you later enable HTTPS for the AdGuard UI, DNS-over-HTTPS, or DNS-over-TLS inside AdGuard, add the image’s additional port mappings in `compose.yml` (see the [Docker Hub quick start](https://hub.docker.com/r/adguard/adguardhome))—do not blindly map host `80`/`443` if Traefik is already there.
 
 Optional ports from the upstream image (add only what you enable in AdGuard’s settings):
 

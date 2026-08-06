@@ -12,6 +12,12 @@ services:
       - ./data/dockge:/app/data
       # Dockge requires the stacks path to be identical on the host and in the container.
       - ${HOMELAB_ROOT:?Set HOMELAB_ROOT in management/.env}:${HOMELAB_ROOT:?Set HOMELAB_ROOT in management/.env}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dockge.rule=Host(`dockge.lexcode.dev`)
+      - traefik.http.routers.dockge.entrypoints=websecure
+      - traefik.http.routers.dockge.tls.certresolver=letsencrypt
+      - traefik.http.services.dockge.loadbalancer.server.port=5001
     networks:
       - managementnetwork
 

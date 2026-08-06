@@ -20,6 +20,12 @@ services:
       - notificationsnetwork
     ports:
       - "${GOTIFY_HTTP_PORT:-8688}:80"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.gotify.rule=Host(`gotify.lexcode.dev`)
+      - traefik.http.routers.gotify.entrypoints=websecure
+      - traefik.http.routers.gotify.tls.certresolver=letsencrypt
+      - traefik.http.services.gotify.loadbalancer.server.port=80
     environment:
       TZ: ${TZ:-UTC}
       GOTIFY_DEFAULTUSER_PASS: ${GOTIFY_DEFAULTUSER_PASS:?Set GOTIFY_DEFAULTUSER_PASS in notifications/.env}

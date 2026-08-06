@@ -1,0 +1,102 @@
+# External-routed backends: devices/hosts with no Docker Compose stack in this repo, so they
+# can't be discovered via Traefik's Docker provider. Docker-routed backends are labeled in
+# their own stack's compose.yml instead — see proxy/README.md.
+http:
+  routers:
+    jellyfin-cloudflare:
+      rule: "Host(`jellyfin.lexcode.dev`)"
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: jellyfin
+
+    # Bypasses Cloudflare entirely — Tailscale terminates TLS at its own edge, so this router
+    # only exists for host-based dispatch inside Traefik; the tailscale-funnel sidecar forwards
+    # here over `websecure` the same way the Cloudflare Tunnel does.
+    jellyfin-tailscale:
+      rule: "Host(`jellyfin.taile28bc7.ts.net`)"
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: jellyfin
+
+    tracearr:
+      rule: "Host(`tracearr.lexcode.dev`)"
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: tracearr
+
+    unraid:
+      rule: "Host(`unraid.lexcode.dev`)"
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: unraid
+
+    router-ui:
+      rule: "Host(`ui.lexcode.dev`)"
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: router-ui
+
+    adguard2:
+      rule: "Host(`adguard2.lexcode.dev`)"
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: adguard2
+
+    synology:
+      rule: "Host(`synology.lexcode.dev`)"
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: synology
+
+  services:
+    jellyfin:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.149:8096"
+
+    tracearr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.149:3010"
+
+    unraid:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.149:80"
+
+    # Self-signed backend certs (router admin UI, NAS) — Traefik must skip verification
+    # to reach them, same trust model NPM used by default.
+    router-ui:
+      loadBalancer:
+        servers:
+          - url: "https://192.168.0.1:443"
+        serversTransport: insecure-backend
+
+    adguard2:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.2:80"
+
+    synology:
+      loadBalancer:
+        servers:
+          - url: "https://192.168.0.10:5001"
+        serversTransport: insecure-backend
+
+  serversTransports:
+    insecure-backend:
+      insecureSkipVerify: true

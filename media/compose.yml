@@ -29,6 +29,21 @@ services:
       - /dev/net/tun:/dev/net/tun
     labels:
       - deunhealth.restart.on.unhealthy=true
+      # prowlarr and qbittorrent run with network_mode: service:vpn, so they share this
+      # container's network namespace and have no network attachment of their own — Traefik's
+      # Docker provider can only route to the container that actually owns servarrnetwork,
+      # which is this one. Each router explicitly declares its own service port.
+      - traefik.enable=true
+      - traefik.http.routers.prowlarr.rule=Host(`prowlarr.lexcode.dev`)
+      - traefik.http.routers.prowlarr.entrypoints=websecure
+      - traefik.http.routers.prowlarr.tls.certresolver=letsencrypt
+      - traefik.http.routers.prowlarr.service=prowlarr
+      - traefik.http.services.prowlarr.loadbalancer.server.port=9696
+      - traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.lexcode.dev`)
+      - traefik.http.routers.qbittorrent.entrypoints=websecure
+      - traefik.http.routers.qbittorrent.tls.certresolver=letsencrypt
+      - traefik.http.routers.qbittorrent.service=qbittorrent
+      - traefik.http.services.qbittorrent.loadbalancer.server.port=${WEBUI_PORT:-8080}
     ports:
       - ${WEBUI_PORT:-8080}:${WEBUI_PORT:-8080} # qBittorrent WebUI
       - ${TORRENTING_PORT:-6881}:${TORRENTING_PORT:-6881}
@@ -151,6 +166,12 @@ services:
       - /mnt/usb2/downloads:/data/downloads3
     ports:
       - 8989:8989
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sonarr.rule=Host(`sonarr.lexcode.dev`)
+      - traefik.http.routers.sonarr.entrypoints=websecure
+      - traefik.http.routers.sonarr.tls.certresolver=letsencrypt
+      - traefik.http.services.sonarr.loadbalancer.server.port=8989
     depends_on:
       vpn:
         condition: service_healthy
@@ -177,6 +198,12 @@ services:
       - /data/downloads-unraid:/data/downloads-unraid
     ports:
       - 7878:7878
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.radarr.rule=Host(`radarr.lexcode.dev`)
+      - traefik.http.routers.radarr.entrypoints=websecure
+      - traefik.http.routers.radarr.tls.certresolver=letsencrypt
+      - traefik.http.services.radarr.loadbalancer.server.port=7878
     networks:
       servarrnetwork:
         ipv4_address: ${RADARR_IP:-172.39.0.4}
@@ -199,6 +226,12 @@ services:
       - TZ=${TZ}
     ports:
       - 8686:8686
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.lidarr.rule=Host(`lidarr.lexcode.dev`)
+      - traefik.http.routers.lidarr.entrypoints=websecure
+      - traefik.http.routers.lidarr.tls.certresolver=letsencrypt
+      - traefik.http.services.lidarr.loadbalancer.server.port=8686
     depends_on:
       vpn:
         condition: service_healthy
@@ -222,6 +255,12 @@ services:
       - /data:/data
     ports:
       - 6767:6767
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bazarr.rule=Host(`bazarr.lexcode.dev`)
+      - traefik.http.routers.bazarr.entrypoints=websecure
+      - traefik.http.routers.bazarr.tls.certresolver=letsencrypt
+      - traefik.http.services.bazarr.loadbalancer.server.port=6767
     depends_on:
       vpn:
         condition: service_healthy
@@ -298,6 +337,12 @@ services:
       - ./data/maintainerr:/opt/data
     ports:
       - ${MAINTAINERR_PORT:-6246}:6246
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.maintainerr.rule=Host(`maintainerr.lexcode.dev`)
+      - traefik.http.routers.maintainerr.entrypoints=websecure
+      - traefik.http.routers.maintainerr.tls.certresolver=letsencrypt
+      - traefik.http.services.maintainerr.loadbalancer.server.port=6246
     healthcheck:
       test: ['CMD', '/opt/app/healthcheck.sh']
       interval: 30s
