@@ -45,15 +45,13 @@ services:
   # router, another host on the LAN) get a static entry in ./config/traefik/dynamic/ instead.
   traefik:
     container_name: traefik
-    image: traefik:v3.3
+    # v3.3's bundled Docker client defaulted to an old API version (1.24) instead of negotiating
+    # up to what the daemon actually supports; recent Docker Engine releases reject anything
+    # below their stated minimum (seen: daemon reports API 1.55, refuses below 1.40), so the
+    # Docker provider failed outright on v3.3. Confirmed fixed on v3.7.10 — DOCKER_API_VERSION
+    # does NOT fix it (Traefik's Docker client doesn't read that env var).
+    image: traefik:v3.7.10
     restart: unless-stopped
-    # Traefik v3.3's bundled Docker client defaults to an old API version (1.24) instead of
-    # negotiating up to what the daemon actually supports. Recent Docker Engine releases reject
-    # anything below their stated minimum (seen: daemon reports API 1.55, refuses below 1.40),
-    # so the Docker provider fails outright without this pin. Bump alongside the daemon if this
-    # ever starts failing again — check `docker version --format '{{.Server.APIVersion}}'`.
-    environment:
-      - DOCKER_API_VERSION=1.51
     command:
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false
@@ -63,6 +61,11 @@ services:
       - --entrypoints.websecure.address=:443
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      # Internal-only entrypoint for Tailscale Funnel traffic. Tailscale terminates TLS at its
+      # own edge and forwards already-decrypted HTTP to this port over `proxynetwork` — it must
+      # NOT go through the web(80) entrypoint's redirect-to-https, or it loops. Not published to
+      # the host (proxynetwork-only), so it doesn't collide with any host-published port.
+      - --entrypoints.tailscale.address=:8082
       # Generous timeouts on websecure — NPM's advanced_config gave Jellyfin 1h read/send
       # timeouts for long transcode/stream sessions; Traefik's equivalent is per-entrypoint.
       - --entrypoints.websecure.transport.respondingTimeouts.readTimeout=1h

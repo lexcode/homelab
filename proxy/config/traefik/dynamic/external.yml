@@ -3,6 +3,7 @@
 # their own stack's compose.yml instead — see proxy/README.md.
 http:
   routers:
+    # Reachable via Cloudflare Tunnel, has a real public DNS record — gets a real LE cert.
     jellyfin-cloudflare:
       rule: "Host(`jellyfin.lexcode.dev`)"
       entrypoints:
@@ -11,55 +12,54 @@ http:
         certResolver: letsencrypt
       service: jellyfin
 
-    # Bypasses Cloudflare entirely — Tailscale terminates TLS at its own edge, so this router
-    # only exists for host-based dispatch inside Traefik; the tailscale-funnel sidecar forwards
-    # here over `websecure` the same way the Cloudflare Tunnel does.
+    # Tailscale terminates TLS at its own edge and forwards already-decrypted HTTP to Traefik's
+    # dedicated `tailscale` entrypoint (see proxy/compose.yml) — not `websecure`, which would
+    # both loop through the web(80) redirect and fail ACME (`*.ts.net` has no public DNS Let's
+    # Encrypt can validate against). No `tls:` block: this router serves plain HTTP internally.
     jellyfin-tailscale:
       rule: "Host(`jellyfin.taile28bc7.ts.net`)"
       entrypoints:
-        - websecure
-      tls:
-        certResolver: letsencrypt
+        - tailscale
       service: jellyfin
 
+    # tracearr/unraid/router-ui/adguard2/synology are LAN-only — confirmed no public DNS record
+    # (NXDOMAIN), so a public ACME resolver can never validate them; requesting one anyway just
+    # burns Let's Encrypt's per-hostname failure rate limit. `tls: {}` still terminates TLS with
+    # Traefik's own default self-signed cert (browsers will warn once, same as most self-hosted
+    # LAN admin UIs) without ever calling out to Let's Encrypt.
     tracearr:
       rule: "Host(`tracearr.lexcode.dev`)"
       entrypoints:
         - websecure
-      tls:
-        certResolver: letsencrypt
+      tls: {}
       service: tracearr
 
     unraid:
       rule: "Host(`unraid.lexcode.dev`)"
       entrypoints:
         - websecure
-      tls:
-        certResolver: letsencrypt
+      tls: {}
       service: unraid
 
     router-ui:
       rule: "Host(`ui.lexcode.dev`)"
       entrypoints:
         - websecure
-      tls:
-        certResolver: letsencrypt
+      tls: {}
       service: router-ui
 
     adguard2:
       rule: "Host(`adguard2.lexcode.dev`)"
       entrypoints:
         - websecure
-      tls:
-        certResolver: letsencrypt
+      tls: {}
       service: adguard2
 
     synology:
       rule: "Host(`synology.lexcode.dev`)"
       entrypoints:
         - websecure
-      tls:
-        certResolver: letsencrypt
+      tls: {}
       service: synology
 
   services:

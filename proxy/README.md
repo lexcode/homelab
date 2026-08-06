@@ -103,7 +103,7 @@ In this stack it runs alongside `cloudflared` and forwards incoming Funnel traff
 
    `TS_HOSTNAME` becomes the MagicDNS name `https://<TS_HOSTNAME>.<tailnet>.ts.net`.
 
-3. **Serve config** — `config/tailscale-funnel/serve.json` in this folder is the Funnel config. The template forwards `:443` to Traefik and `${TS_CERT_DOMAIN}` is substituted automatically with the container's tailnet FQDN at runtime. Leave it as-is to go through Traefik, or edit the `Proxy` URL to hit a service directly.
+3. **Serve config** — `config/tailscale-funnel/serve.json` in this folder is the Funnel config. The template forwards `:443` to `http://traefik:8082` and `${TS_CERT_DOMAIN}` is substituted automatically with the container's tailnet FQDN at runtime. Traefik has a dedicated `tailscale` entrypoint (port `8082`, not published to the host — only reachable over `proxynetwork`) for this traffic, separate from `web`/`websecure`: Tailscale already terminates TLS at its own edge and forwards decrypted HTTP, so this traffic must skip both the `web` entrypoint's HTTP→HTTPS redirect and Traefik's own ACME resolver (a `.ts.net` hostname has no public DNS Let's Encrypt could validate against anyway). Leave the serve config as-is to go through Traefik, or edit the `Proxy` URL to hit a service directly.
 
 4. **Bring it up**
 
