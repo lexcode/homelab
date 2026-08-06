@@ -52,6 +52,14 @@ services:
     # does NOT fix it (Traefik's Docker client doesn't read that env var).
     image: traefik:v3.7.10
     restart: unless-stopped
+    # Docker's embedded DNS (127.0.0.11) forwards to the host resolver and returns SERVFAIL / stale
+    # negative-cache results for some public names — the same known issue documented in
+    # media/compose.yml. It broke DNS-01's propagation check (lego polls via the container's own
+    # resolver to confirm the _acme-challenge TXT record is visible before telling Let's Encrypt to
+    # validate). Same fix: bypass it with explicit public resolvers.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     # DNS-01, not HTTP-01: most *.lexcode.dev subdomains are DNS-only records pointing straight
     # at private LAN IPs (not proxied through Cloudflare), so they're not publicly routable and
     # HTTP-01 can never validate them — confirmed via a direct DNS-over-HTTPS query bypassing
