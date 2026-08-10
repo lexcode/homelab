@@ -81,3 +81,15 @@ max_filename_length: 200
 
 # The library lives on a network share; give slow SMB round-trips room to finish.
 timeout: 30.0
+
+# Syncthing writes in-progress transfers as `~syncthing~<name>.tmp`. Beets' default ignore
+# list does not cover that pattern, so an import run while a sync is still in flight could
+# pick up a half-transferred file and move a truncated FLAC into the library. The first four
+# entries are the beets defaults, repeated because setting `ignore` replaces the list rather
+# than extending it. (`.stfolder` and friends are already covered by the `.*` rule.)
+ignore:
+  - .*
+  - '*~'
+  - System Volume Information
+  - lost+found
+  - '~syncthing~*'
