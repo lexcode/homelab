@@ -23,6 +23,8 @@ Commands:
   import-tree           Interactive import of /music-inbox where files are
                         already in per-album directories (no grouping)
   import-singles        Import /music-inbox as standalone tracks (--singletons)
+  retry <path>          Re-prompt for one file/dir you previously chose Skip on
+                        (--noincremental; see note below)
 
   stats                 Library totals (tracks, albums, size, time)
   ls [query]            List what is in the library
@@ -32,6 +34,12 @@ Commands:
   inbox                 List what is currently sitting in /music-inbox
 
 Every import is interactive. Nothing is moved without a confirmation at the prompt.
+
+Note on Skip: with import.incremental on (the default here), choosing [S]kip at a
+prompt is remembered — re-running import/import-singles/import-tree on the same
+inbox will silently skip that item again with no prompt ("Skipped N paths"), rather
+than asking a second time. Use `retry <path>` to deliberately revisit one skipped
+item; it passes --noincremental so beets forgets that one decision and prompts again.
 EOF
 }
 
@@ -63,6 +71,15 @@ case $command in
     ;;
   import-singles)
     run beet import --singletons /music-inbox "$@"
+    ;;
+  retry)
+    if [[ $# -eq 0 ]]; then
+      printf 'Usage: beet.sh retry <path under /music-inbox>\n' >&2
+      exit 2
+    fi
+    target=$1
+    shift
+    run beet import --singletons --noincremental "$target" "$@"
     ;;
   stats)
     run beet stats "$@"

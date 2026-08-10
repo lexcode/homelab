@@ -209,7 +209,13 @@ Because `BEETSDIR` is read-only, `config.yaml` sets `library`, `statefile`, and 
 
    `--group-albums` is what makes a flat directory work: Beets clusters the loose files by their album tags instead of assuming one directory equals one album. If files arrive already in per-album folders, use `./beets/beet.sh import-tree` instead. For genuine one-off tracks, `./beets/beet.sh import-singles` files them under `Artist/Singles/`.
 
-   `import.incremental` is on, so re-running only looks at directories it hasn't already processed. Skipped items stay in the inbox and are reconsidered on the next run.
+   `import.incremental` is on, so re-running only looks at items it hasn't already processed — **including ones you skipped**. A file left on `S` stays in the inbox but does *not* get reprompted on the next run; a later `import`/`import-singles` pass will report `Skipped N paths` and move on without asking again. To deliberately revisit one:
+
+   ```bash
+   ./beets/beet.sh retry "/music-inbox/<file or dir>"
+   ```
+
+   This runs with `--noincremental` on just that path, so beets forgets the earlier skip and prompts again.
 
 ### Library commands
 
@@ -222,6 +228,7 @@ Because `BEETSDIR` is read-only, `config.yaml` sets `library`, `statefile`, and 
 ./beets/beet.sh check                # FLAC integrity across the library (slow)
 ./beets/beet.sh shell                # shell in the container
 ./beets/beet.sh beet <anything>      # arbitrary beet command
+./beets/beet.sh retry <path>         # re-prompt for one previously skipped item
 ```
 
 Import failures and skips are recorded in `data/beets/import.log`.
@@ -256,6 +263,8 @@ All three numbers should agree.
 sudo mount -a
 docker compose restart beets
 ```
+
+**A re-run prints `Skipped N paths` and doesn't prompt for a file you skipped earlier.** Expected — `import.incremental` remembers skip decisions, not just successful imports, so it won't re-ask on its own. Use `./beets/beet.sh retry "<path>"` to force that one item back to a prompt.
 
 **Files import but Navidrome doesn't see them.** Navidrome scans the Unraid share directly; confirm the file actually landed on Unraid (not in a shadowed local directory that exists underneath the mount point) and trigger a rescan. A common trap: if the CIFS mount fails, `/data/music-unraid` is still a valid empty local directory and Beets will happily write into the Pi's SD card instead. `mountpoint -q /data/music-unraid` before a large import.
 
