@@ -39,6 +39,11 @@ paths:
   comp: $albumartist/$album/$track - $title
 
 plugins:
+  # THE autotagger metadata source. In beets 2.x MusicBrainz is a plugin, not built in,
+  # and the stock config is `plugins: [musicbrainz]`. Setting `plugins` replaces that
+  # default rather than extending it, so omitting this line leaves beets with no metadata
+  # source at all and every album reports "No matching release found".
+  - musicbrainz
   # Recover artist/album/title from the filename when SpotiFLAC left the tags empty.
   - fromfilename
   # Acoustic fingerprinting (needs fpcalc, installed in the Dockerfile).
