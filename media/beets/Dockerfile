@@ -27,11 +27,14 @@ RUN pip install --no-cache-dir "beets[chroma,fetchart]" \
     # decode path.
     && pip uninstall -y audioread
 
-# BEETSDIR is where beets looks for config.yaml and (per config.yaml) keeps library.db.
-# Compose bind-mounts it to ./data/beets so both survive container rebuilds.
-# HOME points at the same place because beets writes state relative to it when run
-# as an arbitrary UID that has no /etc/passwd entry.
-ENV BEETSDIR=/config \
+# BEETSDIR is where beets looks for config.yaml. It points at the repo's beets/ directory,
+# mounted read-only — a whole directory rather than the single config.yaml file, because git
+# replaces a file by writing a new inode and renaming over it, which a single-file bind mount
+# never picks up (the container keeps serving the old inode until it is recreated).
+# Mutable state (library.db, state.pickle, import.log) goes to /config instead; see config.yaml.
+# HOME points at the writable mount because beets writes state relative to it when run as an
+# arbitrary UID with no /etc/passwd entry.
+ENV BEETSDIR=/beets \
     HOME=/config
 
 WORKDIR /music-inbox

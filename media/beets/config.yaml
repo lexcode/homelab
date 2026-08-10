@@ -8,6 +8,10 @@
 directory: /music
 # Database — bind-mounted to ./data/beets, i.e. local disk, not the SMB share.
 library: /config/library.db
+# BEETSDIR (/beets) is the read-only repo mount, so every mutable file has to be pointed
+# at /config explicitly. statefile holds the incremental-import and resume state, which
+# beets would otherwise try to write next to config.yaml.
+statefile: /config/state.pickle
 
 import:
   # Move (not copy) successful imports out of the inbox and into `directory`.

@@ -370,10 +370,12 @@ services:
       - TZ=${TZ}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      # library.db and import.log — local disk, deliberately not on the SMB share
+      # library.db, state.pickle and import.log — local disk, deliberately not on the SMB share
       - ./data/beets:/config
-      # Config is version-controlled in this repo; edit it there, then restart the container
-      - ./beets/config.yaml:/config/config.yaml:ro
+      # BEETSDIR. Mounted as a directory, not as the single config.yaml file: git replaces a
+      # file by writing a new inode and renaming over it, and a single-file bind mount keeps
+      # serving the old inode, so a `git pull` would silently not reach the container.
+      - ./beets:/beets:ro
       - ${MUSIC_INBOX_DIR:-/data/music-inbox}:/music-inbox
       - ${MUSIC_LIBRARY_DIR:-/data/music-unraid}:/music
     networks:

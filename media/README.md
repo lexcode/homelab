@@ -125,11 +125,15 @@ The container itself has **no daemon and no scheduled import**. It idles on `sle
 | Path | Purpose |
 | ---- | ------- |
 | `beets/Dockerfile` | Image: beets + `fpcalc` (fingerprinting) + `flac` (integrity checks) |
-| `beets/config.yaml` | Version-controlled config, mounted read-only at `/config/config.yaml` |
+| `beets/config.yaml` | Version-controlled config; the whole `beets/` dir is mounted read-only as `BEETSDIR=/beets` |
 | `beets/beet.sh` | Wrapper for the common `docker compose exec` invocations |
-| `data/beets/` | `library.db` and `import.log` — local disk, not committed |
+| `data/beets/` | `library.db`, `state.pickle`, `import.log` — local disk, not committed |
 
-Config is mounted **read-only**, so edit `beets/config.yaml` in the repo and `docker compose restart beets`. `beet config -e` will not work by design.
+Config is mounted **read-only**, so edit `beets/config.yaml` in the repo rather than in place; `beet config -e` will not work by design. Each `beet` command is a fresh process that re-reads the file, so edits and `git pull`s apply immediately with no restart.
+
+`beets/` is mounted as a **directory**, not as the single `config.yaml` file. That is deliberate: git replaces a file by writing a new inode and renaming over it, and a single-file bind mount keeps serving the old inode — a `git pull` would appear to succeed on the host while the container silently kept running the old config until it was force-recreated.
+
+Because `BEETSDIR` is read-only, `config.yaml` sets `library`, `statefile`, and `import.log` to explicit paths under `/config`. Adding a new beets feature that writes state means pointing it at `/config` too, or it will fail on a read-only filesystem.
 
 ### Setup
 
@@ -254,6 +258,14 @@ docker compose restart beets
 ```
 
 **Files import but Navidrome doesn't see them.** Navidrome scans the Unraid share directly; confirm the file actually landed on Unraid (not in a shadowed local directory that exists underneath the mount point) and trigger a rescan. A common trap: if the CIFS mount fails, `/data/music-unraid` is still a valid empty local directory and Beets will happily write into the Pi's SD card instead. `mountpoint -q /data/music-unraid` before a large import.
+
+**Every album reports "No matching release found", even clean well-tagged ones.** The `musicbrainz` plugin is missing from the `plugins` list. In beets 2.x MusicBrainz is a plugin rather than built in, and the stock config is `plugins: [musicbrainz]` — setting an explicit list *replaces* that default instead of extending it, leaving the autotagger with no metadata source at all. Check with:
+
+```bash
+docker compose exec beets beet version | grep plugins
+```
+
+`musicbrainz` must appear. Keep it first in `config.yaml`'s `plugins` list whenever that list is edited.
 
 **Nothing matches / everything is a low-confidence guess.** SpotiFLAC left too few tags. `fromfilename` and `chroma` (acoustic fingerprinting) are both enabled to cover that, but fingerprinting needs network access to AcoustID — verify with `docker compose exec beets fpcalc -version` and check the container resolves DNS (it uses the `1.1.1.1` / `8.8.8.8` override shared with the *arr services).
 
