@@ -1,0 +1,10 @@
+[Unit]
+Description=Periodic quiet-mode Beets import of the music inbox
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

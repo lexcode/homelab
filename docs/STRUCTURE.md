@@ -217,6 +217,8 @@ dns/
 systemd/
 ├── README.md                 # Install paths, ordering (proxy After= other stacks)
 ├── media.service
+├── media-beets-import.service # Oneshot: beet.sh import-auto (quiet-mode inbox import)
+├── media-beets-import.timer  # Hourly trigger for the above; opt-in, not stack boot
 ├── documents.service
 ├── monitoring.service
 ├── management.service

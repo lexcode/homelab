@@ -16,3 +16,19 @@ container recovery, while the status command provides an on-demand, read-only
 view.
 
 Installation, enable order, and why **`proxy.service` must start last** (external Docker networks) are documented in the root **[README.md](../README.md#boot-with-systemd-optional)**.
+
+## `media-beets-import.service` / `.timer`
+
+The one pair in this directory that isn't a stack-boot unit. It doesn't run
+`docker compose up`; it runs `media/beets/beet.sh import-auto` against the
+already-running `beets` container on an hourly timer, so new SpotiFLAC drops
+get organized without a manual `beet.sh import` each time. It's opt-in —
+install it only if you want unattended import; see
+[media/README.md](../media/README.md#automated-quiet-import) for what it does
+and does not do. Enable with:
+
+```bash
+sudo cp systemd/media-beets-import.service systemd/media-beets-import.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now media-beets-import.timer
+```
