@@ -15,7 +15,17 @@ RUN apt-get update \
         tzdata \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir "beets[chroma,fetchart]"
+RUN pip install --no-cache-dir "beets[chroma,fetchart]" \
+    # pyacoustid picks its decoder as: `if have_audioread and have_chromaprint -> use audioread`,
+    # and beets' chroma plugin calls fingerprint_file() without force_fpcalc, so the choice
+    # can't be overridden from config. audioread's only backend here is `rawread` (stdlib
+    # wave/aifc/sunau), which cannot decode FLAC — so every track fails with "audio could not
+    # be decoded" even though fpcalc is installed and working. Removing audioread makes
+    # pyacoustid fall back to the fpcalc path, which decodes FLAC via the ffmpeg libraries
+    # that libchromaprint-tools already pulls in. The alternative — installing the ffmpeg
+    # binary so audioread gains a working backend — costs far more image size for a slower
+    # decode path.
+    && pip uninstall -y audioread
 
 # BEETSDIR is where beets looks for config.yaml and (per config.yaml) keeps library.db.
 # Compose bind-mounts it to ./data/beets so both survive container rebuilds.
