@@ -1,0 +1,104 @@
+# Beets configuration for the media stack.
+#
+# Mounted read-only at /config/config.yaml, so edit it here in the repo and restart
+# the container (`docker compose restart beets`) rather than editing it in place.
+# See media/README.md for the import workflow.
+
+# Library root — bind-mounted to the Unraid music share on the host.
+directory: /music
+# Database — bind-mounted to ./data/beets, i.e. local disk, not the SMB share.
+library: /config/library.db
+# BEETSDIR (/beets) is the read-only repo mount, so every mutable file has to be pointed
+# at /config explicitly. statefile holds the incremental-import and resume state, which
+# beets would otherwise try to write next to config.yaml.
+statefile: /config/state.pickle
+
+import:
+  # Move (not copy) successful imports out of the inbox and into `directory`.
+  move: yes
+  # Write the resolved tags back into the files so Navidrome reads the same metadata.
+  write: yes
+  # Remember already-imported directories so a re-run only looks at new arrivals.
+  incremental: yes
+  # Deliberately interactive: no auto-accept, no auto-skip. Everything below the
+  # "strong" threshold prompts, so imports are reviewed rather than applied blindly.
+  quiet: no
+  timid: no
+  # Record skips and failures so a long import can be reviewed afterwards.
+  log: /config/import.log
+
+# Track and album matching. Defaults are conservative; only the strong-match threshold
+# is tightened so questionable matches surface as a prompt instead of being applied.
+match:
+  strong_rec_thresh: 0.10
+  max_rec:
+    missing_tracks: medium
+    unmatched_tracks: medium
+
+paths:
+  default: $albumartist/$album/$track - $title
+  singleton: $artist/Singles/$title
+  # Without this, compilations land under a separate "Compilations/" root, which
+  # breaks the one-Artist/Album/Track shape the library is supposed to have.
+  comp: $albumartist/$album/$track - $title
+
+plugins:
+  # THE autotagger metadata source. In beets 2.x MusicBrainz is a plugin, not built in,
+  # and the stock config is `plugins: [musicbrainz]`. Setting `plugins` replaces that
+  # default rather than extending it, so omitting this line leaves beets with no metadata
+  # source at all and every album reports "No matching release found".
+  - musicbrainz
+  # Recover artist/album/title from the filename when SpotiFLAC left the tags empty.
+  - fromfilename
+  # Acoustic fingerprinting (needs fpcalc, installed in the Dockerfile).
+  - chroma
+  # Strip player-added and ripper-added junk tags before writing clean ones.
+  - scrub
+  # Album art: download, then embed into the FLAC files.
+  - fetchart
+  - embedart
+  # Fix metadata inline during an interactive import (`E` at the prompt).
+  - edit
+  # Library inspection — see `beet.sh stats` / `dupes` / `check`.
+  - info
+  - duplicates
+  - missing
+  # FLAC integrity verification (needs the `flac` binary, installed in the Dockerfile).
+  - badfiles
+
+fetchart:
+  # cover.jpg alongside the tracks, for players that prefer a file over embedded art.
+  cover_names: cover front
+  sources:
+    - filesystem
+    - coverart
+    - itunes
+    - albumart
+
+embedart:
+  # Never let art embedding rewrite a file it can't parse.
+  remove_art_file: no
+
+scrub:
+  # Scrub on import only; re-tagging happens right after, so nothing is lost.
+  auto: yes
+
+# Keep the CIFS mount happy. Beets' default `replace` rules already strip the
+# characters SMB rejects (< > : " ? * |); this only adds a length guard, because
+# some SMB servers reject path components longer than 255 bytes once UTF-8 encoded.
+max_filename_length: 200
+
+# The library lives on a network share; give slow SMB round-trips room to finish.
+timeout: 30.0
+
+# Syncthing writes in-progress transfers as `~syncthing~<name>.tmp`. Beets' default ignore
+# list does not cover that pattern, so an import run while a sync is still in flight could
+# pick up a half-transferred file and move a truncated FLAC into the library. The first four
+# entries are the beets defaults, repeated because setting `ignore` replaces the list rather
+# than extending it. (`.stfolder` and friends are already covered by the `.*` rule.)
+ignore:
+  - .*
+  - '*~'
+  - System Volume Information
+  - lost+found
+  - '~syncthing~*'

@@ -353,6 +353,35 @@ services:
       servarrnetwork:
         ipv4_address: ${MAINTAINERR_IP:-172.39.0.10}
 
+  # Beets organizes the SpotiFLAC inbox into the music library. It has no daemon and no
+  # scheduled job: the container idles on `sleep infinity` and every import is run by hand
+  # with `docker compose exec beets ...` (or ./beets/beet.sh), so matches are reviewed
+  # before files are moved. It sits on servarrnetwork with the *arr DNS override because
+  # matching needs MusicBrainz and AcoustID lookups to resolve reliably.
+  # Lidarr keeps its own role; Beets only handles the manual inbox.
+  beets:
+    <<: *arr-dns
+    build: ./beets
+    image: homelab/beets:latest
+    container_name: beets
+    restart: unless-stopped
+    user: ${PUID:-1000}:${PGID:-1000}
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      # library.db, state.pickle and import.log — local disk, deliberately not on the SMB share
+      - ./data/beets:/config
+      # BEETSDIR. Mounted as a directory, not as the single config.yaml file: git replaces a
+      # file by writing a new inode and renaming over it, and a single-file bind mount keeps
+      # serving the old inode, so a `git pull` would silently not reach the container.
+      - ./beets:/beets:ro
+      - ${MUSIC_INBOX_DIR:-/data/music-inbox}:/music-inbox
+      - ${MUSIC_LIBRARY_DIR:-/data/music-unraid}:/music
+    networks:
+      servarrnetwork:
+        ipv4_address: ${BEETS_IP:-172.39.0.11}
+
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr

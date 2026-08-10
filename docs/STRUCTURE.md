@@ -33,9 +33,13 @@ homelab/
 
 ```text
 media/
-├── compose.yml               # qBittorrent/VPN, Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, deunhealth
+├── compose.yml               # qBittorrent/VPN, Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, Beets, deunhealth
 ├── .env.example
-├── README.md                 # Ports, /data layout, optional NAS mounts
+├── README.md                 # Ports, /data layout, optional NAS mounts, Beets workflow
+├── beets/                    # Beets image and config (committed)
+│   ├── Dockerfile            # beets + fpcalc + flac; idle container, manual imports only
+│   ├── config.yaml           # Mounted read-only at /config/config.yaml
+│   └── beet.sh               # Wrapper for the common `docker compose exec beets` commands
 └── data/                     # Per-app config (not committed); create dirs before first run — see media/README.md
     ├── pia/
     ├── pia-shared/
@@ -46,7 +50,8 @@ media/
     ├── bazarr/
     ├── seerr/
     ├── prowlarr/
-    └── suggestarr/
+    ├── suggestarr/
+    └── beets/                # library.db, import.log
 ```
 
 Host media libraries and downloads are expected under **`/data`** on the machine (bind mounts), as described in **media/README.md**.
