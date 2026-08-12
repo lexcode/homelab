@@ -13,7 +13,7 @@ the HTTP API and the persistent queue worker. The API is routed by Traefik at
    cp .env.example .env
    ```
 
-3. Configure a public hostname in the Cloudflare Tunnel before using Spotify OAuth. The default `resonarr.lexcode.dev` is a one-label hostname covered by this repository's documented `*.lexcode.dev` wildcard. In the Cloudflare Zero Trust tunnel dashboard, add `RESONARR_HOSTNAME` as a public hostname (the template value is `resonarr.lexcode.dev`) with service **HTTP** and URL `http://traefik:80`. The tunnel runs in Docker, so do not use `127.0.0.1` as its origin. See the proxy stack's [public-hostname instructions](../proxy/README.md#public-hostnames) for the routing model.
+3. Configure a public hostname in the Cloudflare Tunnel before using Spotify OAuth. The default `resonarr.lexcode.dev` is a one-label hostname covered by this repository's documented `*.lexcode.dev` wildcard. In the Cloudflare Zero Trust tunnel dashboard, add `RESONARR_HOSTNAME` as a public hostname (the template value is `resonarr.lexcode.dev`) with service **HTTPS** and URL `https://traefik:443`, then enable **Match SNI to Host** in the additional application settings. The tunnel runs in Docker, so do not use `127.0.0.1` as its origin. See the proxy stack's [public-hostname instructions](../proxy/README.md#public-hostnames) for the routing model.
 4. Set the Spotify client ID/secret, a generated `BETTER_AUTH_SECRET`, and the operator credentials. `RESONARR_HOSTNAME` and `SPOTIFY_REDIRECT_URI` name the public API; register that exact callback URI in Spotify. `RESONARR_WEB_ORIGIN` is the separate Vercel frontend origin that is allowed by CORS and receives the post-Spotify redirect.
 5. Load the completed local values for the following commands, then create the writable bind mounts. The image runs as the `node` user (UID 1000), so ownership must allow UID 1000 to create the SQLite database, staging files, and music files:
 
@@ -28,7 +28,7 @@ the HTTP API and the persistent queue worker. The API is routed by Traefik at
    ```bash
    docker compose --env-file .env.example config --quiet
    docker compose up -d
-   curl --fail "https://$RESONARR_HOSTNAME/health"
+   curl --fail --location "https://$RESONARR_HOSTNAME/health"
    ```
 
 On first boot, visit the API through the configured frontend and complete Spotify OAuth. The backend redirects back to `RESONARR_WEB_ORIGIN`; it permits browser requests only from that origin.
