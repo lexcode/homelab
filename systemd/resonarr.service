@@ -1,7 +1,7 @@
 [Unit]
 Description=Resonarr API and download worker
-After=docker.service
-Requires=docker.service
+After=docker.service proxy.service
+Requires=docker.service proxy.service
 
 [Service]
 Type=oneshot

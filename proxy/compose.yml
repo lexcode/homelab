@@ -173,4 +173,7 @@ networks:
   notificationsnetwork:
     external: true
   resonarrnetwork:
-    external: true
+    # This is intentionally proxy-managed rather than external: the proxy must be able to start
+    # on hosts where Resonarr has not yet been deployed. Resonarr consumes this named network as
+    # external once the proxy has created it.
+    name: resonarrnetwork

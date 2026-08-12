@@ -47,3 +47,4 @@ services:
 networks:
   resonarrnetwork:
     name: resonarrnetwork
+    external: true

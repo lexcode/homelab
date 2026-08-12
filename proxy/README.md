@@ -7,7 +7,7 @@ Two ingress paths feed into Traefik:
 - **Cloudflare Tunnel** for most hostnames (admin UIs, dashboards, low-bandwidth apps).
 - **Tailscale Funnel** for a single public hostname that should **bypass Cloudflare's network** — typically a media server, since Cloudflare's [Self-Serve Subscription Agreement §2.8](https://www.cloudflare.com/terms/) prohibits using the Cloudflare proxy to serve video.
 
-**Networks:** Traefik joins `servarrnetwork`, `analyticsnetwork`, `monitoringnetwork`, `documentsnetwork`, `terminalnetwork`, `homepagenetwork`, `managementnetwork`, `adguardnetwork`, and `notificationsnetwork` as `external: true` networks. Those networks must already exist — start the corresponding stacks once before bringing up the proxy stack, or use the [`systemd/`](../systemd/) units (see the root [README.md](../README.md#boot-with-systemd-optional)) so `proxy.service` starts after the other stacks.
+**Networks:** Traefik joins `servarrnetwork`, `analyticsnetwork`, `monitoringnetwork`, `documentsnetwork`, `terminalnetwork`, `homepagenetwork`, `managementnetwork`, `adguardnetwork`, and `notificationsnetwork` as `external: true` networks. Those networks must already exist — start the corresponding stacks once before bringing up the proxy stack, or use the [`systemd/`](../systemd/) units (see the root [README.md](../README.md#boot-with-systemd-optional)) so `proxy.service` starts after the other stacks. The separate `resonarrnetwork` is owned by this stack, so proxy startup creates it even when Resonarr is not deployed; Resonarr then joins it as an external network.
 
 ## Routing model
 

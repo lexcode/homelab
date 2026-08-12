@@ -23,9 +23,13 @@ the HTTP API and the persistent queue worker. The API is routed by Traefik at
    sudo chown -R 1000:1000 data downloads-staging "$RESONARR_MUSIC_HOST_PATH"
    ```
 
-6. Validate and start:
+6. Start the proxy once to create Resonarr's private network, then validate and start Resonarr:
 
    ```bash
+   cd ../proxy
+   docker compose up -d
+
+   cd ../resonarr
    docker compose --env-file .env.example config --quiet
    docker compose up -d
    curl --fail --location "https://$RESONARR_HOSTNAME/health"
@@ -47,4 +51,4 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now resonarr.service
 ```
 
-The proxy must start after Resonarr because it joins the stack's external Docker network; install the updated `proxy.service` too when enabling boot startup.
+The proxy owns the Docker-private `resonarrnetwork`, so it must start before Resonarr. Install the updated `proxy.service` too when enabling boot startup; `resonarr.service` starts it automatically through its systemd dependency.
