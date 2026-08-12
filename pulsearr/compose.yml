@@ -1,0 +1,112 @@
+services:
+  api:
+    image: ghcr.io/lexcode/pulsearr:latest
+    container_name: pulsearr_api
+    command: ["api"]
+    init: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+      - ${SERVICE_ENV_FILE:-.env}
+    environment:
+      PULSEARR_API_PORT: 8700
+    ports:
+      - "${PULSEARR_API_PORT:-8700}:8700"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8700/api/v1/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    networks:
+      pulsearrnetwork:
+      servarrnetwork:
+        ipv4_address: ${PULSEARR_API_SERVARR_IP:-172.39.0.20}
+
+  worker:
+    image: ghcr.io/lexcode/pulsearr:latest
+    container_name: pulsearr_worker
+    command: ["worker", "schedule"]
+    init: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+      - ${SERVICE_ENV_FILE:-.env}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pulsearrnetwork
+      - notificationsnetwork
+
+  db:
+    image: postgres:18
+    container_name: pulsearr_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PULSEARR_DB_NAME}
+      POSTGRES_USER: ${PULSEARR_DB_USER}
+      POSTGRES_PASSWORD: ${PULSEARR_DB_PASSWORD}
+    volumes:
+      - ./data/database:/var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'pg_isready -h 127.0.0.1 -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    networks:
+      - pulsearrnetwork
+
+  backup:
+    image: prodrigestivill/postgres-backup-local
+    container_name: pulsearr_db_backup
+    restart: unless-stopped
+    env_file:
+      - ${SERVICE_ENV_FILE:-.env}
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${PULSEARR_DB_NAME}
+      POSTGRES_USER: ${PULSEARR_DB_USER}
+      POSTGRES_PASSWORD: ${PULSEARR_DB_PASSWORD}
+      SCHEDULE: "@daily"
+      BACKUP_DIR: /db_dumps
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-7}
+      BACKUP_KEEP_WEEKS: ${BACKUP_KEEP_WEEKS:-0}
+      BACKUP_KEEP_MONTHS: ${BACKUP_KEEP_MONTHS:-0}
+    volumes:
+      - ./data/db_dumps:/db_dumps
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pulsearrnetwork
+
+networks:
+  pulsearrnetwork:
+    name: pulsearrnetwork
+  # api gets a static IP on this shared network: without one Docker's dynamic IPAM can hand it
+  # an address already reserved by ../media/compose.yml (e.g. vpn's 172.39.0.2), colliding on
+  # every reboot depending on container start order. Keep PULSEARR_API_SERVARR_IP out of
+  # 172.39.0.2-172.39.0.10, which media/compose.yml reserves for its own services.
+  servarrnetwork:
+    external: true
+    name: servarrnetwork
+  notificationsnetwork:
+    external: true
+    name: notificationsnetwork

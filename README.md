@@ -1,6 +1,6 @@
 # Homelab
 
-Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, shared coding-agent memory, lightweight host monitoring, container management, analytics, push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
+Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, shared coding-agent memory, lightweight host monitoring, container management, analytics, a Netflix IE acquisition feed, push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
 
 ```mermaid
 flowchart LR
@@ -83,6 +83,7 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | [`analytics/`](analytics/)   | [Your Spotify](https://github.com/Yooooomi/your_spotify) self-hosted Spotify listening statistics — see **[analytics/README.md](analytics/README.md)**.                             |
 | [`homepage/`](homepage/)     | [Homepage](https://gethomepage.dev) self-hosted dashboard with service widgets and Docker integration — see **[homepage/README.md](homepage/README.md)**.                           |
 | [`notifications/`](notifications/) | [Gotify](https://gotify.net/) plus optional [iGotify assistant](https://github.com/androidseb25/iGotify-Notification-Assistent) for iOS push, and [changedetection.io](https://github.com/dgtlmoon/changedetection.io) for web-page change monitoring — see **[notifications/README.md](notifications/README.md)**. |
+| [`pulsearr/`](pulsearr/)     | Pulsearr API, worker, PostgreSQL, and backups — see **[pulsearr/README.md](pulsearr/README.md)**. |
 | [`ai/ai-memory/`](ai/ai-memory/) | [ai-memory](https://github.com/akitaonrails/ai-memory) server for shared coding-agent context — see **[ai/ai-memory/README.md](ai/ai-memory/README.md)**. |
 | [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager + optional [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) for video/high-bandwidth services — see **[proxy/README.md](proxy/README.md)**.                                                  |
 | [`dns/`](dns/)               | LAN DNS / filtering ([AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)) — **primary** on Raspberry Pi 5, **secondary** on Unraid; DHCP DNS via **UniFi Dream Machine Pro** — see **[dns/README.md](dns/README.md)**. |
@@ -290,7 +291,7 @@ profile.
 ```bash
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service dns.service ai-memory.service proxy.service
+sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service pulsearr.service dns.service ai-memory.service proxy.service
 ```
 
 **After pulling systemd unit updates:** The files in this repository are source
@@ -310,12 +311,18 @@ one of these units runs `docker compose down` before starting it again.
 
 **Why `proxy.service` lists other stacks in `After=`:** The proxy stack includes [Nginx Proxy Manager](https://nginxproxymanager.com/) joined to **external** Docker networks (`servarrnetwork`, `documentsnetwork`, etc.). Those networks are created when each respective `docker compose` stack starts. If `proxy.service` runs first, Compose fails with “network … not found.” The producer units use oneshot activation, so their `After=` ordering holds proxy startup until each `docker compose up -d` command has completed and created its network.
 
-Order is encoded only in `proxy.service`; other units only need `After=docker.service` and `Requires=docker.service`.
+`pulsearr.service` similarly starts after `media.service` and
+`notifications.service`, whose external networks it imports. It has no public
+proxy or Tailscale Funnel route; access is LAN-only plus the private tailnet.
+
+Cross-stack ordering is encoded only in `proxy.service` and
+`pulsearr.service`; other units only need `After=docker.service` and
+`Requires=docker.service`.
 
 **`Requires=` vs `After=`:** Other stacks do not use `Requires=` on each other so one failing service does not block Docker or unrelated stacks. Only `proxy` needs strict ordering relative to the stacks whose networks it imports.
 
 ## Secrets and git
 
-Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `management/data`, `terminal/data`, `analytics/data`, `notifications/data`, `dns/data`, `ai/ai-memory/data`, and similar paths are intended to stay local.
+Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `management/data`, `terminal/data`, `analytics/data`, `notifications/data`, `pulsearr/data`, `dns/data`, `ai/ai-memory/data`, and similar paths are intended to stay local.
 
 `.cursor/` is listed in `.gitignore` so editor-specific rules stay on your machine and are not shared via the repo; remove that line if you intentionally want to version Cursor project config.

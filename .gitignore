@@ -9,5 +9,6 @@
 /notifications/data/*
 /management/data/*
 /ai/ai-memory/data/*
+/pulsearr/data/*
 .env
 .cursor/*

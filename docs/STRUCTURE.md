@@ -20,6 +20,7 @@ homelab/
 ├── analytics/                # Your Spotify (API + web + MongoDB)
 ├── homepage/                 # Homepage dashboard + docker socket proxy
 ├── notifications/            # Gotify, iGotify assistant, changedetection.io
+├── pulsearr/                 # Netflix IE acquisition feed, Postgres, backups
 ├── ai/
 │   └── ai-memory/            # Shared coding-agent memory server
 ├── proxy/                    # cloudflared + Nginx Proxy Manager (+ optional Tailscale)
@@ -165,6 +166,20 @@ notifications/
 
 ---
 
+## `pulsearr/`
+
+```text
+pulsearr/
+├── compose.yml               # API, worker, Postgres, and daily backups
+├── .env.example
+├── README.md                 # Setup, verification, backup, and recovery
+└── data/                     # Not committed
+    ├── database/
+    └── db_dumps/
+```
+
+---
+
 ## `ai/ai-memory/`
 
 ```text
@@ -224,6 +239,7 @@ systemd/
 ├── analytics.service
 ├── homepage.service
 ├── notifications.service
+├── pulsearr.service
 ├── dns.service
 ├── ai-memory.service
 └── proxy.service
