@@ -79,7 +79,7 @@ In the Cloudflare tunnel dashboard, each public hostname's **origin** is whateve
 
 Because **cloudflared runs in Docker** in this stack (same Compose file as Traefik, both on `proxynetwork`), **`http://127.0.0.1:80` is wrong** — inside that container, `127.0.0.1` is the tunnel container itself, not the host and not Traefik.
 
-**Tunnel → Traefik (recommended here):** set the origin to **`https://traefik:443`** and enable **Match SNI to Host** in the tunnel route's additional application settings. Cloudflared then uses the incoming public hostname as TLS SNI, so Traefik presents its matching wildcard certificate. Targeting `http://traefik:80` loops: Traefik redirects its HTTP entrypoint to HTTPS, while the tunnel repeats the HTTP origin request. Every public hostname uses this same origin — Traefik does the host-based routing from there using each backend's `Host()` rule (see [Routing model](#routing-model) above), rather than a per-hostname origin.
+**Tunnel → Traefik (for Docker-routed public backends):** set the origin to the backend's dedicated Docker-private Traefik entrypoint. Resonarr uses **`http://traefik:8081`**; Cloudflare terminates public TLS, and this entrypoint accepts its internal HTTP request without reapplying the `web` entrypoint's HTTP-to-HTTPS redirect. It is not published on the host. Do not use `http://traefik:80`: that listener redirects to HTTPS and creates a loop because the tunnel repeats its HTTP origin request. The backend declares a matching non-TLS router for this entrypoint alongside its normal `websecure` router.
 
 If you ever run **cloudflared on the host** instead, then `http://127.0.0.1:80` can reach Traefik via the published host port `80`.
 

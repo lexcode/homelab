@@ -76,6 +76,10 @@ services:
       - --entrypoints.websecure.address=:443
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      # Cloudflare Tunnel terminates public TLS itself. This Docker-private HTTP entrypoint lets
+      # it reach selected backends without looping through web's HTTP-to-HTTPS redirect or
+      # validating Traefik's internal default certificate. It is not published on the host.
+      - --entrypoints.cloudflare.address=:8081
       # Internal-only entrypoint for Tailscale Funnel traffic. Tailscale terminates TLS at its
       # own edge and forwards already-decrypted HTTP to this port over `proxynetwork` — it must
       # NOT go through the web(80) entrypoint's redirect-to-https, or it loops. Not published to

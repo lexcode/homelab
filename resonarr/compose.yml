@@ -16,6 +16,11 @@ services:
       - traefik.http.routers.resonarr.rule=Host(`${RESONARR_HOSTNAME:?Set RESONARR_HOSTNAME in resonarr/.env}`)
       - traefik.http.routers.resonarr.entrypoints=websecure
       - traefik.http.routers.resonarr.tls.certresolver=letsencrypt
+      # Cloudflare Tunnel terminates public TLS; route its Docker-private HTTP traffic through
+      # Traefik's dedicated non-redirecting entrypoint.
+      - traefik.http.routers.resonarr-cloudflare.rule=Host(`${RESONARR_HOSTNAME:?Set RESONARR_HOSTNAME in resonarr/.env}`)
+      - traefik.http.routers.resonarr-cloudflare.entrypoints=cloudflare
+      - traefik.http.routers.resonarr-cloudflare.service=resonarr
       - traefik.http.services.resonarr.loadbalancer.server.port=3000
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
