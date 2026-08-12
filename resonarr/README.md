@@ -13,8 +13,9 @@ the HTTP API and the persistent queue worker. The API is routed by Traefik at
    cp .env.example .env
    ```
 
-3. Set the Spotify client ID/secret, a generated `BETTER_AUTH_SECRET`, and the operator credentials. `RESONARR_HOSTNAME` and `SPOTIFY_REDIRECT_URI` name the public API; register that exact callback URI in Spotify. `RESONARR_WEB_ORIGIN` is the separate Vercel frontend origin that is allowed by CORS and receives the post-Spotify redirect.
-4. Load the completed local values for the following commands, then create the writable bind mounts. The image runs as the `node` user (UID 1000), so ownership must allow UID 1000 to create the SQLite database, staging files, and music files:
+3. Configure a public hostname in the Cloudflare Tunnel before using Spotify OAuth. The default `resonarr.lexcode.dev` is a one-label hostname covered by this repository's documented `*.lexcode.dev` wildcard. In the Cloudflare Zero Trust tunnel dashboard, add `RESONARR_HOSTNAME` as a public hostname (the template value is `resonarr.lexcode.dev`) with service **HTTP** and URL `http://traefik:80`. The tunnel runs in Docker, so do not use `127.0.0.1` as its origin. See the proxy stack's [public-hostname instructions](../proxy/README.md#public-hostnames) for the routing model.
+4. Set the Spotify client ID/secret, a generated `BETTER_AUTH_SECRET`, and the operator credentials. `RESONARR_HOSTNAME` and `SPOTIFY_REDIRECT_URI` name the public API; register that exact callback URI in Spotify. `RESONARR_WEB_ORIGIN` is the separate Vercel frontend origin that is allowed by CORS and receives the post-Spotify redirect.
+5. Load the completed local values for the following commands, then create the writable bind mounts. The image runs as the `node` user (UID 1000), so ownership must allow UID 1000 to create the SQLite database, staging files, and music files:
 
    ```bash
    set -a; . ./.env; set +a
@@ -22,7 +23,7 @@ the HTTP API and the persistent queue worker. The API is routed by Traefik at
    sudo chown -R 1000:1000 data downloads-staging "$RESONARR_MUSIC_HOST_PATH"
    ```
 
-5. Validate and start:
+6. Validate and start:
 
    ```bash
    docker compose --env-file .env.example config --quiet
