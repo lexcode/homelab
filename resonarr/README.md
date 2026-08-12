@@ -1,0 +1,49 @@
+# Resonarr
+
+Resonarr is deployed as two containers from the same immutable GHCR image:
+the HTTP API and the persistent queue worker. The API is routed by Traefik at
+`RESONARR_HOSTNAME`; the worker has no published port.
+
+## First deployment
+
+1. Merge [Resonarr backend PR #21](https://github.com/lexcode/resonarr-backend/pull/21), wait for its `main` publish job, and make the GHCR package pullable by this Raspberry Pi. From the Pi, verify it with `docker pull ghcr.io/lexcode/resonarr-backend:latest`.
+2. Copy the template and replace `sha-replace-with-published-commit` with the published immutable SHA tag:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Set the Spotify client ID/secret, a generated `BETTER_AUTH_SECRET`, and the operator credentials. `RESONARR_HOSTNAME` and `SPOTIFY_REDIRECT_URI` name the public API; register that exact callback URI in Spotify. `RESONARR_WEB_ORIGIN` is the separate Vercel frontend origin that is allowed by CORS and receives the post-Spotify redirect.
+4. Load the completed local values for the following commands, then create the writable bind mounts. The image runs as the `node` user (UID 1000), so ownership must allow UID 1000 to create the SQLite database, staging files, and music files:
+
+   ```bash
+   set -a; . ./.env; set +a
+   mkdir -p data downloads-staging "$RESONARR_MUSIC_HOST_PATH"
+   sudo chown -R 1000:1000 data downloads-staging "$RESONARR_MUSIC_HOST_PATH"
+   ```
+
+5. Validate and start:
+
+   ```bash
+   docker compose --env-file .env.example config --quiet
+   docker compose up -d
+   curl --fail "https://$RESONARR_HOSTNAME/health"
+   ```
+
+On first boot, visit the API through the configured frontend and complete Spotify OAuth. The backend redirects back to `RESONARR_WEB_ORIGIN`; it permits browser requests only from that origin.
+
+## Operations
+
+`./data` holds the SQLite state, `./downloads-staging` holds incomplete worker output, and `RESONARR_MUSIC_HOST_PATH` is the permanent music library. Back up `data` and music. Do not use the Beets inbox or its automatic importer: Resonarr finalizes completed files itself, and failed or partial downloads remain outside `/music`.
+
+For a deliberate update, change `RESONARR_IMAGE` to a newer published SHA tag, then run `docker compose pull && docker compose up -d`. Check API and worker state with `bash scripts/status.sh resonarr` from the repository root. Roll back by restoring the previous SHA tag and repeating that command.
+
+To start it at boot:
+
+```bash
+sudo cp ../systemd/resonarr.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now resonarr.service
+```
+
+The proxy must start after Resonarr because it joins the stack's external Docker network; install the updated `proxy.service` too when enabling boot startup.

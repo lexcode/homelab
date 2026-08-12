@@ -1,6 +1,6 @@
 [Unit]
 Description=Proxy Stack (Cloudflare Tunnel + Nginx Proxy Manager)
-After=docker.service media.service monitoring.service analytics.service documents.service terminal.service homepage.service management.service
+After=docker.service media.service monitoring.service analytics.service documents.service terminal.service homepage.service management.service resonarr.service
 Requires=docker.service
 
 [Service]

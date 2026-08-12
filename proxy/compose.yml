@@ -145,6 +145,7 @@ services:
       - managementnetwork
       - adguardnetwork
       - notificationsnetwork
+      - resonarrnetwork
 
 networks:
   proxynetwork:
@@ -166,4 +167,6 @@ networks:
   adguardnetwork:
     external: true
   notificationsnetwork:
+    external: true
+  resonarrnetwork:
     external: true
