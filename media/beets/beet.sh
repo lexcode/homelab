@@ -3,8 +3,11 @@
 # Convenience wrapper around `docker compose exec beets ...`.
 # Run from the media/ directory (or anywhere — the script finds it itself).
 #
-# Nothing here imports automatically: every import subcommand is interactive and
-# prompts before moving files into the library.
+# Every import subcommand except import-auto is interactive and prompts before
+# moving files into the library. import-auto runs unattended (for the systemd
+# timer in systemd/media-beets-import.timer) and only ever applies beets'
+# "strong" recommendation — anything weaker is silently skipped, exactly as if
+# a human had pressed Skip. See "Automated (quiet) import" in media/README.md.
 
 set -u
 
@@ -23,8 +26,13 @@ Commands:
   import-tree           Interactive import of /music-inbox where files are
                         already in per-album directories (no grouping)
   import-singles        Import /music-inbox as standalone tracks (--singletons)
-  retry <path>          Re-prompt for one file/dir you previously chose Skip on
-                        (--noincremental; see note below)
+  import-auto          Unattended quiet-mode import of /music-inbox
+                       (--group-albums -q): applies only "strong" matches,
+                       silently skips the rest. No tty required — this is
+                       what the systemd timer runs. See note below.
+  retry <path>         Re-prompt for one file/dir you previously chose Skip on,
+                       including one auto-skipped by import-auto
+                       (--noincremental; see note below)
 
   stats                 Library totals (tracks, albums, size, time)
   ls [query]            List what is in the library
@@ -33,12 +41,16 @@ Commands:
   check                 Verify FLAC integrity across the library (slow)
   inbox                 List what is currently sitting in /music-inbox
 
-Every import is interactive. Nothing is moved without a confirmation at the prompt.
+Every import is interactive except import-auto, which never prompts: it applies
+a "strong" match and otherwise skips, exactly as a human choosing Skip would.
+Nothing is moved without either a confirmation at the prompt or a strong match
+under -q.
 
 Note on Skip: with import.incremental on (the default here), choosing [S]kip at a
-prompt is remembered — re-running import/import-singles/import-tree on the same
-inbox will silently skip that item again with no prompt ("Skipped N paths"), rather
-than asking a second time. Use `retry <path>` to deliberately revisit one skipped
+prompt — or import-auto skipping a non-strong match — is remembered. Re-running
+import/import-singles/import-tree/import-auto on the same inbox will silently
+skip that item again with no prompt ("Skipped N paths"), rather than asking a
+second time. Use `retry <path>` to deliberately revisit one skipped
 item; it passes --noincremental so beets forgets that one decision and prompts again.
 EOF
 }
@@ -56,6 +68,12 @@ run() {
   (cd "$stack_dir" && docker compose exec -it beets "$@")
 }
 
+# No -it: import-auto runs from the systemd timer, which has no tty to attach.
+# Quiet mode never prompts, so none is needed.
+run_quiet() {
+  (cd "$stack_dir" && docker compose exec -T beets "$@")
+}
+
 case $command in
   shell)
     run bash "$@"
@@ -71,6 +89,9 @@ case $command in
     ;;
   import-singles)
     run beet import --singletons /music-inbox "$@"
+    ;;
+  import-auto)
+    run_quiet beet import --group-albums -q /music-inbox "$@"
     ;;
   retry)
     if [[ $# -eq 0 ]]; then

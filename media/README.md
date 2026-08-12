@@ -118,7 +118,7 @@ Pi 5, CIFS mount                            ▼
 
 Both host paths are CIFS mounts of Unraid shares, so nothing is copied across the network twice: Beets reads from one share and writes to the other, and Navidrome (running on Unraid, outside this repo) serves the result straight off local disk.
 
-The container itself has **no daemon and no scheduled import**. It idles on `sleep infinity`; every import is a command you run. That is deliberate — see [First import](#first-import-manual).
+The container itself has no daemon; it idles on `sleep infinity` and every import is a command run against it via `docker compose exec`, either by hand or by the optional [`import-auto` systemd timer](#automated-quiet-import). Start with manual imports until you trust the matching — see [First import](#first-import-manual).
 
 ### Files
 
@@ -217,6 +217,28 @@ Because `BEETSDIR` is read-only, `config.yaml` sets `library`, `statefile`, and 
 
    This runs with `--noincremental` on just that path, so beets forgets the earlier skip and prompts again.
 
+### Automated (quiet) import
+
+Once you trust the matching (step 5 above), you can stop running imports by hand. `./beets/beet.sh import-auto` runs `beet import --group-albums -q /music-inbox` — beets' **quiet mode**: it never prompts. For each candidate it applies the match only if beets' own recommendation is **"strong"** (the same bar tightened by `match.strong_rec_thresh: 0.10` in `config.yaml`); anything weaker is **skipped automatically**, exactly as if a human had pressed `S`. `import.move: yes` still applies, so a strong match still moves real files — quiet mode changes who clicks "apply" on the confident cases, not the safety bar itself.
+
+`systemd/media-beets-import.timer` runs `import-auto` hourly so new SpotiFLAC drops get organized without a manual step. Before each run, its service requires and verifies that both `/data/music-inbox` and `/data/music-unraid` are active mount points; if either CIFS mount is unavailable, the import fails before Beets can move files into a shadow directory on the Pi. It's opt-in — install it only if you want that:
+
+```bash
+sudo cp ../systemd/media-beets-import.service ../systemd/media-beets-import.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now media-beets-import.timer
+```
+
+Because `import.incremental` is on, a quiet-mode skip is recorded exactly like a manual `S` — it will **not** be reprompted by a later `import-auto` run, nor by a plain interactive `./beets/beet.sh import`. Files that quiet mode couldn't confidently match just accumulate in the inbox until you look at them:
+
+```bash
+./beets/beet.sh inbox                          # what's still sitting there
+tail -f data/beets/import.log                  # what got imported vs. skipped, and why
+./beets/beet.sh retry "/music-inbox/<file or dir>"  # force one back to an interactive prompt
+```
+
+`journalctl -u media-beets-import.service` shows each run's output if you want to check the timer itself is firing.
+
 ### Library commands
 
 ```bash
@@ -228,6 +250,7 @@ Because `BEETSDIR` is read-only, `config.yaml` sets `library`, `statefile`, and 
 ./beets/beet.sh check                # FLAC integrity across the library (slow)
 ./beets/beet.sh shell                # shell in the container
 ./beets/beet.sh beet <anything>      # arbitrary beet command
+./beets/beet.sh import-auto          # unattended quiet-mode import (strong matches only)
 ./beets/beet.sh retry <path>         # re-prompt for one previously skipped item
 ```
 

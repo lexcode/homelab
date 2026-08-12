@@ -1,8 +1,9 @@
 # Beets image for the media stack.
 #
-# The container has no daemon and no scheduled import: it idles on `sleep infinity`
-# and every import is driven manually via `docker compose exec` (see media/README.md),
-# so match quality can be reviewed before anything is moved into the library.
+# The container has no daemon: it idles on `sleep infinity` and every import is driven
+# via `docker compose exec` (see media/README.md), either interactively by hand or,
+# for the optional systemd timer, unattended in beets' quiet mode (-q), which only
+# ever applies "strong" matches and skips the rest for later manual review.
 FROM python:3.13-slim
 
 # fpcalc (libchromaprint-tools) backs the `chroma` acoustic-fingerprint plugin, which is
