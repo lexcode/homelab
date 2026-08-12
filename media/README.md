@@ -221,10 +221,10 @@ Because `BEETSDIR` is read-only, `config.yaml` sets `library`, `statefile`, and 
 
 Once you trust the matching (step 5 above), you can stop running imports by hand. `./beets/beet.sh import-auto` runs `beet import --group-albums -q /music-inbox` — beets' **quiet mode**: it never prompts. For each candidate it applies the match only if beets' own recommendation is **"strong"** (the same bar tightened by `match.strong_rec_thresh: 0.10` in `config.yaml`); anything weaker is **skipped automatically**, exactly as if a human had pressed `S`. `import.move: yes` still applies, so a strong match still moves real files — quiet mode changes who clicks "apply" on the confident cases, not the safety bar itself.
 
-`systemd/media-beets-import.timer` runs `import-auto` hourly so new SpotiFLAC drops get organized without a manual step. It's opt-in — install it only if you want that:
+`systemd/media-beets-import.timer` runs `import-auto` hourly so new SpotiFLAC drops get organized without a manual step. Before each run, its service requires and verifies that both `/data/music-inbox` and `/data/music-unraid` are active mount points; if either CIFS mount is unavailable, the import fails before Beets can move files into a shadow directory on the Pi. It's opt-in — install it only if you want that:
 
 ```bash
-sudo cp systemd/media-beets-import.service systemd/media-beets-import.timer /etc/systemd/system/
+sudo cp ../systemd/media-beets-import.service ../systemd/media-beets-import.timer /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now media-beets-import.timer
 ```

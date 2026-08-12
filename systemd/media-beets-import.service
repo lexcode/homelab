@@ -2,9 +2,12 @@
 Description=Beets quiet-mode import of the music inbox (strong matches only)
 After=docker.service media.service
 Requires=docker.service
+RequiresMountsFor=/data/music-inbox /data/music-unraid
 
 [Service]
 Type=oneshot
 WorkingDirectory=/home/lexcode/git/homelab/media
+ExecStartPre=/usr/bin/mountpoint -q /data/music-inbox
+ExecStartPre=/usr/bin/mountpoint -q /data/music-unraid
 ExecStart=/home/lexcode/git/homelab/media/beets/beet.sh import-auto
 TimeoutStartSec=30min
