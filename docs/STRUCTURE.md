@@ -20,6 +20,7 @@ homelab/
 ├── analytics/                # Your Spotify (API + web + MongoDB)
 ├── homepage/                 # Homepage dashboard + docker socket proxy
 ├── notifications/            # Gotify, iGotify assistant, changedetection.io
+├── resonarr/                 # Resonarr API and persistent download worker
 ├── ai/
 │   └── ai-memory/            # Shared coding-agent memory server
 ├── proxy/                    # cloudflared + Nginx Proxy Manager (+ optional Tailscale)
@@ -211,6 +212,22 @@ dns/
 
 ---
 
+## `resonarr/`
+
+```text
+resonarr/
+├── compose.yml               # API behind Traefik plus a private queue worker
+├── .env.example              # GHCR image pin, Spotify, auth, frontend-origin configuration
+├── README.md                 # First deployment, OAuth, updates, rollback, backups
+├── data/                     # SQLite state (not committed)
+└── downloads-staging/        # Incomplete worker output (not committed)
+```
+
+The permanent music library is a host bind mount configured by
+`RESONARR_MUSIC_HOST_PATH`; Resonarr finalizes completed files directly there.
+
+---
+
 ## `systemd/`
 
 ```text
@@ -228,6 +245,7 @@ systemd/
 ├── notifications.service
 ├── dns.service
 ├── ai-memory.service
+├── resonarr.service
 └── proxy.service
 ```
 

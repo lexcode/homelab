@@ -7,7 +7,7 @@ Two ingress paths feed into Traefik:
 - **Cloudflare Tunnel** for most hostnames (admin UIs, dashboards, low-bandwidth apps).
 - **Tailscale Funnel** for a single public hostname that should **bypass Cloudflare's network** — typically a media server, since Cloudflare's [Self-Serve Subscription Agreement §2.8](https://www.cloudflare.com/terms/) prohibits using the Cloudflare proxy to serve video.
 
-**Networks:** Traefik joins `servarrnetwork`, `analyticsnetwork`, `monitoringnetwork`, `documentsnetwork`, `terminalnetwork`, `homepagenetwork`, `managementnetwork`, `adguardnetwork`, and `notificationsnetwork` as `external: true` networks. Those networks must already exist — start the corresponding stacks once before bringing up the proxy stack, or use the [`systemd/`](../systemd/) units (see the root [README.md](../README.md#boot-with-systemd-optional)) so `proxy.service` starts after the other stacks.
+**Networks:** Traefik joins `servarrnetwork`, `analyticsnetwork`, `monitoringnetwork`, `documentsnetwork`, `terminalnetwork`, `homepagenetwork`, `managementnetwork`, `adguardnetwork`, and `notificationsnetwork` as `external: true` networks. Those networks must already exist — start the corresponding stacks once before bringing up the proxy stack, or use the [`systemd/`](../systemd/) units (see the root [README.md](../README.md#boot-with-systemd-optional)) so `proxy.service` starts after the other stacks. The separate `resonarrnetwork` is owned by this stack, so proxy startup creates it even when Resonarr is not deployed; Resonarr then joins it as an external network.
 
 ## Routing model
 
@@ -79,7 +79,7 @@ In the Cloudflare tunnel dashboard, each public hostname's **origin** is whateve
 
 Because **cloudflared runs in Docker** in this stack (same Compose file as Traefik, both on `proxynetwork`), **`http://127.0.0.1:80` is wrong** — inside that container, `127.0.0.1` is the tunnel container itself, not the host and not Traefik.
 
-**Tunnel → Traefik (recommended here):** set the origin to **`http://traefik:80`**. Port **80** is correct: that is Traefik's HTTP listener inside its container, which redirects to `websecure` (443) internally. Every public hostname uses this same origin — Traefik does the host-based routing from there using each backend's `Host()` rule (see [Routing model](#routing-model) above), rather than a per-hostname origin.
+**Tunnel → Traefik (for Docker-routed public backends):** set the origin to the backend's dedicated Docker-private Traefik entrypoint. Resonarr uses **`http://traefik:8081`**; Cloudflare terminates public TLS, and this entrypoint accepts its internal HTTP request without reapplying the `web` entrypoint's HTTP-to-HTTPS redirect. It is not published on the host. Do not use `http://traefik:80`: that listener redirects to HTTPS and creates a loop because the tunnel repeats its HTTP origin request. The backend declares a matching non-TLS router for this entrypoint alongside its normal `websecure` router.
 
 If you ever run **cloudflared on the host** instead, then `http://127.0.0.1:80` can reach Traefik via the published host port `80`.
 

@@ -1,0 +1,50 @@
+services:
+  api:
+    image: ${RESONARR_IMAGE:?Set RESONARR_IMAGE in resonarr/.env}
+    restart: unless-stopped
+    env_file:
+      - path: ${SERVICE_ENV_FILE:-.env}
+        required: false
+    networks:
+      - resonarrnetwork
+    volumes:
+      - ./data:/data
+      - ./downloads-staging:/downloads-staging
+      - ${RESONARR_MUSIC_HOST_PATH:?Set RESONARR_MUSIC_HOST_PATH in resonarr/.env}:/music
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.resonarr.rule=Host(`${RESONARR_HOSTNAME:?Set RESONARR_HOSTNAME in resonarr/.env}`)
+      - traefik.http.routers.resonarr.entrypoints=websecure
+      - traefik.http.routers.resonarr.tls.certresolver=letsencrypt
+      # Cloudflare Tunnel terminates public TLS; route its Docker-private HTTP traffic through
+      # Traefik's dedicated non-redirecting entrypoint.
+      - traefik.http.routers.resonarr-cloudflare.rule=Host(`${RESONARR_HOSTNAME:?Set RESONARR_HOSTNAME in resonarr/.env}`)
+      - traefik.http.routers.resonarr-cloudflare.entrypoints=cloudflare
+      - traefik.http.routers.resonarr-cloudflare.service=resonarr
+      - traefik.http.services.resonarr.loadbalancer.server.port=3000
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 15s
+
+  worker:
+    image: ${RESONARR_IMAGE:?Set RESONARR_IMAGE in resonarr/.env}
+    command: ["node", "dist/worker.js"]
+    restart: unless-stopped
+    env_file:
+      - path: ${SERVICE_ENV_FILE:-.env}
+        required: false
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ./data:/data
+      - ./downloads-staging:/downloads-staging
+      - ${RESONARR_MUSIC_HOST_PATH:?Set RESONARR_MUSIC_HOST_PATH in resonarr/.env}:/music
+
+networks:
+  resonarrnetwork:
+    name: resonarrnetwork
+    external: true

@@ -9,5 +9,7 @@
 /notifications/data/*
 /management/data/*
 /ai/ai-memory/data/*
+/resonarr/data/*
+/resonarr/downloads-staging/*
 .env
 .cursor/*

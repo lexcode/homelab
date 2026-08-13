@@ -86,6 +86,7 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | [`ai/ai-memory/`](ai/ai-memory/) | [ai-memory](https://github.com/akitaonrails/ai-memory) server for shared coding-agent context — see **[ai/ai-memory/README.md](ai/ai-memory/README.md)**. |
 | [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager + optional [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) for video/high-bandwidth services — see **[proxy/README.md](proxy/README.md)**.                                                  |
 | [`dns/`](dns/)               | LAN DNS / filtering ([AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)) — **primary** on Raspberry Pi 5, **secondary** on Unraid; DHCP DNS via **UniFi Dream Machine Pro** — see **[dns/README.md](dns/README.md)**. |
+| [`resonarr/`](resonarr/)     | Resonarr API and persistent download worker, published from GHCR — see **[resonarr/README.md](resonarr/README.md)**. |
 | [`systemd/`](systemd/)       | Optional systemd units to start each stack at boot — see **Boot with systemd** below.                                                                                               |
 
 Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./data/` (not committed).
@@ -290,7 +291,7 @@ profile.
 ```bash
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service dns.service ai-memory.service proxy.service
+sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service dns.service ai-memory.service resonarr.service proxy.service
 ```
 
 **After pulling systemd unit updates:** The files in this repository are source

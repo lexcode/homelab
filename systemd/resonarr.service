@@ -1,0 +1,17 @@
+[Unit]
+Description=Resonarr API and download worker
+After=docker.service proxy.service
+Requires=docker.service proxy.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=15min
+WorkingDirectory=/home/lexcode/git/homelab/resonarr
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
