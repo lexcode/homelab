@@ -2,7 +2,7 @@ services:
   atuin:
     container_name: atuin
     restart: always
-    image: ghcr.io/atuinsh/atuin:18.18.1
+    image: ghcr.io/atuinsh/atuin:latest
     command: start
     volumes:
       - "./data/config:/config"
@@ -24,7 +24,11 @@ services:
     image: postgres:18
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      test:
+        [
+          "CMD-SHELL",
+          'pg_isready -h 127.0.0.1 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
