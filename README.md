@@ -88,8 +88,34 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | [`dns/`](dns/)               | LAN DNS / filtering ([AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)) — **primary** on Raspberry Pi 5, **secondary** on Unraid; DHCP DNS via **UniFi Dream Machine Pro** — see **[dns/README.md](dns/README.md)**. |
 | [`resonarr/`](resonarr/)     | Resonarr API and persistent download worker, published from GHCR — see **[resonarr/README.md](resonarr/README.md)**. |
 | [`systemd/`](systemd/)       | Optional systemd units to start each stack at boot — see **Boot with systemd** below.                                                                                               |
+| [`scripts/`](scripts/)       | Helper scripts — see **Scripts** below.                                                                                                                                           |
 
 Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./data/` (not committed).
+
+## Scripts
+
+[**`scripts/docker-compose-pull-all.sh`**](scripts/docker-compose-pull-all.sh) discovers every Compose file under the repo (for example `docker-compose.yml`, `compose.yml`, and `compose.*.yml` overlays), skips `.git`, and runs `docker compose pull` once per directory (falls back to `docker-compose` if the v2 plugin is missing). Useful for refreshing images across stacks without visiting each folder. Requires **GNU find** (`-printf`).
+
+From the repo root:
+
+```bash
+./scripts/docker-compose-pull-all.sh
+```
+
+On a **Raspberry Pi** (or similar) with Docker on **SD card storage**, default pulls can stress the card (Compose and Docker fetch many layers in parallel). **Sequential pulls** (one Compose service after another) are gentler:
+
+```bash
+./scripts/docker-compose-pull-all.sh --sequential
+# equivalent: HOMELAB_COMPOSE_PULL_SEQUENTIAL=1 ./scripts/docker-compose-pull-all.sh
+```
+
+You can also cap how many layers Docker pulls at once globally in `/etc/docker/daemon.json`:
+
+```json
+{ "max-concurrent-downloads": 2 }
+```
+
+Then restart Docker (`sudo systemctl restart docker`).
 
 ## Requirements
 
