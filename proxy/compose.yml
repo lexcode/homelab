@@ -139,17 +139,27 @@ services:
       - traefik.http.routers.traefik-dashboard-local.entrypoints=traefik
       - traefik.http.routers.traefik-dashboard-local.service=api@internal
     networks:
-      - proxynetwork
-      - servarrnetwork
-      - analyticsnetwork
-      - monitoringnetwork
-      - documentsnetwork
-      - terminalnetwork
-      - homepagenetwork
-      - managementnetwork
-      - adguardnetwork
-      - notificationsnetwork
-      - resonarrnetwork
+      proxynetwork:
+      # Pinned: these networks hand out static IPs to their own services (see each stack's
+      # .env). Traefik joining without ipv4_address lets Docker's IPAM auto-assign it whatever
+      # address is free at the time — which can be a static IP that a stopped container (e.g.
+      # sonarr) will try to reclaim on its next `docker compose up`, causing "failed to set up
+      # container networking: Address already in use". Pinning traefik to a fixed address well
+      # outside each stack's static range avoids the collision regardless of start order.
+      servarrnetwork:
+        ipv4_address: ${TRAEFIK_SERVARR_IP:-172.39.0.250}
+      analyticsnetwork:
+        ipv4_address: ${TRAEFIK_ANALYTICS_IP:-172.39.2.250}
+      monitoringnetwork:
+        ipv4_address: ${TRAEFIK_MONITORING_IP:-172.39.1.250}
+      adguardnetwork:
+        ipv4_address: ${TRAEFIK_ADGUARD_IP:-172.39.5.250}
+      documentsnetwork:
+      terminalnetwork:
+      homepagenetwork:
+      managementnetwork:
+      notificationsnetwork:
+      resonarrnetwork:
 
 networks:
   proxynetwork:

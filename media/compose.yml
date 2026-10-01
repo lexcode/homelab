@@ -363,6 +363,7 @@ services:
     <<: *arr-dns
     build: ./beets
     image: homelab/beets:latest
+    pull_policy: build
     container_name: beets
     restart: unless-stopped
     user: ${PUID:-1000}:${PGID:-1000}
