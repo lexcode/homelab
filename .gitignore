@@ -11,5 +11,6 @@
 /ai/ai-memory/data/*
 /resonarr/data/*
 /resonarr/downloads-staging/*
+/pulsearr/data/*
 .env
 .cursor/*

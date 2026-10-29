@@ -21,7 +21,7 @@ services:
 
   db:
     container_name: atuin_db
-    image: postgres:18
+    image: postgres:latest
     restart: unless-stopped
     healthcheck:
       test:
