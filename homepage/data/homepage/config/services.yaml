@@ -63,6 +63,20 @@
           key: "{{HOMEPAGE_VAR_SPOTIFY_KEY}}"
           interval: month # optional, defaults to week - Allowed values for interval: day, week, month, year, all. https://gethomepage.dev/widgets/services/yourspotify/
 
+- Tesla:
+    - TeslaMate:
+        href: "{{HOMEPAGE_VAR_TESLAMATE_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tesla.svg
+        description: Vehicle telemetry
+        server: docker
+        container: teslamate
+    - TeslaMate Dashboards:
+        href: "{{HOMEPAGE_VAR_TESLAMATE_GRAFANA_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grafana.svg
+        description: Grafana dashboards
+        server: docker
+        container: teslamate_grafana
+
 - Notifications:
     - Gotify:
         href: "{{HOMEPAGE_VAR_GOTIFY_URL}}"

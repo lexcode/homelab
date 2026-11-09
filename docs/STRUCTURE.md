@@ -22,6 +22,7 @@ homelab/
 ├── notifications/            # Gotify, iGotify assistant, changedetection.io
 ├── resonarr/                 # Resonarr API and persistent download worker
 ├── pulsearr/                 # Netflix IE acquisition feed, Postgres, backups
+├── teslamate/                # LAN-only TeslaMate + Grafana, Postgres, Mosquitto, backups
 ├── ai/
 │   └── ai-memory/            # Shared coding-agent memory server
 ├── proxy/                    # cloudflared + Nginx Proxy Manager (+ optional Tailscale)
@@ -181,6 +182,25 @@ pulsearr/
 
 ---
 
+## `teslamate/`
+
+```text
+teslamate/
+├── compose.yml               # TeslaMate, PostgreSQL, Grafana, Mosquitto, daily DB backups
+├── .env.example              # TeslaMate encryption, database, Grafana, and retention settings
+├── README.md                 # LAN-only Traefik setup, token onboarding, backups
+└── data/                     # Not committed
+    ├── database/             # PostgreSQL cluster
+    ├── grafana/              # Grafana state
+    ├── mosquitto/            # MQTT persistence
+    ├── import/               # TeslaMate import files
+    └── db_dumps/             # Daily PostgreSQL backups
+```
+
+TeslaMate is available only on the LAN through Traefik at `tesla.lexcode.dev`; it has no Cloudflare Tunnel route.
+
+---
+
 ## `ai/ai-memory/`
 
 ```text
@@ -259,6 +279,7 @@ systemd/
 ├── homepage.service
 ├── notifications.service
 ├── pulsearr.service
+├── teslamate.service
 ├── dns.service
 ├── ai-memory.service
 ├── resonarr.service

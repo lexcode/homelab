@@ -7,7 +7,7 @@ Two ingress paths feed into Traefik:
 - **Cloudflare Tunnel** for most hostnames (admin UIs, dashboards, low-bandwidth apps).
 - **Tailscale Funnel** for a single public hostname that should **bypass Cloudflare's network** — typically a media server, since Cloudflare's [Self-Serve Subscription Agreement §2.8](https://www.cloudflare.com/terms/) prohibits using the Cloudflare proxy to serve video.
 
-**Networks:** Traefik joins `servarrnetwork`, `analyticsnetwork`, `monitoringnetwork`, `documentsnetwork`, `terminalnetwork`, `homepagenetwork`, `managementnetwork`, `adguardnetwork`, and `notificationsnetwork` as `external: true` networks. Those networks must already exist — start the corresponding stacks once before bringing up the proxy stack, or use the [`systemd/`](../systemd/) units (see the root [README.md](../README.md#boot-with-systemd-optional)) so `proxy.service` starts after the other stacks. The separate `resonarrnetwork` is owned by this stack, so proxy startup creates it even when Resonarr is not deployed; Resonarr then joins it as an external network.
+**Networks:** Traefik joins `servarrnetwork`, `analyticsnetwork`, `monitoringnetwork`, `documentsnetwork`, `terminalnetwork`, `homepagenetwork`, `managementnetwork`, `adguardnetwork`, `notificationsnetwork`, and `teslamatenetwork` as `external: true` networks. Those networks must already exist — start the corresponding stacks once before bringing up the proxy stack, or use the [`systemd/`](../systemd/) units (see the root [README.md](../README.md#boot-with-systemd-optional)) so `proxy.service` starts after the other stacks. The separate `resonarrnetwork` is owned by this stack, so proxy startup creates it even when Resonarr is not deployed; Resonarr then joins it as an external network.
 
 ## Routing model
 
@@ -67,7 +67,7 @@ Tailscale Funnel's route (`jellyfin-tailscale`) is the one exception: it has no 
 
    This starts Cloudflare Tunnel and Traefik only. Tailscale Funnel is excluded by default through the `tailscale` Compose profile.
 
-5. **Traefik dashboard:** `https://traefik.lexcode.dev/dashboard/`, behind basicauth (`TRAEFIK_DASHBOARD_AUTH`). It is routed like any other backend — `websecure` entrypoint, wildcard cert — and is reachable **on the LAN only**: `*.lexcode.dev` is a DNS-only wildcard pointing at the Docker host, and this hostname is deliberately absent from the Cloudflare Tunnel ingress, so it is not publicly routable.
+5. **Traefik dashboard:** `https://traefik.lexcode.dev/dashboard/`, behind basicauth (`TRAEFIK_DASHBOARD_AUTH`). It is routed like any other backend — `websecure` entrypoint, wildcard cert — and is reachable **on the LAN only**: `*.lexcode.dev` is a DNS-only wildcard pointing at the Docker host, and this hostname is deliberately absent from the Cloudflare Tunnel ingress, so it is not publicly routable. TeslaMate at `tesla.lexcode.dev` follows the same LAN-only model.
 
    The dashboard and its `/api` have **no authentication of their own**, and `/api` returns every router, service and backend address in the lab. The basicauth middleware is the only thing guarding it — don't remove it, and don't add this hostname to the tunnel.
 
