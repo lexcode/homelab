@@ -66,7 +66,7 @@
 - Tesla:
     - TeslaMate:
         href: "{{HOMEPAGE_VAR_TESLAMATE_URL}}"
-        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tesla.svg
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/teslamate-light.svg
         description: Vehicle telemetry
         server: docker
         container: teslamate
