@@ -1,0 +1,125 @@
+services:
+  teslamate:
+    image: teslamate/teslamate:latest
+    container_name: teslamate
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    depends_on:
+      database:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    environment:
+      ENCRYPTION_KEY: ${TM_ENCRYPTION_KEY:?Set TM_ENCRYPTION_KEY in teslamate/.env}
+      DATABASE_USER: ${TM_DB_USER:?Set TM_DB_USER in teslamate/.env}
+      DATABASE_PASS: ${TM_DB_PASSWORD:?Set TM_DB_PASSWORD in teslamate/.env}
+      DATABASE_NAME: ${TM_DB_NAME:?Set TM_DB_NAME in teslamate/.env}
+      DATABASE_HOST: database
+      MQTT_HOST: mosquitto
+      VIRTUAL_HOST: ${TM_HOSTNAME:?Set TM_HOSTNAME in teslamate/.env}
+      CHECK_ORIGIN: "true"
+      TZ: ${TZ:?Set TZ in teslamate/.env}
+    volumes:
+      - ./data/import:/opt/app/import
+    labels:
+      - traefik.enable=true
+      # LAN-only: this router uses Traefik's TLS entrypoint but deliberately has no
+      # `cloudflare` entrypoint router. Do not add tesla.lexcode.dev to the Tunnel.
+      - traefik.http.routers.teslamate.rule=Host(`${TM_HOSTNAME:?Set TM_HOSTNAME in teslamate/.env}`)
+      - traefik.http.routers.teslamate.entrypoints=websecure
+      - traefik.http.routers.teslamate.tls.certresolver=letsencrypt
+      - traefik.http.routers.teslamate.priority=10
+      - traefik.http.services.teslamate.loadbalancer.server.port=4000
+    networks:
+      - teslamatenetwork
+
+  database:
+    image: postgres:18-trixie
+    container_name: teslamate_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TM_DB_USER:?Set TM_DB_USER in teslamate/.env}
+      POSTGRES_PASSWORD: ${TM_DB_PASSWORD:?Set TM_DB_PASSWORD in teslamate/.env}
+      POSTGRES_DB: ${TM_DB_NAME:?Set TM_DB_NAME in teslamate/.env}
+    volumes:
+      # PostgreSQL 18 stores its cluster beneath this parent directory.
+      - ./data/database:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    networks:
+      - teslamatenetwork
+
+  grafana:
+    image: teslamate/grafana:latest
+    container_name: teslamate_grafana
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      DATABASE_USER: ${TM_DB_USER:?Set TM_DB_USER in teslamate/.env}
+      DATABASE_PASS: ${TM_DB_PASSWORD:?Set TM_DB_PASSWORD in teslamate/.env}
+      DATABASE_NAME: ${TM_DB_NAME:?Set TM_DB_NAME in teslamate/.env}
+      DATABASE_HOST: database
+      GF_SECURITY_ADMIN_USER: ${TM_GRAFANA_USER:?Set TM_GRAFANA_USER in teslamate/.env}
+      GF_SECURITY_ADMIN_PASSWORD: ${TM_GRAFANA_PASSWORD:?Set TM_GRAFANA_PASSWORD in teslamate/.env}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SERVER_DOMAIN: ${TM_HOSTNAME:?Set TM_HOSTNAME in teslamate/.env}
+      GF_SERVER_ROOT_URL: https://${TM_HOSTNAME:?Set TM_HOSTNAME in teslamate/.env}/grafana
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.teslamate-grafana.rule=Host(`${TM_HOSTNAME:?Set TM_HOSTNAME in teslamate/.env}`) && (Path(`/grafana`) || PathPrefix(`/grafana/`))
+      - traefik.http.routers.teslamate-grafana.entrypoints=websecure
+      - traefik.http.routers.teslamate-grafana.tls.certresolver=letsencrypt
+      - traefik.http.routers.teslamate-grafana.priority=100
+      - traefik.http.services.teslamate-grafana.loadbalancer.server.port=3000
+    networks:
+      - teslamatenetwork
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: teslamate_mosquitto
+    restart: unless-stopped
+    command: mosquitto -c /mosquitto-no-auth.conf
+    volumes:
+      - ./data/mosquitto:/mosquitto/data
+    networks:
+      - teslamatenetwork
+
+  database-backup:
+    image: prodrigestivill/postgres-backup-local:latest
+    container_name: teslamate_db_backup
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: database
+      POSTGRES_DB: ${TM_DB_NAME:?Set TM_DB_NAME in teslamate/.env}
+      POSTGRES_USER: ${TM_DB_USER:?Set TM_DB_USER in teslamate/.env}
+      POSTGRES_PASSWORD: ${TM_DB_PASSWORD:?Set TM_DB_PASSWORD in teslamate/.env}
+      SCHEDULE: "@daily"
+      BACKUP_DIR: /db_dumps
+      BACKUP_KEEP_DAYS: ${TM_DB_BACKUP_KEEP_DAYS:-7}
+      BACKUP_KEEP_WEEKS: ${TM_DB_BACKUP_KEEP_WEEKS:-4}
+      BACKUP_KEEP_MONTHS: ${TM_DB_BACKUP_KEEP_MONTHS:-6}
+    volumes:
+      - ./data/db_dumps:/db_dumps
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - teslamatenetwork
+
+networks:
+  teslamatenetwork:
+    name: teslamatenetwork
