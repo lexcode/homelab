@@ -13,5 +13,6 @@
 /resonarr/downloads-staging/*
 /pulsearr/data/*
 /teslamate/data/*
+/n8n/data/*
 .env
 .cursor/*

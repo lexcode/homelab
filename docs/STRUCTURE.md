@@ -23,6 +23,7 @@ homelab/
 ├── resonarr/                 # Resonarr API and persistent download worker
 ├── pulsearr/                 # Netflix IE acquisition feed, Postgres, backups
 ├── teslamate/                # LAN-only TeslaMate + Grafana, Postgres, Mosquitto, backups
+├── n8n/                      # LAN-only n8n workflow automation (SQLite)
 ├── ai/
 │   └── ai-memory/            # Shared coding-agent memory server
 ├── proxy/                    # cloudflared + Nginx Proxy Manager (+ optional Tailscale)
@@ -201,6 +202,22 @@ TeslaMate is available only on the LAN through Traefik at `tesla.lexcode.dev`; i
 
 ---
 
+## `n8n/`
+
+```text
+n8n/
+├── compose.yml               # n8n workflow automation (n8nnetwork)
+├── .env.example              # hostname, timezone, encryption key
+├── README.md                 # LAN-only Traefik setup, SQLite data layout, credentials key
+└── data/                     # Not committed
+    ├── n8n/                  # SQLite database and n8n state
+    └── files/                # Optional working files for Read/Write File nodes
+```
+
+n8n is available only on the LAN through Traefik at `n8n.lexcode.dev`; it has no Cloudflare Tunnel route.
+
+---
+
 ## `ai/ai-memory/`
 
 ```text
@@ -280,6 +297,7 @@ systemd/
 ├── notifications.service
 ├── pulsearr.service
 ├── teslamate.service
+├── n8n.service
 ├── dns.service
 ├── ai-memory.service
 ├── resonarr.service

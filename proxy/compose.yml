@@ -161,6 +161,7 @@ services:
       notificationsnetwork:
       resonarrnetwork:
       teslamatenetwork:
+      n8nnetwork:
 
 networks:
   proxynetwork:
@@ -191,3 +192,6 @@ networks:
   teslamatenetwork:
     external: true
     name: teslamatenetwork
+  n8nnetwork:
+    external: true
+    name: n8nnetwork

@@ -5,7 +5,7 @@ One unit per Docker Compose stack, matching the directory layout under this repo
 `pulsearr.service` starts after `media.service` and `notifications.service`
 because its Compose stack imports the Docker networks created by those stacks.
 
-`teslamate.service` creates `teslamatenetwork`; `proxy.service` starts after it so Traefik can join that external network.
+`teslamate.service` creates `teslamatenetwork`; `n8n.service` creates `n8nnetwork`. `proxy.service` starts after both so Traefik can join those external networks.
 
 Unit state deliberately does not mirror container state. An active unit means
 Compose orchestration succeeded; it does not mean every container is still

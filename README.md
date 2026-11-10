@@ -1,6 +1,6 @@
 # Homelab
 
-Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, shared coding-agent memory, lightweight host monitoring, container management, analytics, a Netflix IE acquisition feed, push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
+Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, shared coding-agent memory, lightweight host monitoring, container management, analytics, a Netflix IE acquisition feed, workflow automation (n8n), push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
 
 ```mermaid
 flowchart TB
@@ -27,6 +27,7 @@ flowchart TB
             pulsearr["pulsearr/"]
             resonarr["resonarr/"]
             teslamate["teslamate/"]
+            n8n["n8n/"]
         end
     end
 
@@ -57,6 +58,7 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | [`notifications/`](notifications/) | [Gotify](https://gotify.net/) plus optional [iGotify assistant](https://github.com/androidseb25/iGotify-Notification-Assistent) for iOS push, and [changedetection.io](https://github.com/dgtlmoon/changedetection.io) for web-page change monitoring — see **[notifications/README.md](notifications/README.md)**. |
 | [`pulsearr/`](pulsearr/)     | Pulsearr API, worker, PostgreSQL, and backups — see **[pulsearr/README.md](pulsearr/README.md)**. |
 | [`teslamate/`](teslamate/)   | LAN-only Tesla vehicle telemetry, Grafana dashboards, PostgreSQL, Mosquitto, and backups — see **[teslamate/README.md](teslamate/README.md)**. |
+| [`n8n/`](n8n/)               | LAN-only [n8n](https://n8n.io/) workflow automation with SQLite storage — see **[n8n/README.md](n8n/README.md)**. |
 | [`ai/ai-memory/`](ai/ai-memory/) | [ai-memory](https://github.com/akitaonrails/ai-memory) server for shared coding-agent context — see **[ai/ai-memory/README.md](ai/ai-memory/README.md)**. |
 | [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager + optional [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) for video/high-bandwidth services — see **[proxy/README.md](proxy/README.md)**.                                                  |
 | [`dns/`](dns/)               | LAN DNS / filtering ([AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)) — **primary** on Raspberry Pi 5, **secondary** on Unraid; DHCP DNS via **UniFi Dream Machine Pro** — see **[dns/README.md](dns/README.md)**. |
@@ -220,6 +222,21 @@ docker compose up -d
 
 Do **not** add `tesla.lexcode.dev` to Cloudflare Tunnel; it is intentionally available only through the LAN DNS and Traefik.
 
+## N8n
+
+See **[n8n/README.md](n8n/README.md)** for the LAN-only Traefik route, SQLite data layout, webhook URL, and the `N8N_ENCRYPTION_KEY` used to encrypt workflow credentials.
+
+Quick start:
+
+```bash
+cd n8n
+cp .env.example .env   # set N8N_ENCRYPTION_KEY (openssl rand -base64 48); keep it permanent
+mkdir -p data/n8n data/files && sudo chown -R 1000:1000 data
+docker compose up -d
+```
+
+Do **not** add `n8n.lexcode.dev` to Cloudflare Tunnel; it is intentionally available only through the LAN DNS and Traefik.
+
 ## AI memory
 
 See **[ai/ai-memory/README.md](ai/ai-memory/README.md)** for Raspberry Pi setup, bearer-token configuration, native-data migration, and desktop client integration.
@@ -279,7 +296,7 @@ profile.
 ```bash
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service pulsearr.service teslamate.service dns.service ai-memory.service resonarr.service proxy.service
+sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service pulsearr.service teslamate.service n8n.service dns.service ai-memory.service resonarr.service proxy.service
 ```
 
 **After pulling systemd unit updates:** The files in this repository are source
@@ -305,7 +322,8 @@ proxy or Tailscale Funnel route; access is LAN-only plus the private tailnet.
 
 `teslamate.service` creates `teslamatenetwork`, so `proxy.service` starts after
 it. TeslaMate is routed at `tesla.lexcode.dev` only on the LAN and deliberately
-has no Cloudflare Tunnel hostname.
+has no Cloudflare Tunnel hostname. `n8n.service` creates `n8nnetwork` the same
+way; n8n is LAN-only at `n8n.lexcode.dev`.
 
 Cross-stack ordering is encoded only in `proxy.service` and
 `pulsearr.service`; other units only need `After=docker.service` and
@@ -315,6 +333,6 @@ Cross-stack ordering is encoded only in `proxy.service` and
 
 ## Secrets and git
 
-Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `management/data`, `terminal/data`, `analytics/data`, `notifications/data`, `pulsearr/data`, `teslamate/data`, `dns/data`, `ai/ai-memory/data`, and similar paths are intended to stay local.
+Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `management/data`, `terminal/data`, `analytics/data`, `notifications/data`, `pulsearr/data`, `teslamate/data`, `n8n/data`, `dns/data`, `ai/ai-memory/data`, and similar paths are intended to stay local.
 
 `.cursor/` is listed in `.gitignore` so editor-specific rules stay on your machine and are not shared via the repo; remove that line if you intentionally want to version Cursor project config.
