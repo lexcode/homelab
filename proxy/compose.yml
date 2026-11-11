@@ -50,7 +50,7 @@ services:
     # below their stated minimum (seen: daemon reports API 1.55, refuses below 1.40), so the
     # Docker provider failed outright on v3.3. Confirmed fixed on v3.7.10 — DOCKER_API_VERSION
     # does NOT fix it (Traefik's Docker client doesn't read that env var).
-    image: traefik:v3.7.10
+    image: traefik:v3.7.18
     restart: unless-stopped
     # Docker's embedded DNS (127.0.0.11) forwards to the host resolver and returns SERVFAIL / stale
     # negative-cache results for some public names — the same known issue documented in
