@@ -60,7 +60,10 @@ services:
     env_file:
       - ${SERVICE_ENV_FILE:-.env}
     environment:
-      - LOC=${PIA_LOC:-swiss}
+      # Comma-separated fallbacks: the image tries each location until one
+      # registers. Some PIA regions occasionally become unreachable, which
+      # shows up as repeated "curl: (28) Connection timed out" during addKey.
+      - LOC=${PIA_LOC:-ireland,nl_amsterdam,swiss}
       - USER=${OPENVPN_USER}
       - PASS=${OPENVPN_PASSWORD}
       - LOCAL_NETWORK=${LOCAL_NETWORK}

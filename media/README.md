@@ -21,7 +21,7 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
    - `TZ`
    - `SERVARR_SUBNET` and each `*_IP` — must stay inside the same subnet; defaults match `compose.yml`
    - `OPENVPN_USER` / `OPENVPN_PASSWORD` — PIA credentials
-   - `PIA_LOC` — PIA location slug (see the VPN image docs)
+   - `PIA_LOC` — PIA location slug, or a comma-separated fallback list (e.g. `ireland,nl_amsterdam,swiss`)
    - `LOCAL_NETWORK` — your LAN CIDR (e.g. `192.168.0.0/24`) so the VPN container allows local access
 
 2. **Create the folder structure**
@@ -302,6 +302,28 @@ docker compose exec beets beet version | grep plugins
 **Nothing matches / everything is a low-confidence guess.** SpotiFLAC left too few tags. `fromfilename` and `chroma` (acoustic fingerprinting) are both enabled to cover that, but fingerprinting needs network access to AcoustID — verify with `docker compose exec beets fpcalc -version` and check the container resolves DNS (it uses the `1.1.1.1` / `8.8.8.8` override shared with the *arr services).
 
 **Slow imports.** Expected. Each album is a MusicBrainz lookup plus, on weak metadata, a fingerprint of every track, and writes go over SMB. Import in batches rather than one 5,000-file run.
+
+## VPN (PIA) troubleshooting
+
+The `vpn` container fails closed if PIA's WireGuard key registration does not complete. A single unreachable region looks like this in `docker compose logs vpn`:
+
+```text
+[wg-gen] Registering public key with PIA endpoint; id: uk, cn: Server-10876-2a, ip: 85.203.46.130
+curl: (28) Connection timed out after 15001 milliseconds
+...
+Registration failed
+Failed to generate WireGuard config for the selected location/s: uk
+```
+
+`PIA_LOC` accepts a comma-separated list, and the image tries each location until one registers (the Compose default is `ireland,nl_amsterdam,swiss`). If every location fails, list PIA's current regions with `docker compose exec vpn /scripts/wg-gen.sh -a` and pick one whose endpoint is reachable from your network; regional PIA WireGuard endpoints are occasionally unreachable while the rest of PIA's API stays up.
+
+The `ping` health check reports `Operation not permitted` while `wg0` is down because the image installs a default-drop firewall before the tunnel exists. That is expected during startup, not the cause of a failed start.
+
+Prowlarr, FlareSolverr, and qBittorrent use `network_mode: service:vpn`, so recreating the `vpn` container leaves them in the old network namespace. Recreate them together after a manual VPN replacement:
+
+```bash
+docker compose up -d --force-recreate vpn flaresolverr prowlarr qbittorrent
+```
 
 ## Seerr logging
 
