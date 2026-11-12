@@ -119,10 +119,10 @@ assert_status 0
 assert_contains 'PASS analytics healthy running healthy'
 assert_contains 'PASS analytics plain running no-healthcheck'
 
-run_status healthy ai/ai-memory
+run_status healthy ai-memory
 assert_status 0
-assert_contains 'PASS ai/ai-memory healthy running healthy'
-assert_contains 'PASS ai/ai-memory plain running no-healthcheck'
+assert_contains 'PASS ai-memory healthy running healthy'
+assert_contains 'PASS ai-memory plain running no-healthcheck'
 
 run_status unhealthy analytics
 assert_status 1
@@ -177,8 +177,8 @@ assert_contains 'FAIL analytics healthy exited'
 run_status healthy --all
 assert_status 0
 stack_count=$(printf '%s\n' "$output" | awk '$3 == "healthy" { print $2 }' | sort -u | wc -l)
-if [[ $stack_count -ne 12 ]]; then
-  printf 'not ok - expected 12 stacks from --all, got %s: %s\n' "$stack_count" "$output"
+if [[ $stack_count -ne 16 ]]; then
+  printf 'not ok - expected 16 stacks from --all, got %s: %s\n' "$stack_count" "$output"
   failures=$((failures + 1))
 fi
 

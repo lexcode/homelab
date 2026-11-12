@@ -19,6 +19,21 @@ services:
       # Required: n8n encrypts workflow credentials with this key. Keep it permanent.
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Set N8N_ENCRYPTION_KEY in n8n/.env}
       N8N_RESTRICT_FILE_ACCESS_TO: /files
+      # Traefik is exactly one reverse-proxy hop in front of n8n. Without this, Express'
+      # `trust proxy` stays false while Traefik sets X-Forwarded-For, which makes
+      # express-rate-limit log ERR_ERL_UNEXPECTED_X_FORWARDED_FOR and key every request on
+      # the proxy's IP rather than the real client's.
+      N8N_PROXY_HOPS: ${N8N_PROXY_HOPS:-1}
+      # n8n Assistant's code-execution sandbox. The sandbox containers live in the
+      # sibling `n8n-sandbox/` stack; this instance reaches `sandbox-api` by service
+      # name over the shared `n8n-sandbox-network`. Enable by setting
+      # N8N_INSTANCE_AI_SANDBOX_ENABLED=true (and the API key) in n8n/.env.
+      N8N_INSTANCE_AI_SANDBOX_ENABLED: ${N8N_INSTANCE_AI_SANDBOX_ENABLED:-false}
+      N8N_INSTANCE_AI_SANDBOX_PROVIDER: ${N8N_INSTANCE_AI_SANDBOX_PROVIDER:-n8n-sandbox}
+      N8N_SANDBOX_SERVICE_URL: ${N8N_SANDBOX_SERVICE_URL:-http://sandbox-api:8080}
+      N8N_SANDBOX_SERVICE_API_KEY: ${N8N_SANDBOX_SERVICE_API_KEY:-}
+      # Optional web search (SearXNG is bundled in n8n-sandbox/). Brave takes priority.
+      N8N_INSTANCE_AI_SEARXNG_URL: ${N8N_INSTANCE_AI_SEARXNG_URL:-http://searxng:8080}
       GENERIC_TIMEZONE: ${TZ:?Set TZ in n8n/.env}
       TZ: ${TZ:?Set TZ in n8n/.env}
     volumes:
@@ -37,7 +52,28 @@ services:
       - traefik.http.services.n8n.loadbalancer.server.port=5678
     networks:
       - n8nnetwork
+      # Carries n8n Assistant traffic to the sandbox-api container in `n8n-sandbox/`.
+      # Harmless while the sandbox is disabled, and keeps service names stable.
+      - n8n-sandbox-network
+      # Lets workflows query TeslaMate's PostgreSQL by service name (`teslamate_db:5432`).
+      # `teslamate/` owns this network, so start that stack first. This is an internal
+      # Docker-network peer; the database still publishes nothing to the host or LAN.
+      # Remove this line if no workflow needs TeslaMate data.
+      - teslamatenetwork
 
 networks:
   n8nnetwork:
     name: n8nnetwork
+  # This stack owns the network (rather than consuming it as external) for the same
+  # reason `proxy/` owns `resonarrnetwork`: the always-on stack must be startable on its
+  # own. `n8n-sandbox/` joins it as `external: true`, so start this stack first.
+  n8n-sandbox-network:
+    name: n8n-sandbox-network
+    ipam:
+      config:
+        # Must not overlap media (172.39.0.0/24), monitoring (.1), analytics (.2),
+        # dns (.5) or management (.8).
+        - subnet: ${N8N_SANDBOX_SUBNET:-172.39.9.0/24}
+  teslamatenetwork:
+    external: true
+    name: teslamatenetwork

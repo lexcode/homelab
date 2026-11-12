@@ -8,7 +8,7 @@ n8n is routed by the existing Traefik stack at **`https://n8n.lexcode.dev`**. Th
 
 - Docker and Docker Compose v2 on a 64-bit host
 - LAN DNS resolving `*.lexcode.dev` to the Traefik host
-- The [`proxy/`](../proxy/README.md) stack running after this stack, so Traefik can join `n8nnetwork`
+- The [`proxy/`](../proxy/README.md) stack running after this stack, so Traefik can join `n8nnetwork` and `n8n-sandbox-network`
 
 ## First deployment
 
@@ -46,6 +46,42 @@ n8n is routed by the existing Traefik stack at **`https://n8n.lexcode.dev`**. Th
 This stack intentionally does **not** include a Traefik `cloudflare` entrypoint router. Do not add `n8n.lexcode.dev` in Cloudflare Zero Trust → Tunnels → Public Hostnames; LAN DNS plus Traefik TLS is the selected access model. n8n's own login protects the editor; the hostname is not reachable outside the LAN.
 
 `N8N_WEBHOOK_URL` is fixed to `https://n8n.lexcode.dev/` so the Webhook node generates URLs that resolve on the LAN. `N8N_RESTRICT_FILE_ACCESS_TO=/files` confines the Read/Write File nodes to `./data/files` (mounted at `/files`).
+
+## n8n Assistant (optional)
+
+n8n Assistant runs AI-generated code, so it needs an isolated sandbox. That sandbox is the sibling [`n8n-sandbox/`](../n8n-sandbox/README.md) stack — `sandbox-api`, a privileged Docker-in-Docker runner, and a bundled SearXNG. This stack owns `n8n-sandbox-network` and reaches `sandbox-api` by service name.
+
+Enable it in `n8n/.env`:
+
+1. Set `N8N_SANDBOX_SERVICE_API_KEY` to a value from `SANDBOX_API_KEYS` in `n8n-sandbox/.env` (they must match exactly).
+2. Set `N8N_INSTANCE_AI_SANDBOX_ENABLED=true`.
+3. Set a model and its key: `N8N_INSTANCE_AI_MODEL` (`provider/model`, e.g. `anthropic/claude-opus-4-8`) and `N8N_INSTANCE_AI_MODEL_API_KEY`.
+4. Restart: `docker compose up -d`.
+
+This stack **owns** `n8n-sandbox-network`, so it stays startable on its own: bring it up first, then `n8n-sandbox/` joins that network as external. n8n keeps working with the sandbox down; only n8n Assistant is affected. Web search uses the bundled SearXNG at `http://searxng:8080` unless `INSTANCE_AI_BRAVE_SEARCH_API_KEY` (no `N8N_` prefix) is set, which takes priority.
+
+`N8N_INSTANCE_AI_SANDBOX_ENABLED` defaults to `false` here so the stack stays self-contained and `bash scripts/validate.sh` passes without the sandbox present.
+
+**Env vars are not authoritative.** n8n stores the sandbox toggle in its own SQLite database (the `settings` row keyed `instanceAi.settings`) and a stored value beats `N8N_INSTANCE_AI_SANDBOX_ENABLED`. If `docker logs n8n | grep Sandbox` prints `enabled=false … (DB override)`, change it at Settings → Agents → Shared sandbox, or edit that JSON row with n8n stopped (`{"sandboxEnabled": true, "n8nSandboxServiceUrl": "http://sandbox-api:8080"}`). `enabled=true provider=n8n-sandbox` is the line you want. See [`n8n-sandbox/README.md`](../n8n-sandbox/README.md#troubleshooting).
+
+## Querying TeslaMate's database
+
+n8n joins `teslamatenetwork` (owned by [`teslamate/`](../teslamate/README.md)) so a Postgres node can read vehicle telemetry. Values for the n8n Postgres credential:
+
+| Field | Value |
+| --- | --- |
+| Host | `teslamate_db` |
+| Port | `5432` |
+| Database | `teslamate` |
+| User | `teslamate` |
+| Password | `TM_DB_PASSWORD` from `teslamate/.env` |
+| SSL | **Disable** |
+
+Always use the service name `teslamate_db` (alias `database`), never an IP: both containers get dynamic addresses on `10.0.10.0/24`, so `10.0.10.5`-style values break on the next recreate.
+
+Useful tables: `cars`, `drives`, `charging_processes`, `charges`, `positions`, `states`, `updates`, `geofences`, `settings`.
+
+The database publishes no port to the host or LAN — this works only because n8n is a Docker-network peer in `teslamatenetwork`. Remove that network from `compose.yml` if no workflow needs it. Starting n8n before `teslamate/` has created the network fails with `network teslamatenetwork declared as external, but could not be found`.
 
 ## Operations
 

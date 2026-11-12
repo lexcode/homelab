@@ -23,11 +23,12 @@ flowchart TB
             terminal["terminal/"]
             notifications["notifications/"]
             dns["dns/"]
-            aimemory["ai/ai-memory/"]
+            aimemory["ai-memory/"]
             pulsearr["pulsearr/"]
             resonarr["resonarr/"]
             teslamate["teslamate/"]
             n8n["n8n/"]
+            n8nsandbox["n8n-sandbox/"]
         end
     end
 
@@ -59,7 +60,8 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | [`pulsearr/`](pulsearr/)     | Pulsearr API, worker, PostgreSQL, and backups — see **[pulsearr/README.md](pulsearr/README.md)**. |
 | [`teslamate/`](teslamate/)   | LAN-only Tesla vehicle telemetry, Grafana dashboards, PostgreSQL, Mosquitto, and backups — see **[teslamate/README.md](teslamate/README.md)**. |
 | [`n8n/`](n8n/)               | LAN-only [n8n](https://n8n.io/) workflow automation with SQLite storage — see **[n8n/README.md](n8n/README.md)**. |
-| [`ai/ai-memory/`](ai/ai-memory/) | [ai-memory](https://github.com/akitaonrails/ai-memory) server for shared coding-agent context — see **[ai/ai-memory/README.md](ai/ai-memory/README.md)**. |
+| [`n8n-sandbox/`](n8n-sandbox/) | Code-execution sandbox for n8n Assistant: sandbox-api, privileged Docker-in-Docker runner, and bundled SearXNG (`n8n-searxng.lexcode.dev`; sandbox API at `n8n-sandbox-api.lexcode.dev`) — see **[n8n-sandbox/README.md](n8n-sandbox/README.md)**. |
+| [`ai-memory/`](ai-memory/) | [ai-memory](https://github.com/akitaonrails/ai-memory) server for shared coding-agent context — see **[ai-memory/README.md](ai-memory/README.md)**. |
 | [`proxy/`](proxy/)           | [Cloudflare Tunnel](https://github.com/cloudflare/cloudflared) + Nginx Proxy Manager + optional [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) for video/high-bandwidth services — see **[proxy/README.md](proxy/README.md)**.                                                  |
 | [`dns/`](dns/)               | LAN DNS / filtering ([AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)) — **primary** on Raspberry Pi 5, **secondary** on Unraid; DHCP DNS via **UniFi Dream Machine Pro** — see **[dns/README.md](dns/README.md)**. |
 | [`resonarr/`](resonarr/)     | Resonarr API and persistent download worker, published from GHCR — see **[resonarr/README.md](resonarr/README.md)**. |
@@ -224,7 +226,7 @@ Do **not** add `tesla.lexcode.dev` to Cloudflare Tunnel; it is intentionally ava
 
 ## N8n
 
-See **[n8n/README.md](n8n/README.md)** for the LAN-only Traefik route, SQLite data layout, webhook URL, and the `N8N_ENCRYPTION_KEY` used to encrypt workflow credentials.
+See **[n8n/README.md](n8n/README.md)** for the LAN-only Traefik route, SQLite data layout, webhook URL, and the `N8N_ENCRYPTION_KEY` used to encrypt workflow credentials. n8n Assistant's sandbox is a separate stack — see **[n8n-sandbox/README.md](n8n-sandbox/README.md)**.
 
 Quick start:
 
@@ -235,16 +237,16 @@ mkdir -p data/n8n data/files && sudo chown -R 1000:1000 data
 docker compose up -d
 ```
 
-Do **not** add `n8n.lexcode.dev` to Cloudflare Tunnel; it is intentionally available only through the LAN DNS and Traefik.
+Do **not** add `n8n.lexcode.dev` to Cloudflare Tunnel; it is intentionally available only through the LAN DNS and Traefik. The Assistant sandbox in [`n8n-sandbox/`](n8n-sandbox/) has two more LAN-only names: `n8n-searxng.lexcode.dev` (search UI + JSON API) and `n8n-sandbox-api.lexcode.dev` (the `X-Api-Key` protected control plane). Do not add those to the Tunnel either.
 
 ## AI memory
 
-See **[ai/ai-memory/README.md](ai/ai-memory/README.md)** for Raspberry Pi setup, bearer-token configuration, native-data migration, and desktop client integration.
+See **[ai-memory/README.md](ai-memory/README.md)** for Raspberry Pi setup, bearer-token configuration, native-data migration, and desktop client integration.
 
 Quick start:
 
 ```bash
-cd ai/ai-memory
+cd ai-memory
 cp .env.example .env   # set AI_MEMORY_AUTH_TOKEN and AI_MEMORY_ALLOWED_HOSTS
 mkdir -p data
 docker compose up -d
@@ -299,6 +301,8 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service pulsearr.service teslamate.service n8n.service dns.service ai-memory.service resonarr.service proxy.service
 ```
 
+`n8n-sandbox.service` is optional: enable it only when n8n Assistant's sandbox is in use. It is ordered after `n8n.service`, because n8n owns `n8n-sandbox-network`.
+
 **After pulling systemd unit updates:** The files in this repository are source
 copies; systemd uses the installed copies under `/etc/systemd/system/`. Reinstall
 them and reload systemd after pulling changes:
@@ -322,17 +326,22 @@ proxy or Tailscale Funnel route; access is LAN-only plus the private tailnet.
 
 `teslamate.service` creates `teslamatenetwork`, so `proxy.service` starts after
 it. TeslaMate is routed at `tesla.lexcode.dev` only on the LAN and deliberately
-has no Cloudflare Tunnel hostname. `n8n.service` creates `n8nnetwork` the same
-way; n8n is LAN-only at `n8n.lexcode.dev`.
+has no Cloudflare Tunnel hostname. `n8n.service` creates `n8nnetwork` and
+`n8n-sandbox-network` the same way; n8n is LAN-only at `n8n.lexcode.dev`, and the
+n8n Assistant sandbox is LAN-only at `n8n-searxng.lexcode.dev` (search UI + JSON API)
+and `n8n-sandbox-api.lexcode.dev` (`X-Api-Key` protected control plane).
+`n8n-sandbox.service` then joins `n8n-sandbox-network` as external, so it is the one
+unit ordered *after* another stack's unit (`After=n8n.service`) rather than before
+`proxy.service`.
 
-Cross-stack ordering is encoded only in `proxy.service` and
-`pulsearr.service`; other units only need `After=docker.service` and
+Cross-stack ordering is encoded in `proxy.service`, `pulsearr.service`, and
+`n8n-sandbox.service`; other units only need `After=docker.service` and
 `Requires=docker.service`.
 
 **`Requires=` vs `After=`:** Other stacks do not use `Requires=` on each other so one failing service does not block Docker or unrelated stacks. Only `proxy` needs strict ordering relative to the stacks whose networks it imports.
 
 ## Secrets and git
 
-Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `management/data`, `terminal/data`, `analytics/data`, `notifications/data`, `pulsearr/data`, `teslamate/data`, `n8n/data`, `dns/data`, `ai/ai-memory/data`, and similar paths are intended to stay local.
+Do not commit real `.env` files or credentials. Never put tunnel tokens, API keys, or passwords in `compose.yml` comments. Runtime database and agent state under `media/data`, `documents/data`, `monitoring/data`, `management/data`, `terminal/data`, `analytics/data`, `notifications/data`, `pulsearr/data`, `teslamate/data`, `n8n/data`, `n8n-sandbox/data`, `dns/data`, `ai-memory/data`, and similar paths are intended to stay local.
 
 `.cursor/` is listed in `.gitignore` so editor-specific rules stay on your machine and are not shared via the repo; remove that line if you intentionally want to version Cursor project config.

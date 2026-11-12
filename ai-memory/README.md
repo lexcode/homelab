@@ -17,7 +17,7 @@ The published Docker image supports `linux/arm64`, including a 64-bit Raspberry 
 2. Create the environment file and persistent-data directory:
 
    ```bash
-   cd ~/git/homelab/ai/ai-memory
+   cd ~/git/homelab/ai-memory
    cp .env.example .env
    mkdir -p data
    ```
@@ -77,6 +77,8 @@ environment as described in the
 
 The service intentionally has no container healthcheck because the published image is not guaranteed to contain an HTTP probe utility. Repository status reports it as `no-healthcheck`.
 
+The repository-root `.ai-memory.toml` declares the `workspace` and `project` scope that the ai-memory MCP server uses for this checkout. It is committed so every machine resolves the same memory scope; it contains no credentials.
+
 ## Migrate the existing Docker named volume
 
 Use these steps when an earlier deployment stored its data in the
@@ -84,7 +86,7 @@ Use these steps when an earlier deployment stored its data in the
 SQLite data is consistent:
 
 ```bash
-cd ~/git/homelab/ai/ai-memory
+cd ~/git/homelab/ai-memory
 docker compose down
 ```
 
@@ -147,7 +149,7 @@ systemctl --user stop ai-memory
 If this Docker stack has already been used, stop it and preserve its current data:
 
 ```bash
-cd ~/git/homelab/ai/ai-memory
+cd ~/git/homelab/ai-memory
 docker compose down
 backup_dir="$HOME/ai-memory-backups/data-before-migration-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$HOME/ai-memory-backups"
@@ -161,13 +163,13 @@ From the desktop, transfer the complete native data directory:
 ```bash
 rsync -aHAX --info=progress2 \
   ~/.local/share/ai-memory/ \
-  lexcode@YOUR_PI_IP:~/git/homelab/ai/ai-memory/data/
+  lexcode@YOUR_PI_IP:~/git/homelab/ai-memory/data/
 ```
 
 Then start the server on the Pi:
 
 ```bash
-cd ~/git/homelab/ai/ai-memory
+cd ~/git/homelab/ai-memory
 sudo chown -R "$(id -u):$(id -g)" data
 docker compose up -d
 docker compose logs -f --tail=100
@@ -187,7 +189,7 @@ must be present in `AI_MEMORY_ALLOWED_HOSTS` on the Pi. After changing the Pi's
 `.env`, apply it with:
 
 ```bash
-cd ~/git/homelab/ai/ai-memory
+cd ~/git/homelab/ai-memory
 docker compose up -d
 ```
 
@@ -313,7 +315,7 @@ From the repository root:
 
 ```bash
 bash scripts/validate.sh
-bash scripts/status.sh ai/ai-memory
+bash scripts/status.sh ai-memory
 ```
 
 To confirm LAN reachability:

@@ -162,6 +162,7 @@ services:
       resonarrnetwork:
       teslamatenetwork:
       n8nnetwork:
+      n8n-sandbox-network:
 
 networks:
   proxynetwork:
@@ -195,3 +196,6 @@ networks:
   n8nnetwork:
     external: true
     name: n8nnetwork
+  n8n-sandbox-network:
+    external: true
+    name: n8n-sandbox-network
