@@ -139,7 +139,7 @@ docker compose up -d
 
 ## Monitoring
 
-See **[monitoring/README.md](monitoring/README.md)** for Beszel hub and agent setup, environment variables, extra filesystem mounts, and remote agents.
+See **[monitoring/README.md](monitoring/README.md)** for Beszel hub and agent setup, environment variables, extra filesystem mounts, remote agents, and Dozzle container actions.
 
 Quick start:
 
