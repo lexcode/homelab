@@ -76,7 +76,43 @@ To restore a PostgreSQL custom-format dump, stop the application services, resto
 
 ## Grafana database
 
-Grafana keeps its state in SQLite at `data/grafana/grafana.db`. This stack enables SQLite WAL mode and query retries because the database lives on the host SD card, where rollback-journal locking produced recurring `SQLITE_BUSY` errors whenever the disk was busy. WAL is safe on the local ext4 filesystem but not on network filesystems; keep `data/grafana` on local storage. If `database is locked` errors return, check host I/O pressure first (`uptime`, `vmstat 1`) before changing database settings.
+Grafana keeps its state in SQLite at `data/grafana/grafana.db`. This stack enables SQLite WAL mode and query retries because the database lives on the host SD card, where rollback-journal locking produced recurring `SQLITE_BUSY` errors whenever the disk was busy.
+
+WAL trade-offs:
+
+- WAL requires a local filesystem. Do not put `data/grafana` on NFS, SMB, or another network filesystem. If the database must live on one, set `GF_DATABASE_WAL=false` and expect more lock contention.
+- WAL creates `grafana.db-wal` and `grafana.db-shm` next to `grafana.db`. They are part of the live database; do not delete them.
+- Do not copy only `grafana.db` while Grafana is running: recent commits may still be in `grafana.db-wal`. Stop Grafana first, copy the whole `data/grafana` directory, or use SQLite's backup mechanism.
+- WAL and query retries reduce lock failures; they do not make a slow or overloaded disk fast. A local SSD/NVMe is still the best fix for I/O starvation.
+- `GF_DATABASE_QUERY_RETRIES` applies to SQLite only and is ignored if Grafana is moved to PostgreSQL.
+- If `database is locked` errors return, check host I/O pressure first (`uptime`, `vmstat 1`) before changing database settings.
+
+The simplest safe copy is to stop Grafana first:
+
+```bash
+docker compose stop grafana
+tar -C data -czf grafana-data-$(date +%F).tar.gz grafana
+docker compose start grafana
+```
+
+## Backup and migration
+
+The stack's durable state lives in `data/` and the private `teslamate/.env` file. Before moving to another host:
+
+1. Copy `.env` to the new host securely. Preserve `TM_ENCRYPTION_KEY` exactly: TeslaMate uses it to decrypt the Tesla API tokens in PostgreSQL. If it is lost, the tokens cannot be recovered and TeslaMate must be re-authenticated. `.env` is gitignored; never commit it.
+2. Back up PostgreSQL with `pg_dump` (or use the dumps in `data/db_dumps`). Do not copy `data/database` while PostgreSQL is running.
+3. Stop Grafana and copy the entire `data/grafana` directory, including `grafana.db-wal` and `grafana.db-shm` if present.
+4. Copy `data/mosquitto` if you want to keep MQTT persistence, and `data/import` if it contains files you still need.
+
+For a simple move with a short outage, stop the whole stack, copy `data/` and `.env`, then start it on the new host:
+
+```bash
+docker compose stop
+rsync -a data/ new-host:/path/to/teslamate/data/
+rsync -a .env new-host:/path/to/teslamate/.env
+```
+
+On the new host, restore the same directory ownership described in [First deployment](#first-deployment) (`data/database` → `999:999`, `data/grafana` → `472:472`, `data/mosquitto` → `1883:1883`) before starting the stack. If the new host runs a different PostgreSQL major version, use `pg_dump`/`pg_restore` instead of copying `data/database`.
 
 ## Boot with systemd (optional)
 
