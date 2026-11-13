@@ -81,7 +81,7 @@ documents/
 monitoring/
 ├── compose.yml               # Beszel hub, Beszel agent, Dozzle
 ├── .env.example
-├── README.md                 # Keys, mounts, remote agents
+├── README.md                 # Keys, mounts, remote agents, Dozzle actions
 └── data/                     # Hub/agent state (not committed)
 ```
 

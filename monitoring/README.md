@@ -61,6 +61,7 @@ Docker Compose stack combining:
 | `DOZZLE_IP`           | Static IPv4 for the `dozzle` container on `monitoringnetwork`.                                                                                                                                                                                                        |
 | `DOZZLE_HOSTNAME`     | Display name for this machine in the Dozzle UI (e.g. `omarchy`). Shared by both `dozzle` and `dozzle-agent`.                                                                                                                                                          |
 | `DOZZLE_REMOTE_AGENT` | Comma-separated `host:7007` addresses of **other** machines running `dozzle-agent`. Do not include this machine's own IP.                                                                                                                                             |
+| `DOZZLE_ENABLE_ACTIONS` | Enables container start, stop, restart, remove, and update from the UI (default `true`). Set `false` to make both the UI and this machine's agent read-only. See [Container actions](#container-actions).                                                              |
 
 `.env.example` also lists `BESZEL_AGENT_LOG_LEVEL`; the current `compose.yml` does not pass it into the agent—add an `environment` entry there if the image documents support for it.
 
@@ -70,7 +71,7 @@ Docker Compose stack combining:
 
 - **`beszel`**: Hub UI + API, data in `./data/beszel_data`.
 - **`beszelagent`**: `network_mode: service:beszel` so the agent shares the hub's network namespace; no separate published ports for the agent process.
-- **`dozzle`**: Log viewer UI on port `8181`, connects to remote agents via `DOZZLE_REMOTE_AGENT`.
+- **`dozzle`**: Log viewer UI on port `8181`, connects to remote agents via `DOZZLE_REMOTE_AGENT`, and enables container actions (see [Container actions](#container-actions)).
 - **`dozzle-agent`**: Exposes this machine's Docker socket to other Dozzle UIs on port `7007`.
 - **Volumes**: `./data/beszel_agent_data` holds agent state; `./data/beszel_data` is the hub database and keys; `./data/dozzle_data` holds Dozzle session and auth data.
 
@@ -137,6 +138,26 @@ docker run -d \
 ```
 
 Then add that machine's IP to `DOZZLE_REMOTE_AGENT` on the machines running the full compose.
+
+### Container actions
+
+`compose.yml` sets `DOZZLE_ENABLE_ACTIONS` to `true` by default, which adds **Start**, **Stop**, **Restart**, **Remove**, and **Update** to each container's menu. The same switch is passed to `dozzle-agent`, so setting `DOZZLE_ENABLE_ACTIONS=false` in `.env` and recreating both services (`docker compose up -d`) makes this host read-only for every hub that connects to its agent.
+
+What each action does:
+
+- **Start / Stop / Restart** call Docker directly on the container.
+- **Remove** deletes the container and its writable layer. Anonymous volumes are left behind, detached; bind mounts and named volumes are untouched.
+- **Update** pulls the image's exact tag and recreates the container with the same configuration, volumes, and bind mounts. A pinned tag re-pulls the same image; a moving tag such as `latest` can jump major versions. The old container is kept until the new one stays up (and reports healthy when the image has a healthcheck), then removed; a failed update rolls back. Data written to the writable layer is lost, and a stopped container is never updated.
+- Actions also apply to **remote agents**. An agent allows actions whenever the hub enables them; set `DOZZLE_ENABLE_ACTIONS=false` on a specific agent to keep that host read-only.
+
+Security considerations:
+
+- This stack does **not** enable Dozzle authentication. Anyone who can open `dozzle.lexcode.dev` or host port `8181` can stop, remove, or update containers. Keep the route on the trusted LAN and do not expose it publicly (Cloudflare Tunnel or port forward) without authentication in front of it.
+- If Dozzle must be reachable beyond the LAN, add authentication first: Traefik basic auth, Cloudflare Access, or Dozzle's own `DOZZLE_AUTH_PROVIDER=simple` with a generated `/data/users.yml`. With Dozzle simple auth, give users who need actions the `actions` role (an empty `roles:` grants `all`); users without it can still read logs according to their filter.
+- `dozzle-agent` on port `7007` is unauthenticated and trusts the shared Dozzle certificate. Anyone who can reach that port can read every log on the host and, when actions are allowed, run them. Keep `7007` on the LAN, and generate custom agent certificates (`DOZZLE_CERT` / `DOZZLE_KEY`) if it is reachable by anything you do not control.
+- The Docker socket is mounted read-write in the `dozzle` service because actions need it. Access to that socket is equivalent to root on the host: do not widen access to the UI beyond what you would grant host root.
+
+See [Dozzle's container actions documentation](https://dozzle.dev/guide/actions) for the upstream reference.
 
 ## Layout
 

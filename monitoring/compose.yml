@@ -51,6 +51,9 @@ services:
     environment:
       DOZZLE_REMOTE_AGENT: ${DOZZLE_REMOTE_AGENT}
       DOZZLE_HOSTNAME: ${DOZZLE_HOSTNAME:-mario}
+      # Start/stop/restart/remove/update containers from the UI. Anyone who can open
+      # the Dozzle route can use these actions, so keep the route private or add auth.
+      DOZZLE_ENABLE_ACTIONS: ${DOZZLE_ENABLE_ACTIONS:-true}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data/dozzle_data:/data
@@ -73,6 +76,9 @@ services:
     container_name: dozzle-agent
     environment:
       DOZZLE_HOSTNAME: ${DOZZLE_HOSTNAME:-mario}
+      # Agents allow actions whenever the hub does. Binding this to the same switch lets
+      # DOZZLE_ENABLE_ACTIONS=false keep this host read-only for every connecting hub.
+      DOZZLE_ENABLE_ACTIONS: ${DOZZLE_ENABLE_ACTIONS:-true}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
