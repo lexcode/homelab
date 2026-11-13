@@ -74,6 +74,10 @@ docker compose up -d
 
 To restore a PostgreSQL custom-format dump, stop the application services, restore into the database container with `pg_restore`, then start the stack again. Test the exact restore procedure against a copy before relying on it for disaster recovery.
 
+## Grafana database
+
+Grafana keeps its state in SQLite at `data/grafana/grafana.db`. This stack enables SQLite WAL mode and query retries because the database lives on the host SD card, where rollback-journal locking produced recurring `SQLITE_BUSY` errors whenever the disk was busy. WAL is safe on the local ext4 filesystem but not on network filesystems; keep `data/grafana` on local storage. If `database is locked` errors return, check host I/O pressure first (`uptime`, `vmstat 1`) before changing database settings.
+
 ## Boot with systemd (optional)
 
 ```bash

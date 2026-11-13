@@ -76,6 +76,10 @@ services:
       GF_SERVER_DOMAIN: ${TM_HOSTNAME:?Set TM_HOSTNAME in teslamate/.env}
       GF_SERVER_ROOT_URL: https://${TM_HOSTNAME:?Set TM_HOSTNAME in teslamate/.env}/grafana
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      # Grafana's SQLite database lives on the host SD card; WAL avoids most
+      # reader/writer lock contention, and query retries absorb the rest.
+      GF_DATABASE_WAL: "true"
+      GF_DATABASE_QUERY_RETRIES: "3"
     volumes:
       - ./data/grafana:/var/lib/grafana
     labels:
