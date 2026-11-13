@@ -1,0 +1,20 @@
+[Unit]
+Description=n8n Assistant sandbox stack
+After=docker.service
+Requires=docker.service
+# n8n-sandbox-network is created by n8n.service (see n8n/compose.yml), and this stack
+# consumes it as external, so n8n must be brought up first.
+After=n8n.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=15min
+WorkingDirectory=/home/lexcode/git/homelab/n8n-sandbox
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

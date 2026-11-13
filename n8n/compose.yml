@@ -1,0 +1,79 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_HOST: ${N8N_HOSTNAME:?Set N8N_HOSTNAME in n8n/.env}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: https
+      NODE_ENV: production
+      N8N_WEBHOOK_URL: https://${N8N_HOSTNAME:?Set N8N_HOSTNAME in n8n/.env}/
+      # SQLite is the default database type; declaring it documents the choice.
+      N8N_DB_TYPE: sqlite
+      # Required: n8n encrypts workflow credentials with this key. Keep it permanent.
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Set N8N_ENCRYPTION_KEY in n8n/.env}
+      N8N_RESTRICT_FILE_ACCESS_TO: /files
+      # Traefik is exactly one reverse-proxy hop in front of n8n. Without this, Express'
+      # `trust proxy` stays false while Traefik sets X-Forwarded-For, which makes
+      # express-rate-limit log ERR_ERL_UNEXPECTED_X_FORWARDED_FOR and key every request on
+      # the proxy's IP rather than the real client's.
+      N8N_PROXY_HOPS: ${N8N_PROXY_HOPS:-1}
+      # n8n Assistant's code-execution sandbox. The sandbox containers live in the
+      # sibling `n8n-sandbox/` stack; this instance reaches `sandbox-api` by service
+      # name over the shared `n8n-sandbox-network`. Enable by setting
+      # N8N_INSTANCE_AI_SANDBOX_ENABLED=true (and the API key) in n8n/.env.
+      N8N_INSTANCE_AI_SANDBOX_ENABLED: ${N8N_INSTANCE_AI_SANDBOX_ENABLED:-false}
+      N8N_INSTANCE_AI_SANDBOX_PROVIDER: ${N8N_INSTANCE_AI_SANDBOX_PROVIDER:-n8n-sandbox}
+      N8N_SANDBOX_SERVICE_URL: ${N8N_SANDBOX_SERVICE_URL:-http://sandbox-api:8080}
+      N8N_SANDBOX_SERVICE_API_KEY: ${N8N_SANDBOX_SERVICE_API_KEY:-}
+      # Optional web search (SearXNG is bundled in n8n-sandbox/). Brave takes priority.
+      N8N_INSTANCE_AI_SEARXNG_URL: ${N8N_INSTANCE_AI_SEARXNG_URL:-http://searxng:8080}
+      GENERIC_TIMEZONE: ${TZ:?Set TZ in n8n/.env}
+      TZ: ${TZ:?Set TZ in n8n/.env}
+    volumes:
+      # SQLite database, settings, and workflow state.
+      - ./data/n8n:/home/node/.n8n
+      # Optional working file area for Read/Write File nodes (restricted to this path).
+      - ./data/files:/files
+    labels:
+      - traefik.enable=true
+      # LAN-only: this router uses Traefik's TLS entrypoint but deliberately has no
+      # `cloudflare` entrypoint router. Do not add n8n.lexcode.dev to the Tunnel.
+      - traefik.http.routers.n8n.rule=Host(`${N8N_HOSTNAME:?Set N8N_HOSTNAME in n8n/.env}`)
+      - traefik.http.routers.n8n.entrypoints=websecure
+      - traefik.http.routers.n8n.tls.certresolver=letsencrypt
+      - traefik.http.routers.n8n.priority=10
+      - traefik.http.services.n8n.loadbalancer.server.port=5678
+    networks:
+      - n8nnetwork
+      # Carries n8n Assistant traffic to the sandbox-api container in `n8n-sandbox/`.
+      # Harmless while the sandbox is disabled, and keeps service names stable.
+      - n8n-sandbox-network
+      # Lets workflows query TeslaMate's PostgreSQL by service name (`teslamate_db:5432`).
+      # `teslamate/` owns this network, so start that stack first. This is an internal
+      # Docker-network peer; the database still publishes nothing to the host or LAN.
+      # Remove this line if no workflow needs TeslaMate data.
+      - teslamatenetwork
+
+networks:
+  n8nnetwork:
+    name: n8nnetwork
+  # This stack owns the network (rather than consuming it as external) for the same
+  # reason `proxy/` owns `resonarrnetwork`: the always-on stack must be startable on its
+  # own. `n8n-sandbox/` joins it as `external: true`, so start this stack first.
+  n8n-sandbox-network:
+    name: n8n-sandbox-network
+    ipam:
+      config:
+        # Must not overlap media (172.39.0.0/24), monitoring (.1), analytics (.2),
+        # dns (.5) or management (.8).
+        - subnet: ${N8N_SANDBOX_SUBNET:-172.39.9.0/24}
+  teslamatenetwork:
+    external: true
+    name: teslamatenetwork

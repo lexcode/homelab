@@ -77,6 +77,14 @@
         server: docker
         container: teslamate_grafana
 
+- Automation:
+    - N8N:
+        href: "{{HOMEPAGE_VAR_N8N_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/n8n.svg
+        description: Workflow automation
+        server: docker
+        container: n8n
+
 - Notifications:
     - Gotify:
         href: "{{HOMEPAGE_VAR_GOTIFY_URL}}"

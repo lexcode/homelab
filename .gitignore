@@ -8,10 +8,12 @@
 /terminal/data/*
 /notifications/data/*
 /management/data/*
-/ai/ai-memory/data/*
+/ai-memory/data/*
 /resonarr/data/*
 /resonarr/downloads-staging/*
 /pulsearr/data/*
 /teslamate/data/*
+/n8n/data/*
+/n8n-sandbox/data/*
 .env
 .cursor/*
