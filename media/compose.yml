@@ -337,6 +337,15 @@ services:
     environment:
       - LOG_LEVEL=${SUGGESTARR_LOG_LEVEL:-info}
       - SUGGESTARR_PORT=${SUGGESTARR_PORT:-5000}
+    labels:
+      - traefik.enable=true
+      # Host-network container: it has no IP on any network Traefik shares, so the Docker
+      # provider cannot infer a backend address. State the URL explicitly instead — it must be
+      # an address the Traefik container can reach, i.e. the host's LAN IP and published port.
+      - traefik.http.routers.suggestarr.rule=Host(`suggestarr.lexcode.dev`)
+      - traefik.http.routers.suggestarr.entrypoints=websecure
+      - traefik.http.routers.suggestarr.tls.certresolver=letsencrypt
+      - traefik.http.services.suggestarr.loadbalancer.server.url=http://192.168.0.24:${SUGGESTARR_PORT:-5000}
 
   maintainerr:
     <<: *arr-dns
