@@ -83,7 +83,7 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
 
 ## Reverse proxy
 
-The proxy stack joins `servarrnetwork`. `sonarr`, `radarr`, `lidarr`, `bazarr`, and `maintainerr` each carry `traefik.*` labels routing them at `<name>.lexcode.dev`. `prowlarr` and `qbittorrent` run with `network_mode: service:vpn`, so their routing labels live on the `vpn` container instead (each router declares its own `loadbalancer.server.port` explicitly) — see [Docker-routed backends](../proxy/README.md#routing-model) for why. Seerr and FlareSolverr are not currently routed publicly.
+The proxy stack joins `servarrnetwork`. `sonarr`, `radarr`, `lidarr`, `bazarr`, `maintainerr`, and `seerr` each carry `traefik.*` labels routing them at `<name>.lexcode.dev`. Seerr also has a `cloudflare` router: set its Cloudflare Tunnel public hostname origin to `http://traefik:8081`, not the host-published `http://192.168.0.24:5055`, so public traffic stays on Docker's internal networks. `prowlarr` and `qbittorrent` run with `network_mode: service:vpn`, so their routing labels live on the `vpn` container instead (each router declares its own `loadbalancer.server.port` explicitly) — see [Docker-routed backends](../proxy/README.md#routing-model) for why. FlareSolverr is not currently routed publicly.
 
 ## Maintainerr
 

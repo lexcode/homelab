@@ -292,6 +292,17 @@ services:
       - ./data/seerr:/app/config
     ports:
       - 5055:5055
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.seerr.rule=Host(`seerr.lexcode.dev`)
+      - traefik.http.routers.seerr.entrypoints=websecure
+      - traefik.http.routers.seerr.tls.certresolver=letsencrypt
+      # Cloudflare terminates public TLS; use Traefik's Docker-private HTTP entrypoint
+      # instead of routing the tunnel through the host-published port.
+      - traefik.http.routers.seerr-cloudflare.rule=Host(`seerr.lexcode.dev`)
+      - traefik.http.routers.seerr-cloudflare.entrypoints=cloudflare
+      - traefik.http.routers.seerr-cloudflare.service=seerr
+      - traefik.http.services.seerr.loadbalancer.server.port=5055
     networks:
       servarrnetwork:
         ipv4_address: ${SEERR_IP:-172.39.0.7}
