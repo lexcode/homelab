@@ -57,6 +57,8 @@ services:
     volumes:
       - ./data/pia:/pia
       - ./data/pia-shared:/pia-shared
+      # PORT_SCRIPT hook: sets qBittorrent's listen port to whatever port PIA actually forwards.
+      - ./scripts/port-sync.sh:/port-sync.sh:ro
     env_file:
       - ${SERVICE_ENV_FILE:-.env}
     environment:
@@ -68,7 +70,13 @@ services:
       - PASS=${OPENVPN_PASSWORD}
       - LOCAL_NETWORK=${LOCAL_NETWORK}
       - PORT_FORWARDING=1
-      - PORT_PERSIST=1
+      - PORT_PERSIST=1 # asks PIA for the same port on restart; it can still change on a region fallback
+      # Fires once a forward succeeds, with the port as $1. Without it the listen port is whatever
+      # was last typed into the qBittorrent UI, and inbound peers break silently when PIA hands out a
+      # different port. The script talks to the WebUI over loopback inside this shared namespace, so
+      # it needs no credentials (qBittorrent has WebUI\LocalHostAuth=false). See media/README.md.
+      - PORT_SCRIPT=/port-sync.sh
+      - QBIT_WEBUI_PORT=${WEBUI_PORT:-8080}
       - MTU=1280 # Pi / VPN: avoids path-MTU black holes that show up as stalled torrents
       # - VPNDNS=${VPNDNS}
       - TZ=${TZ}
