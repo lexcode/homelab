@@ -29,7 +29,7 @@ and understandable — not simply to make containers start.
 Before making changes:
 
 1. Read the root `README.md`.
-2. Read `CONTEXT.md` when it exists.
+2. Read `GLOSSARY.md` when it exists.
 3. Read `docs/STRUCTURE.md` when the change affects repository structure.
 4. Read the relevant stack's `README.md`.
 5. Inspect its `compose.yml`, `.env.example`, scripts, and related configuration.
@@ -216,7 +216,7 @@ Update other documentation when relevant:
 
 - `README.md` — repository overview and operational entry points.
 - `docs/STRUCTURE.md` — directory and stack layout.
-- `CONTEXT.md` — established domain terminology.
+- `GLOSSARY.md` — established domain terminology.
 - `docs/adr/` — architectural decisions and their rationale.
 - `docs/agents/` — agent-specific working guidance.
 
@@ -277,3 +277,17 @@ Before completing a task, provide:
 - Ask only for information that is genuinely needed.
 - If the requested approach is unsafe or unnecessarily complex, explain
   why and recommend a better alternative.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as GitHub issues in `lexcode/homelab`, driven by the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles map 1:1 to the default label strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: glossary at `GLOSSARY.md`, decisions under `docs/adr/`. See `docs/agents/domain.md`.
