@@ -351,7 +351,17 @@ docker compose up -d --force-recreate vpn flaresolverr prowlarr qbittorrent
 
 PIA forwards a single port for inbound torrent traffic. qBittorrent has to *listen* on exactly that port or no peer can connect to you in — downloads still work, so the failure is silent. The forwarded port is published at `./data/pia-shared/port.dat`, and `PORT_PERSIST=1` asks PIA to keep the same port across restarts (usually for weeks, but not guaranteed: a reconnect or a `PIA_LOC` region fallback can hand out a different one).
 
-`scripts/port-sync.sh` closes that gap. The `vpn` container runs it through the image's `PORT_SCRIPT` hook as soon as a forward succeeds, passing the port as its first argument. The script posts that port to qBittorrent's `app/setPreferences` API over loopback — the two containers share a network namespace, and qBittorrent's `WebUI\LocalHostAuth=false` lets loopback clients skip the password, so it needs no credentials. It retries for about a minute while qBittorrent starts, logs each decision as `port-sync: …` in `docker compose logs vpn`, and backs off if the port is unchanged.
+`scripts/port-sync.sh` closes that gap. The `vpn` container runs it through the image's `PORT_SCRIPT` hook whenever a port is bound, passing the port as its first argument. The script posts that port to qBittorrent's `app/setPreferences` API over loopback — the two containers share a network namespace, and qBittorrent's `WebUI\LocalHostAuth=false` lets loopback clients skip the password, so it needs no credentials. It retries for about a minute while qBittorrent starts, logs each decision as `port-sync: …` in `docker compose logs vpn`, and backs off if the port is unchanged.
+
+### When the hook fires
+
+The image calls it from `pf_success.sh`, which runs only in the branch that acquires a fresh PIA port-forward token and binds the port:
+
+- container start
+- any restart or reconnect — a `PIA_LOC` fallback, a manual recreate, or `deunhealth` restarting an unhealthy `vpn`
+- when PIA's port-forward token comes within a week of expiry, which is where a new port number can first appear (tokens live roughly two months)
+
+It deliberately does **not** run on the 15-minute keep-alive rebind, because that rebind cannot change the port and re-running it would only append duplicate firewall rules. So the trigger set and the “the port can change” set are the same — a change is never missed. The trade-off is that a qBittorrent restart on its own does not re-sync; it doesn't need to, since qBittorrent persists `Session\Port` and the last sync already set the right value.
 
 Check the current state any time without logging into the UI:
 
