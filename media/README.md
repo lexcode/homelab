@@ -81,6 +81,21 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
 
 **SuggestArr** uses the host network so outbound calls to Jellyfin/Plex on the LAN use the host’s source address (avoids LAN firewalls that drop traffic from the Docker bridge range).
 
+## Connections between services
+
+In-app settings that follow from the network namespaces and the mount layout — set these once per app:
+
+| Where | Value | Why |
+| --- | --- | --- |
+| Radarr / Sonarr / Lidarr → Download Clients → qBittorrent | host `172.39.0.2` (or the host LAN IP `192.168.0.24`), port `8080` | qBittorrent has no address of its own; `172.39.0.2` is the `VPN_IP` of the container whose namespace it shares, and the LAN IP reaches it through the published port |
+| Prowlarr → Apps | Radarr `http://radarr:7878`, Sonarr `http://sonarr:8989`, Lidarr `http://lidarr:8686` | plain `servarrnetwork` DNS |
+| Prowlarr → Settings → Indexer Proxies → FlareSolverr | `http://172.39.0.2:8191` (or `http://127.0.0.1:8191`) | Prowlarr and FlareSolverr share the `vpn` namespace, so both are the same machine — `http://flaresolverr:8191` does not resolve |
+| Bazarr → Settings → Sonarr / Radarr | `http://sonarr:8989` / `http://radarr:7878` | same network |
+| Seerr → Settings → Services | `http://radarr:7878` / `http://sonarr:8989` | same network |
+| Maintainerr → media server and \*arr connections | container names on `servarrnetwork` | same network |
+
+The download client’s save path and category have to land inside `/data/downloads2`, `/data/downloads3` or `/data/downloads-unraid`. Those are the only download roots mounted into qBittorrent, and it and the \*arr apps see all three at identical container paths — which is what makes imports work without remote path mapping.
+
 ## Reverse proxy
 
 The proxy stack joins `servarrnetwork`. `sonarr`, `radarr`, `lidarr`, `bazarr`, `maintainerr`, `seerr`, and `suggestarr` each carry `traefik.*` labels routing them at `<name>.lexcode.dev` — LAN-only, like every other hostname here that isn't listed in the Cloudflare Tunnel ingress. Seerr also has a `cloudflare` router: set its Cloudflare Tunnel public hostname origin to `http://traefik:8081`, not the host-published `http://192.168.0.24:5055`, so public traffic stays on Docker's internal networks.
@@ -332,6 +347,38 @@ Prowlarr, FlareSolverr, and qBittorrent use `network_mode: service:vpn`, so recr
 docker compose up -d --force-recreate vpn flaresolverr prowlarr qbittorrent
 ```
 
+## Keeping the listen port on PIA's forwarded port
+
+PIA forwards a single port for inbound torrent traffic. qBittorrent has to *listen* on exactly that port or no peer can connect to you in — downloads still work, so the failure is silent. The forwarded port is published at `./data/pia-shared/port.dat`, and `PORT_PERSIST=1` asks PIA to keep the same port across restarts (usually for weeks, but not guaranteed: a reconnect or a `PIA_LOC` region fallback can hand out a different one).
+
+`scripts/port-sync.sh` closes that gap. The `vpn` container runs it through the image's `PORT_SCRIPT` hook as soon as a forward succeeds, passing the port as its first argument. The script posts that port to qBittorrent's `app/setPreferences` API over loopback — the two containers share a network namespace, and qBittorrent's `WebUI\LocalHostAuth=false` lets loopback clients skip the password, so it needs no credentials. It retries for about a minute while qBittorrent starts, logs each decision as `port-sync: …` in `docker compose logs vpn`, and backs off if the port is unchanged.
+
+Check the current state any time without logging into the UI:
+
+```bash
+printf 'PIA forwards: '; cat data/pia-shared/port.dat
+docker exec vpn ss -lntu | grep -E 'wg0|utp'   # what qBittorrent actually binds
+```
+
+The two numbers must match. Two consequences worth knowing:
+
+- `TORRENTING_PORT` in `.env` now only describes the ports published on the host for LAN-side peers; it is no longer the listen port the internet sees. Leave the published mappings alone unless you want to drop them.
+- Anything that hard-codes the listen port — the qBittorrent UI's *Advanced → Listening port*, or a `Session\Port` value in `qBittorrent.conf` — gets overwritten by the sync, by design.
+
+Because the script is mounted into the `vpn` service, applying it means recreating that container *and* the three that share its namespace:
+
+```bash
+docker compose up -d vpn flaresolverr prowlarr qbittorrent
+```
+
+It only fires when the VPN reports a successful forward, so a qBittorrent restart while PIA keeps the same port needs no action — but if the UI ever shows a port that disagrees with `port.dat`, run the same script by hand (no argument reads `port.dat`):
+
+```bash
+docker exec vpn sh /port-sync.sh
+```
+
+The script only ever writes a port it can read back as the forwarded one, and it logs `port-sync: gave up …` instead of guessing. A failed sync leaves the old port in place rather than pointing qBittorrent at something wrong.
+
 ## Seerr logging
 
 Seerr defaults to informational logging through `SEERR_LOG_LEVEL=info`. When
@@ -414,6 +461,8 @@ Keep all library paths on local disks under `/data` (or change the bind mounts i
 
 - `./data/*` — container configs (gitignored or local only; do not commit secrets)
 - `/data` on host — libraries, downloads root (as configured in each app)
+
+On the reference host `/data` is not a disk: it is a directory carrying ten host-side CIFS automounts, from Unraid (`192.168.0.149` → `Media/{Downloads,Movies,Shows,Animes,Music,Music-Inbox}`) and a second NAS (`192.168.0.10` → `Media/{Movies,TV Shows,Music,Documents}`). The `-unraid` suffixed roots and the plain ones therefore sit on **different** filesystems, which is why an import between them copies instead of hardlinking. `/mnt/usb/downloads2` and `/mnt/usb2/downloads` are plain directories on the host's root filesystem despite the name — no USB disk is mounted there.
 
 ### Example host `/data` tree
 
