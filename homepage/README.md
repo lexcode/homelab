@@ -34,12 +34,15 @@ Docker Compose stack for [**Homepage**](https://gethomepage.dev) — a self-host
 | -------- | ----------- | ------ |
 | homepage | `3003`      | Web UI |
 
-`dockerproxy` binds only to `127.0.0.1:2375` and is not exposed externally.
+`dockerproxy` publishes **no host port at all**. Homepage reaches it as `dockerproxy:2375` over
+`homepagenetwork`, so nothing outside that network can address the Docker API — including
+`network_mode: host` workloads, which share the host loopback and would otherwise reach a
+`127.0.0.1`-published proxy (see [`media/README.md`](../media/README.md)).
 
 ## Services
 
 - **`homepage`** — the dashboard itself. Config lives in `./data/homepage/config/`, images in `./data/homepage/images/`.
-- **`dockerproxy`** — [Tecnativa Docker Socket Proxy](https://github.com/Tecnativa/docker-socket-proxy) — exposes a read-only Docker API at `dockerproxy:2375`. Homepage accesses Docker only through this proxy; the raw Docker socket is mounted only in the proxy container. `POST=0` ensures no write operations are possible.
+- **`dockerproxy`** — [Tecnativa Docker Socket Proxy](https://github.com/Tecnativa/docker-socket-proxy) — exposes a read-only Docker API at `dockerproxy:2375` on `homepagenetwork` only, with no published host port. Homepage accesses Docker only through this proxy; the raw Docker socket is mounted only in the proxy container. `POST=0` ensures no write operations are possible. Note that `POST=0` blocks writes but still allows reads of container configuration, so the proxy must not be reachable from workloads you do not trust.
 
 ## Configuration files
 

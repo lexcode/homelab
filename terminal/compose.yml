@@ -10,7 +10,11 @@ services:
       - 8888:8888
     environment:
       ATUIN_HOST: "0.0.0.0"
-      ATUIN_OPEN_REGISTRATION: "true"
+      # Closed by default. The hostname is publicly routed through the Cloudflare Tunnel
+      # (atuin.lexcode.dev), where open registration lets any internet client create accounts
+      # on the shell-history store. Set ATUIN_OPEN_REGISTRATION=true in terminal/.env only for
+      # the run that creates your own account, then set it back to false.
+      ATUIN_OPEN_REGISTRATION: "${ATUIN_OPEN_REGISTRATION:-false}"
       ATUIN_DB_URI: postgres://$ATUIN_DB_USERNAME:$ATUIN_DB_PASSWORD@db/$ATUIN_DB_NAME
       RUST_LOG: info,atuin_server=debug
     depends_on:

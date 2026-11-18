@@ -2,10 +2,15 @@ services:
   cloudflared:
     container_name: cloudflare-tunnel
     image: cloudflare/cloudflared:latest
-    command: tunnel --no-autoupdate run --protocol http2 --token ${CLOUDFLARED_TOKEN}
+    # The credential is read from TUNNEL_TOKEN, not from a --token argument: argv is visible in
+    # `docker inspect` Command (and in the container list itself) to anything that can read the
+    # Docker API, whereas this environment entry is only visible on a per-container inspect.
+    # The env_file is deliberately NOT used here — it handed this container the whole proxy/.env
+    # (ACME email, DNS-edit token, dashboard hash, Tailscale key), none of which it needs.
+    command: tunnel --no-autoupdate run --protocol http2
     restart: unless-stopped
-    env_file:
-      - ${SERVICE_ENV_FILE:-.env}
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARED_TOKEN:?Set CLOUDFLARED_TOKEN in proxy/.env}
     networks:
       - proxynetwork
 
