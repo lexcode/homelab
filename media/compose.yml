@@ -335,6 +335,10 @@ services:
   # Host network: outbound calls to Jellyfin/Plex use the host LAN IP (e.g. 192.168.0.5).
   # On a bridged custom network, TCP can leave with source 172.39.0.x; LAN-only firewalls
   # (common on Unraid) then block :8096 while ping still works — same symptom as your wget timeout.
+  #
+  # CONSEQUENCE: `network_mode: host` shares the host's loopback, so this container can reach any
+  # service published on 127.0.0.1 (e.g. a Docker-API proxy). Never publish an admin surface to
+  # 127.0.0.1 on this host and assume it is unreachable from containers — use a Docker network.
   suggestarr:
     image: ciuse99/suggestarr:latest
     container_name: suggestarr
