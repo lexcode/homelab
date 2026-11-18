@@ -81,7 +81,22 @@ Use a strong password in `.env`. Avoid characters that are special in URLs (`@`,
 
 ## Security note
 
-`compose.yml` sets `ATUIN_OPEN_REGISTRATION=true`, which allows anyone who can reach the service to create accounts. For a homelab behind your LAN or a reverse proxy with auth, that may be fine. For anything internet-exposed, turn registration off after creating your user (set `ATUIN_OPEN_REGISTRATION=false` and restart) and rely on your existing accounts.
+`ATUIN_OPEN_REGISTRATION` controls account creation, and it is **closed by default**
+(`compose.yml` renders `${ATUIN_OPEN_REGISTRATION:-false}`).
+
+This stack's hostname is publicly routed through the Cloudflare Tunnel
+(`atuin.lexcode.dev` → `http://<host>:8888`), so open registration would let any internet client
+create accounts on the shell-history store. The intended flow is:
+
+1. Set `ATUIN_OPEN_REGISTRATION=true` in `.env`.
+2. `docker compose up -d` (the container must be **recreated** — editing `.env` alone changes nothing,
+   because Compose only interpolates variables that `compose.yml` references).
+3. Create your account.
+4. Set it back to `false` and recreate again.
+
+Setting the variable only in `.env` is not enough: `compose.yml` must read it, which is why the
+default lives in the interpolation rather than as a literal `"true"`. Do not expose this service
+without either closed registration or an authenticating proxy in front of it.
 
 ## Image pin
 
