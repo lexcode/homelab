@@ -1,0 +1,59 @@
+# Audiobookshelf — self-hosted audiobook and podcast server.
+# Runs on the Raspberry Pi 5 Docker host (the same host as media/ and dns/);
+# Traefik routes https://audio.lexcode.dev to it over
+# audiobookshelfnetwork. Upstream: https://github.com/advplyr/audiobookshelf
+
+networks:
+  audiobookshelfnetwork:
+    name: audiobookshelfnetwork
+    ipam:
+      config:
+        - subnet: ${AUDIOBOOKSHELF_SUBNET:-172.39.10.0/24}
+
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    restart: unless-stopped
+    # The upstream image defaults to root. Run it as the same unprivileged
+    # owner as the library and ./data so files it writes stay readable by the
+    # rest of the stack. Docker allows non-root binding to port 80 inside the
+    # container (net.ipv4.ip_unprivileged_port_start=0).
+    user: "${PUID:-1000}:${PGID:-1000}"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ:-Europe/Dublin}
+    ports:
+      # LAN access without Traefik. Traefik talks to the container on :80
+      # over audiobookshelfnetwork, so only the host side is configurable.
+      - "${AUDIOBOOKSHELF_PORT:-13378}:80"
+    volumes:
+      # SQLite database, server settings and the generated JWT secret. Keep
+      # this on local disk, not a network share (upstream requirement).
+      - ./data/audiobookshelf/config:/config
+      # Covers, extracted metadata and OPDS cache. Local disk as well.
+      - ./data/audiobookshelf/metadata:/metadata
+      # Library roots. Absolute host paths live in .env; both must exist
+      # before the first start so Docker does not create root-owned folders.
+      - ${AUDIOBOOKSHELF_AUDIOBOOKS_DIR:-/data/audiobooks}:/audiobooks
+      - ${AUDIOBOOKSHELF_PODCASTS_DIR:-/data/podcasts}:/podcasts
+    healthcheck:
+      # The image ships node; /healthcheck returns 200 once Express is serving.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:80/healthcheck').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.audiobookshelf.rule=Host(`audio.lexcode.dev`)
+      - traefik.http.routers.audiobookshelf.entrypoints=websecure
+      - traefik.http.routers.audiobookshelf.tls.certresolver=letsencrypt
+      - traefik.http.services.audiobookshelf.loadbalancer.server.port=80
+    networks:
+      - audiobookshelfnetwork

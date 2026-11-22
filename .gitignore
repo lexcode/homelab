@@ -1,4 +1,5 @@
 /media/data/*
+/audiobookshelf/data/*
 /monitoring/data/*
 /documents/data/*
 /homepage/data/homepage/config/logs/*

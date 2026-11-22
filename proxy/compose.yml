@@ -168,6 +168,7 @@ services:
       teslamatenetwork:
       n8nnetwork:
       n8n-sandbox-network:
+      audiobookshelfnetwork:
 
 networks:
   proxynetwork:
@@ -204,3 +205,6 @@ networks:
   n8n-sandbox-network:
     external: true
     name: n8n-sandbox-network
+  audiobookshelfnetwork:
+    external: true
+    name: audiobookshelfnetwork

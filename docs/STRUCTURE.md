@@ -14,6 +14,7 @@ homelab/
 ├── docs/
 │   └── STRUCTURE.md          # This file
 ├── media/                    # Servarr + VPN + *arr stack
+├── audiobookshelf/           # LAN-only audiobook and podcast server
 ├── documents/                # paperless-ngx, AI helpers, broker, DBs
 ├── monitoring/               # Beszel hub + agent, Dozzle
 ├── management/               # Dockge Compose stack manager
@@ -60,6 +61,28 @@ media/
 ```
 
 Host media libraries and downloads are expected under **`/data`** on the machine (bind mounts), as described in **media/README.md**.
+
+---
+
+## `audiobookshelf/`
+
+```text
+audiobookshelf/
+├── compose.yml               # Audiobookshelf, audiobookshelfnetwork, Traefik labels, health check
+├── .env.example              # Host port, bridge subnet, PUID/PGID, TZ, library paths
+├── README.md                 # LAN-only route, storage, permissions, backups, updates
+└── data/                     # Not committed
+    └── audiobookshelf/
+        ├── config/           # SQLite DB, settings, generated secrets
+        └── metadata/         # Covers and extracted metadata
+```
+
+Runs on the Raspberry Pi 5 Docker host, the same host as `media/` and `dns/`,
+but on its own bridge network (`audiobookshelfnetwork`) so it needs neither the
+VPN namespace nor `servarrnetwork`. The library and podcast roots are host
+paths from `.env` (`/data/audiobooks` and `/data/podcasts` by default).
+Traefik routes `https://audio.lexcode.dev` to the container **LAN-only** —
+there is no Cloudflare Tunnel hostname.
 
 ---
 
@@ -305,6 +328,7 @@ The permanent music library is a host bind mount configured by
 systemd/
 ├── README.md                 # Install paths, ordering (proxy After= other stacks)
 ├── media.service
+├── audiobookshelf.service
 ├── media-beets-import.service # Oneshot: beet.sh import-auto (quiet-mode inbox import)
 ├── media-beets-import.timer  # Hourly trigger for the above; opt-in, not stack boot
 ├── documents.service

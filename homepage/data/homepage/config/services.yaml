@@ -241,6 +241,11 @@
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/maintainerr.png
         server: docker
         container: maintainerr
+    - Audiobookshelf:
+        href: "{{HOMEPAGE_VAR_AUDIOBOOKSHELF_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/audiobookshelf.svg
+        server: docker
+        container: audiobookshelf
 - DNS:
     - AdGuard Home:
         href: "{{HOMEPAGE_VAR_ADGUARD_HOME_URL}}"
