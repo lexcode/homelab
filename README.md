@@ -50,7 +50,7 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 
 | Directory                    | Purpose                                                                                                                                                                             |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`media/`](media/)           | Servarr stack (qBittorrent over WireGuard PIA, Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, deunhealth) — see **[media/README.md](media/README.md)**. |
+| [`media/`](media/)           | Servarr stack (qBittorrent over WireGuard PIA, Sonarr, Radarr, Lidarr, Chaptarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, deunhealth) — see **[media/README.md](media/README.md)**. |
 | [`audiobookshelf/`](audiobookshelf/) | LAN-only [Audiobookshelf](https://github.com/advplyr/audiobookshelf) audiobook and podcast server on the Raspberry Pi 5 — see **[audiobookshelf/README.md](audiobookshelf/README.md)**. |
 | [`documents/`](documents/)   | AI-powered document management (paperless-ngx + paperless-gpt with Ollama OCR and tagging) — see **[documents/README.md](documents/README.md)**.                                    |
 | [`monitoring/`](monitoring/) | [Beszel](https://github.com/henrygd/beszel) hub plus co-located agent — see **[monitoring/README.md](monitoring/README.md)**.                                                       |

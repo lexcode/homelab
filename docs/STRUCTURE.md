@@ -39,9 +39,9 @@ homelab/
 
 ```text
 media/
-├── compose.yml               # qBittorrent/VPN, Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, Beets, deunhealth
+├── compose.yml               # qBittorrent/VPN, Sonarr, Radarr, Lidarr, Chaptarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, Beets, deunhealth
 ├── .env.example
-├── README.md                 # Ports, /data layout, optional NAS mounts, Beets workflow
+├── README.md                 # Ports, /data layout, optional NAS mounts, Chaptarr and Beets workflows
 ├── beets/                    # Beets image and config (committed)
 │   ├── Dockerfile            # beets + fpcalc + flac; idle container, manual imports only
 │   ├── config.yaml           # Mounted read-only at /config/config.yaml
@@ -53,6 +53,7 @@ media/
     ├── sonarr/
     ├── radarr/
     ├── lidarr/
+    ├── chaptarr/
     ├── bazarr/
     ├── seerr/
     ├── prowlarr/

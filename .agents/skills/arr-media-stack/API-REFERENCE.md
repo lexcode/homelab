@@ -244,6 +244,41 @@ curl -s -H "X-API-KEY: $BKEY" "http://$H:6767/api/languages"
 
 No stable public API — `GET /api/status` is `404`. Use the UI at `maintainerr.lexcode.dev`; the container healthcheck `/opt/app/healthcheck.sh` is the programmatic signal via `docker compose ps`. Deep detail: `media/README.md` → *Maintainerr*.
 
+## Chaptarr (API v1)
+
+> Paths below are taken from Chaptarr's published OpenAPI document
+> (`src/Chaptarr.Api.V1/openapi.json`, 2026-11) and from the Dockerfile's
+> `EXPOSE 8789` — they have **not** yet been exercised against the running
+> stack. Treat a surprising response here as unverified rather than broken.
+
+Readarr lineage, so v1 and book vocabulary: `/api/v3/*` is `404`, and the
+entities are `author` and `book`. Port 8789, container `chaptarr`.
+
+```bash
+H=192.168.0.24
+CKEY=$(grep -oP '(?<=<ApiKey>)[^<]+' media/data/chaptarr/config.xml)
+
+curl -s "http://$H:8789/ping"                       # liveness, no key
+curl -s -H "X-Api-Key: $CKEY" "http://$H:8789/api/v1/system/status" | jq '{version, appName, databaseType}'
+
+# root folders — is the book library a real mount, or an empty local dir?
+curl -s -H "X-Api-Key: $CKEY" "http://$H:8789/api/v1/rootfolder" | jq '.[] | {path, accessible, freeSpace}'
+
+# health, queue and wanted list: the same triage ladder as Radarr/Sonarr
+curl -s -H "X-Api-Key: $CKEY" "http://$H:8789/api/v1/health" | jq '.[] | {type, source, message}'
+curl -s -H "X-Api-Key: $CKEY" "http://$H:8789/api/v1/queue" | jq '.records[] | {title, status, trackedDownloadState, errorMessage}'
+curl -s -H "X-Api-Key: $CKEY" "http://$H:8789/api/v1/wanted/missing" | jq '.totalRecords'
+
+# what the app thinks its indexers and download client are
+curl -s -H "X-Api-Key: $CKEY" "http://$H:8789/api/v1/config/indexer" | jq '{maximumSize, minimumAge}'
+curl -s -H "X-Api-Key: $CKEY" "http://$H:8789/api/v1/downloadclient" | jq '.[] | {name, implementation, enable}'
+```
+
+Empty metadata (no author, title or cover on a searched book) is the metadata
+provider, not the indexer: check Settings → Metadata, and note Hardcover needs
+an API token. Empty search results across every indexer are the same cause as
+elsewhere in the stack — film/TV trackers carry no books.
+
 ## Beets
 
 No HTTP API. `./beets/beet.sh stats | ls <query> | missing | dupes | check | retry <path>`, and `media/data/beets/import.log` records what each import decided.

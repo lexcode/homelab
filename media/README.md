@@ -1,6 +1,6 @@
 # Media stack (Servarr + VPN)
 
-Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, Maintainerr, Beets, and deunhealth. Config lives under `./data/`; libraries and downloads are expected on the host at **`/data`** (bind-mounted into the containers).
+Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Radarr, Lidarr, Chaptarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, Maintainerr, Beets, and deunhealth. Config lives under `./data/`; libraries and downloads are expected on the host at **`/data`** (bind-mounted into the containers).
 
 ## Prerequisites
 
@@ -36,6 +36,7 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
      data/sonarr \
      data/radarr \
      data/lidarr \
+     data/chaptarr \
      data/bazarr \
      data/seerr \
      data/prowlarr \
@@ -69,6 +70,7 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
 | Sonarr       | `8989`      |                                          |
 | Radarr       | `7878`      |                                          |
 | Lidarr       | `8686`      |                                          |
+| Chaptarr     | `8789`      | `CHAPTARR_PORT`                          |
 | Bazarr       | `6767`      |                                          |
 | Seerr        | `5055`      |                                          |
 | Prowlarr     | `9696`      | Via VPN container                        |
@@ -87,8 +89,8 @@ In-app settings that follow from the network namespaces and the mount layout —
 
 | Where | Value | Why |
 | --- | --- | --- |
-| Radarr / Sonarr / Lidarr → Download Clients → qBittorrent | host `172.39.0.2` (or the host LAN IP `192.168.0.24`), port `8080` | qBittorrent has no address of its own; `172.39.0.2` is the `VPN_IP` of the container whose namespace it shares, and the LAN IP reaches it through the published port |
-| Prowlarr → Apps | Radarr `http://radarr:7878`, Sonarr `http://sonarr:8989`, Lidarr `http://lidarr:8686` | plain `servarrnetwork` DNS |
+| Radarr / Sonarr / Lidarr / Chaptarr → Download Clients → qBittorrent | host `172.39.0.2` (or the host LAN IP `192.168.0.24`), port `8080` | qBittorrent has no address of its own; `172.39.0.2` is the `VPN_IP` of the container whose namespace it shares, and the LAN IP reaches it through the published port |
+| Prowlarr → Apps | Radarr `http://radarr:7878`, Sonarr `http://sonarr:8989`, Lidarr `http://lidarr:8686`, Chaptarr `http://chaptarr:8789` | plain `servarrnetwork` DNS |
 | Prowlarr → Settings → Indexer Proxies → FlareSolverr | `http://172.39.0.2:8191` (or `http://127.0.0.1:8191`) | Prowlarr and FlareSolverr share the `vpn` namespace, so both are the same machine — `http://flaresolverr:8191` does not resolve |
 | Bazarr → Settings → Sonarr / Radarr | `http://sonarr:8989` / `http://radarr:7878` | same network |
 | Seerr → Settings → Services | `http://radarr:7878` / `http://sonarr:8989` | same network |
@@ -98,7 +100,7 @@ The download client’s save path and category have to land inside `/data/downlo
 
 ## Reverse proxy
 
-The proxy stack joins `servarrnetwork`. `sonarr`, `radarr`, `lidarr`, `bazarr`, `maintainerr`, `seerr`, and `suggestarr` each carry `traefik.*` labels routing them at `<name>.lexcode.dev` — LAN-only, like every other hostname here that isn't listed in the Cloudflare Tunnel ingress. Seerr also has a `cloudflare` router: set its Cloudflare Tunnel public hostname origin to `http://traefik:8081`, not the host-published `http://192.168.0.24:5055`, so public traffic stays on Docker's internal networks.
+The proxy stack joins `servarrnetwork`. `sonarr`, `radarr`, `lidarr`, `chaptarr`, `bazarr`, `maintainerr`, `seerr`, and `suggestarr` each carry `traefik.*` labels routing them at `<name>.lexcode.dev` — LAN-only, like every other hostname here that isn't listed in the Cloudflare Tunnel ingress. Seerr also has a `cloudflare` router: set its Cloudflare Tunnel public hostname origin to `http://traefik:8081`, not the host-published `http://192.168.0.24:5055`, so public traffic stays on Docker's internal networks.
 
 Two services need a non-default backend address:
 
@@ -110,6 +112,62 @@ FlareSolverr is not currently routed publicly.
 ## Maintainerr
 
 [**Maintainerr**](https://github.com/maintainerr/maintainerr) automates library cleanup by applying rules (e.g. "unwatched for 30 days") against Plex/Jellyfin, then removing matching media via Radarr/Sonarr. It sits on `servarrnetwork` so it can reach the other *arr apps by container name; set its media-server and *arr connections from the Maintainerr UI (`http://<host>:6246`) after startup. Set `MAINTAINERR_GITHUB_TOKEN` in `.env` if you hit GitHub API rate limits.
+
+## Chaptarr (audiobook and ebook manager)
+
+[**Chaptarr**](https://github.com/Chaptarr/chaptarr) is the book equivalent of
+Sonarr/Radarr: it monitors authors, searches indexers through Prowlarr, sends
+grabs to qBittorrent, and imports the finished files into a library root. It is
+the **acquisition half** of the [`audiobookshelf/`](../audiobookshelf/README.md)
+stack — Audiobookshelf only serves files already on disk, so without something
+like Chaptarr a requested book never arrives by itself.
+
+Chaptarr is a fork of Readarr, which was retired in June 2025. Upstream labels
+it **beta**: keep the recycling bin enabled, and do not point it at a library
+you could not restore from backup.
+
+### Wiring it up
+
+Nothing is configured by environment variables beyond `PUID`/`PGID`/`TZ`; the
+rest is in the UI at `http://<host>:8789` (or `https://chaptarr.lexcode.dev`):
+
+| Setting | Value |
+| --- | --- |
+| Settings → Indexers | add Prowlarr as the indexer source (or add indexers directly). On the Prowlarr side add Chaptarr under **Apps** as `http://chaptarr:8789` with its API key, the same way Sonarr/Radarr are added. |
+| Settings → Download Clients → qBittorrent | host `172.39.0.2`, port `8080` — qBittorrent has no address of its own (see [Connections between services](#connections-between-services)) |
+| Settings → Media Management → Root Folders | `Audiobooks` → `/data/audiobooks`; optionally `Ebooks` → `/data/books` |
+| Category | use a dedicated category such as `chaptarr`, kept inside a mounted download root (`/data/downloads-unraid`) |
+| Settings → Metadata | pick a book metadata provider (Hardcover, Goodreads, Audible). Hardcover needs a free API token; without a provider, searches return nothing |
+
+The root folder is the same host path that Audiobookshelf's
+`AUDIOBOOKSHELF_AUDIOBOOKS_DIR` points at, mounted here as `/data/audiobooks` by
+the `- /data:/data` bind. Two consequences worth knowing:
+
+- **The root must be a real mount.** If `/data/audiobooks` is merely an empty
+directory on the Pi (an automount that did not come up), Chaptarr will happily
+fill the SD card and Audiobookshelf will see nothing. `findmnt /data/audiobooks`
+before the first import.
+- **Imports usually copy, not hardlink.** `/data/downloads-unraid` and the book
+library are different CIFS shares, so finishing a book costs a second copy and
+the peak space of both.
+
+Audiobookshelf picks the files up from the library folder (its own library
+watcher, or a manual rescan from the library menu; a CIFS-backed library may not
+emit inotify events reliably).
+
+Root folders also carry per-media-type automation options — audiobook quality
+profile, monitored-on-add, and `Write cover into Audiobookshelf folder` — so the
+cover audiobook metadata provides lands next to the files that Audiobookshelf
+then displays.
+
+### The limiting factor is indexers
+
+The existing indexers in Prowlarr are film and TV trackers. Audiobooks come from
+book-specific trackers (for example MyAnonamouse or AudioBookBay, sometimes via
+the FlareSolverr proxy at `http://172.39.0.2:8191`) or from usenet, and those
+need accounts. With only movie/TV indexers configured, Chaptarr's searches return
+nothing and it looks broken when it is simply unconfigured. Book metadata
+matching is also weaker than TMDB: expect to fix some matches by hand.
 
 ## Beets (music inbox organizer)
 
@@ -476,11 +534,12 @@ On the reference host `/data` is not a disk: it is a directory carrying ten host
 
 ### Example host `/data` tree
 
-Conventional paths under the bind-mounted host root. Point Radarr, Sonarr, Lidarr, Bazarr, and qBittorrent at the folders you actually use.
+Conventional paths under the bind-mounted host root. Point Radarr, Sonarr, Lidarr, Chaptarr, Bazarr, and qBittorrent at the folders you actually use.
 
 ```text
 /data
-├── books
+├── audiobooks      # CIFS: book library root Chaptarr imports into; Audiobookshelf scans it
+├── books           # optional ebook root, if you keep those separately from audiobooks
 ├── downloads
 │   └── qbittorrent
 │       ├── completed

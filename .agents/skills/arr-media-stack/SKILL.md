@@ -1,6 +1,6 @@
 ---
 name: arr-media-stack
-description: Operate and troubleshoot the media/ stack in this repo — Radarr, Sonarr, Lidarr, Prowlarr, Bazarr, Seerr, qBittorrent behind the PIA WireGuard container, FlareSolverr, Maintainerr, SuggestArr, Beets. Use when adding media, checking stack health, queues or history, diagnosing failed imports, stalled torrents, empty search results, missing subtitles, or VPN and network problems in this stack.
+description: Operate and troubleshoot the media/ stack in this repo — Radarr, Sonarr, Lidarr, Chaptarr, Prowlarr, Bazarr, Seerr, qBittorrent behind the PIA WireGuard container, FlareSolverr, Maintainerr, SuggestArr, Beets. Use when adding media, checking stack health, queues or history, diagnosing failed imports, stalled torrents, empty search results, missing subtitles, missing audiobooks, or VPN and network problems in this stack.
 ---
 
 # Arr media stack
@@ -23,6 +23,7 @@ Run Compose commands from `media/`: `cd media && docker compose <cmd>`. The stac
 | Radarr | `radarr` | 7878 | `http://radarr:7878` | `/api/v3` |
 | Sonarr | `sonarr` | 8989 | `http://sonarr:8989` | `/api/v3` |
 | Lidarr | `lidarr` | 8686 | `http://lidarr:8686` | **`/api/v1`** |
+| Chaptarr | `chaptarr` | 8789 | `http://chaptarr:8789` | **`/api/v1`** |
 | Prowlarr | `prowlarr` | 9696 | `http://172.39.0.2:9696` | `/api/v1` |
 | qBittorrent | `qbittorrent` | 8080 | `http://172.39.0.2:8080` | `/api/v2` |
 | FlareSolverr | `flaresolverr` | 8191 | `http://172.39.0.2:8191` (loopback from Prowlarr) | `POST /v1` |
@@ -32,7 +33,7 @@ Run Compose commands from `media/`: `cd media && docker compose <cmd>`. The stac
 | SuggestArr | `suggestarr` | 5000 | `http://192.168.0.24:5000` | `network_mode: host` |
 | Beets | `beets` | — | — | no daemon; `docker compose exec beets` |
 
-Lidarr is the trap: it never moved to v3, so `/api/v3/...` returns `404` while everything else answers. A version mismatch looks like a missing endpoint, not an auth error.
+Lidarr is the trap: it never moved to v3, so `/api/v3/...` returns `404` while everything else answers. A version mismatch looks like a missing endpoint, not an auth error. Chaptarr is the same — it inherits Readarr's v1 API, and its entity is `book`/`author` rather than `book`/`series`.
 
 `prowlarr`, `qbittorrent` and `flaresolverr` carry `network_mode: service:vpn` — they share the VPN container's namespace, have no address of their own, and are unreachable by container name. `172.39.0.2` is `VPN_IP`; from inside that namespace `127.0.0.1` is the same machine. Container-name DNS (`http://flaresolverr:8191`) resolves to nothing.
 
@@ -44,7 +45,7 @@ LAN hostnames are `<app>.lexcode.dev`; only Seerr is routed publicly, through th
 
 | Service | Key location | Header |
 | --- | --- | --- |
-| Radarr / Sonarr / Lidarr / Prowlarr | `media/data/<app>/config.xml` → `<ApiKey>` | `X-Api-Key` |
+| Radarr / Sonarr / Lidarr / Chaptarr / Prowlarr | `media/data/<app>/config.xml` → `<ApiKey>` | `X-Api-Key` |
 | Bazarr | `media/data/bazarr/config/config.yaml` → `auth.apikey` | `X-API-KEY` |
 | Seerr | `media/data/seerr/settings.json` → `main.apiKey` | `X-Api-Key` |
 | qBittorrent | username/password only, stored as `WebUI\Username` + a PBKDF2 hash that cannot be read back | cookie |
@@ -101,7 +102,7 @@ Work down and stop at the first rung that fails — everything below inherits th
 | `/data/downloads-unraid` | `//192.168.0.149/Media/Downloads` | qBittorrent's real download root |
 | `/mnt/usb/downloads2`, `/mnt/usb2/downloads` | **plain directories on the Pi's SD card** | mounted into qBittorrent and the \*arr apps as `/data/downloads2` and `/data/downloads3`. The `usb` names are historical — no USB disk is mounted there |
 
-Current root folders (`GET /api/v3/rootfolder` is authoritative): Radarr `/data/movies`, `/data/movies-unraid`; Sonarr `/data/shows`, `/data/animes`, `/data/shows-unraid`; Lidarr `/data/music`, `/data/music-unraid`.
+Current root folders (`GET /api/v3/rootfolder` is authoritative): Radarr `/data/movies`, `/data/movies-unraid`; Sonarr `/data/shows`, `/data/animes`, `/data/shows-unraid`; Lidarr `/data/music`, `/data/music-unraid`. Chaptarr (`GET /api/v1/rootfolder`) points at a book root under `/data` — normally `/data/audiobooks`, the same host path Audiobookshelf's `AUDIOBOOKSHELF_AUDIOBOOKS_DIR` scans. That root is not in the mount table above unless a book share is mounted: an empty local `/data/audiobooks` is the failure mode where the library fills on the SD card and Audiobookshelf shows nothing.
 
 What follows, and what to re-check before touching a mount:
 
@@ -109,6 +110,17 @@ What follows, and what to re-check before touching a mount:
 - The mounts are host-side autofs. When one drops, the container keeps a valid bind to an empty directory and the app reports the path as accessible — an empty library is the symptom, not an error.
 - Hardlinks and atomic moves need one filesystem. The two NAS boxes plus the SD card are three, so an import across them copies. Check with `stat -f -c %d <download-root> <library-root>` on the Pi.
 - Downloads default to `/data/downloads-unraid/qbittorrent/completed`; the `radarr`, `tv-sonarr` and `lidarr` categories inherit that path. Writing torrent data to `/data/downloads2` or `/data/downloads3` means writing to the SD card.
+
+## Chaptarr
+
+Books, not film: a Readarr fork (Readarr retired June 2025, still labelled beta upstream) that is the acquisition half of `audiobookshelf/`. Audiobookshelf never downloads anything — it serves files — so "the book never arrived" is a Chaptarr question, and "the file is on disk but absent from Audiobookshelf" is an Audiobookshelf rescan question.
+
+- Same plumbing as the other \*arr apps: Prowlarr as indexer source, qBittorrent at `http://172.39.0.2:8080`, imports into a root folder under `/data`.
+- Empty search results are usually **indexers**, not configuration: the installed trackers are film/TV. Book trackers need accounts; MAM-style indexers go through FlareSolverr.
+- Empty metadata (no title, no author, no cover) is the metadata provider, not the download: Settings → Metadata needs Hardcover (API token), Goodreads or Audible.
+- Config lives in `media/data/chaptarr/`, the API key in `config.xml` — but the entrypoint starts as root, chowns `/config`, then drops to `PUID`. `media/data/chaptarr` is local disk, never a share.
+
+Workflow and the Audiobookshelf side: `media/README.md` → *Chaptarr*.
 
 ## Beets
 
