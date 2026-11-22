@@ -102,11 +102,16 @@ needs a change for routing.
 GPU use needs both halves in place:
 
 1. Unraid's NVIDIA Driver plugin installed (host `nvidia-smi` lists the card);
-   `compose.yml` ships with the `gpus:`/`devices:` passthrough **enabled**, and
-   it is this plugin that registers the `nvidia` runtime Docker needs to start
-   the container — without it the container refuses to start. To run CPU-only,
-   comment out the `gpus:` and `devices:` lines. Once started, the container
-   should see the card (`docker exec kima nvidia-smi`).
+   `compose.yml` ships with the passthrough **enabled**: the `gpus:`/`devices:`
+   block plus the same `NVIDIA_VISIBLE_DEVICES` / `NVIDIA_DRIVER_CAPABILITIES`
+   env vars an Unraid GPU template uses (the Jellyfin container on this host
+   is configured the same way). It is the plugin that registers the `nvidia`
+   runtime Docker needs — without it the container refuses to start. To run
+   CPU-only, comment out the `gpus:` and `devices:` lines. Once started, the
+   container should see the card (`docker exec kima nvidia-smi`). If an older
+   plugin build rejects the `gpus: all` line itself, remove only that line —
+   the device nodes plus env vars alone hand the card over, exactly as
+   Jellyfin does.
 2. In **Settings → Library → Performance**, turn on the two NVIDIA switches
    ("vibe embeddings" and "audio analysis"); they show on Linux x86-64 only.
 

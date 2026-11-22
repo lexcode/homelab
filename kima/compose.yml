@@ -38,6 +38,12 @@ services:
       # check then stops expecting it. For low-CPU/low-RAM hosts that skip the
       # vibe features.
       - DISABLE_CLAP=${DISABLE_CLAP:-}
+      # GPU env vars matching an Unraid GPU template (your Jellyfin container
+      # uses the same two). With the plugin's default nvidia runtime they hand
+      # the card over; `all` picks the single P620 (`nvidia-smi -L` lists a
+      # device UUID if you ever want to pin it).
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+      - NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:-all}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     # NVIDIA GPU passthrough (Quadro P620), enabled. Requires Unraid's NVIDIA
