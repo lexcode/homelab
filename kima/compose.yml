@@ -56,9 +56,10 @@ services:
     # both values on low-RAM hosts.
     mem_limit: ${KIMA_MEM_LIMIT:-6g}
     memswap_limit: ${KIMA_MEMSWAP_LIMIT:-8g}
-    # Upstream fix for the Redis overcommit memory warning.
-    sysctls:
-      - vm.overcommit_memory=1
+    # Upstream docker-compose.prod.yml sets `vm.overcommit_memory=1` to silence
+    # a Redis warning. Dropped here: runc/Docker on Unraid rejects it ("not in a
+    # separate kernel namespace") and refuses to create the container. Redis
+    # just logs the harmless overcommit warning on start instead.
     healthcheck:
       test: ["CMD", "node", "/app/healthcheck.js"]
       interval: 30s

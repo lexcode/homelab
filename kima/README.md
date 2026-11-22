@@ -46,6 +46,10 @@ container labels.
    `/data/secrets`. No post-creation steps needed — the container's startup
    script creates and chowns `/data/postgres` and `/data/redis` itself.
 
+   Note: upstream's `vm.overcommit_memory=1` sysctl is deliberately not
+   included — Docker on Unraid rejects it as not namespaced. Redis logs a
+   harmless overcommit warning instead.
+
 3. Open `https://music.lexcode.dev` (or `http://<unraid-ip>:3030` on the LAN)
    and create the first account — it becomes the administrator. Point the
    library at `/music`, which is the `Media/Music` share.
