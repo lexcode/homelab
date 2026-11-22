@@ -59,10 +59,12 @@ services:
       - /dev/nvidiactl
       - /dev/nvidia-uvm
       - /dev/nvidia-uvm-tools
-    # Upstream memory guardrails. Each analysis worker needs about 1-1.5 GB (up
-    # to 2-3 GB at peak) and the all-in-one image runs two by default — lower
-    # both values on low-RAM hosts.
-    mem_limit: ${KIMA_MEM_LIMIT:-6g}
+    # Memory guardrails. This host is tuned low (2g): each analysis worker
+    # needs about 1-1.5 GB (up to 2-3 GB at peak) and the all-in-one image runs
+    # two by default, so a full sweep can exceed this — the kernel OOM-killer
+    # then reaps container processes until workers are reduced or DISABLE_CLAP
+    # is set. Raise it if the host has the RAM.
+    mem_limit: ${KIMA_MEM_LIMIT:-2g}
     memswap_limit: ${KIMA_MEMSWAP_LIMIT:-8g}
     # Upstream docker-compose.prod.yml sets `vm.overcommit_memory=1` to silence
     # a Redis warning. Dropped here: runc/Docker on Unraid rejects it ("not in a
