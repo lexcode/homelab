@@ -199,6 +199,18 @@
           type: lidarr
           url: "{{HOMEPAGE_VAR_LIDARR_URL}}"
           key: "{{HOMEPAGE_VAR_LIDARR_KEY}}"
+    - Chaptarr:
+        href: "{{HOMEPAGE_VAR_CHAPTARR_URL}}"
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/readarr.svg
+        server: docker
+        container: chaptarr
+        # No Chaptarr widget in Homepage yet. Chaptarr serves Readarr's /api/v1
+        # shape, so `type: readarr` is expected to work, but it is left commented
+        # until it has been checked against the running instance.
+        # widget:
+        #   type: readarr
+        #   url: "{{HOMEPAGE_VAR_CHAPTARR_URL}}"
+        #   key: "{{HOMEPAGE_VAR_CHAPTARR_KEY}}"
     - Bazarr:
         href: "{{HOMEPAGE_VAR_BAZARR_URL}}"
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/bazarr.svg
