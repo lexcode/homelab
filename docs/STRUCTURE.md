@@ -14,6 +14,7 @@ homelab/
 ├── docs/
 │   └── STRUCTURE.md          # This file
 ├── media/                    # Servarr + VPN + *arr stack
+├── kima/                     # Kima music server (compose here, deployed on Unraid)
 ├── documents/                # paperless-ngx, AI helpers, broker, DBs
 ├── monitoring/               # Beszel hub + agent, Dozzle
 ├── management/               # Dockge Compose stack manager
@@ -296,6 +297,23 @@ resonarr/
 
 The permanent music library is a host bind mount configured by
 `RESONARR_MUSIC_HOST_PATH`; Resonarr finalizes completed files directly there.
+
+---
+
+## `kima/`
+
+```text
+kima/
+├── compose.yml               # Kima all-in-one image — the Unraid deployment configuration
+├── .env.example              # Image tag, Unraid paths, port, HTTPS cookie flag, callbacks
+└── README.md                 # Deploying on Unraid, routing, GPU, performance, updates
+```
+
+Kima is **deployed on the Unraid host, not on this Docker host**: `compose.yml`
+is the file pasted into Unraid's Docker Compose support, and runtime state
+lives on Unraid under `/mnt/user/appdata/kima` (bind-mounted at `/data`),
+not in a `data/` directory here. The proxy stack routes
+`https://music.lexcode.dev` to Unraid as an external-routed backend.
 
 ---
 

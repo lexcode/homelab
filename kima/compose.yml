@@ -1,0 +1,67 @@
+# Kima — all-in-one music server (web app, API, Postgres, Redis, audio and
+# vibe analyzers in a single image). This stack targets the Unraid host, not
+# this repository's Docker host: copy compose.yml (and an optional .env) to a
+# folder on Unraid and run `docker compose up -d` there. Routing to
+# https://music.lexcode.dev lives in this repo's proxy stack (external.yml),
+# because Kima is an external-routed backend from this host's point of view.
+#
+# Upstream: https://github.com/Chevron7Locked/kima-hub
+# Base: docker-compose.prod.yml — see docs/install.md (data layout, upgrades)
+# and docs/gpu.md (NVIDIA GPU) for the details behind the settings below.
+
+services:
+  kima:
+    image: chevron7locked/kima:${KIMA_VERSION:-latest}
+    container_name: kima
+    restart: unless-stopped
+    ports:
+      - "${KIMA_PORT:-3030}:3030"
+    volumes:
+      # Music library (host path on Unraid). Symbolic links inside are followed,
+      # as long as their targets are also mounted.
+      - ${KIMA_MUSIC_PATH:-/mnt/user/Media/Music}:/music
+      # Everything persistent: Postgres, Redis, cache, and the generated
+      # SESSION_SECRET + SETTINGS_ENCRYPTION_KEY under /data/secrets. Back this
+      # up — losing it loses users, playlists, play history and the stored
+      # credentials.
+      - ${KIMA_DATA_PATH:-/mnt/user/appdata/kima}:/data
+    environment:
+      - TZ=${TZ:-Europe/Dublin}
+      # Served behind HTTPS (https://music.lexcode.dev): send session cookies
+      # over HTTPS only. Set false if you ever access it over plain HTTP.
+      - SECURE_COOKIES=${KIMA_SECURE_COOKIES:-true}
+      # The address Lidarr uses to call back into Kima. Lidarr resolves it, so
+      # host.docker.internal only works for Lidarr on the same host; the repo's
+      # media stack runs Lidarr on another host, so it needs the LAN address.
+      - KIMA_CALLBACK_URL=${KIMA_CALLBACK_URL:-http://192.168.0.149:3030}
+      # DISABLE_CLAP=1 turns off the vibe (sound-vector) analyzer; the health
+      # check then stops expecting it. For low-CPU/low-RAM hosts that skip the
+      # vibe features.
+      - DISABLE_CLAP=${DISABLE_CLAP:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # NVIDIA GPU passthrough (Quadro P620): uncomment after Unraid's NVIDIA
+    # Driver plugin is installed (registers the nvidia runtime; `nvidia-smi`
+    # on the host must list the card). Then turn on the switches under
+    # Settings > Library > Performance. Everything also runs on CPU with this
+    # left off.
+    # gpus: all
+    # devices:
+    #   - /dev/nvidia0
+    #   - /dev/nvidiactl
+    #   - /dev/nvidia-uvm
+    #   - /dev/nvidia-uvm-tools
+    # Upstream memory guardrails. Each analysis worker needs about 1-1.5 GB (up
+    # to 2-3 GB at peak) and the all-in-one image runs two by default — lower
+    # both values on low-RAM hosts.
+    mem_limit: ${KIMA_MEM_LIMIT:-6g}
+    memswap_limit: ${KIMA_MEMSWAP_LIMIT:-8g}
+    # Upstream fix for the Redis overcommit memory warning.
+    sysctls:
+      - vm.overcommit_memory=1
+    healthcheck:
+      test: ["CMD", "node", "/app/healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      start_period: 300s
+      retries: 3

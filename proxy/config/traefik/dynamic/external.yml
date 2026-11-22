@@ -49,6 +49,16 @@ http:
         certResolver: letsencrypt
       service: unraid
 
+    # Kima music server — Unraid host (kima/ stack in this repo, deployed on
+    # Unraid, not on this Docker host). Kima publishes port 3030 there.
+    kima:
+      rule: "Host(`music.lexcode.dev`)"
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: kima
+
     router-ui:
       rule: "Host(`ui.lexcode.dev`)"
       entrypoints:
@@ -88,6 +98,11 @@ http:
       loadBalancer:
         servers:
           - url: "http://192.168.0.149:80"
+
+    kima:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.149:3030"
 
     # Self-signed backend certs (router admin UI, NAS) — Traefik must skip verification
     # to reach them, same trust model NPM used by default.

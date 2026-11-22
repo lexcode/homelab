@@ -1,6 +1,6 @@
 # Homelab
 
-Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, shared coding-agent memory, lightweight host monitoring, container management, analytics, a Netflix IE acquisition feed, workflow automation (n8n), push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
+Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, shared coding-agent memory, lightweight host monitoring, container management, analytics, a Netflix IE acquisition feed, a self-hosted music server (Kima, on the Unraid host), workflow automation (n8n), push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
 
 ```mermaid
 flowchart TB
@@ -50,6 +50,7 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | Directory                    | Purpose                                                                                                                                                                             |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`media/`](media/)           | Servarr stack (qBittorrent over WireGuard PIA, Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, deunhealth) — see **[media/README.md](media/README.md)**. |
+| [`kima/`](kima/)             | [Kima](https://github.com/Chevron7Locked/kima-hub) music server, deployed on the Unraid host (compose lives here, runs there) — see **[kima/README.md](kima/README.md)**. |
 | [`documents/`](documents/)   | AI-powered document management (paperless-ngx + paperless-gpt with Ollama OCR and tagging) — see **[documents/README.md](documents/README.md)**.                                    |
 | [`monitoring/`](monitoring/) | [Beszel](https://github.com/henrygd/beszel) hub plus co-located agent — see **[monitoring/README.md](monitoring/README.md)**.                                                       |
 | [`management/`](management/) | [Dockge](https://github.com/louislam/dockge) Compose stack manager with click-to-update workflows — see **[management/README.md](management/README.md)**. |
