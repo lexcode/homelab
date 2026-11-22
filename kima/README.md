@@ -99,16 +99,20 @@ needs a change for routing.
 
 ## NVIDIA GPU (Quadro P620)
 
-GPU use is **off by default** in the app and needs both halves in place:
+GPU use needs both halves in place:
 
-1. Unraid's NVIDIA Driver plugin installed (host `nvidia-smi` lists the card),
-   then uncomment the `gpus:`/`devices:` block in `compose.yml` and
-   `docker compose up -d` — the container should then see the card
-   (`docker exec kima nvidia-smi`).
+1. Unraid's NVIDIA Driver plugin installed (host `nvidia-smi` lists the card);
+   `compose.yml` ships with the `gpus:`/`devices:` passthrough **enabled**, and
+   it is this plugin that registers the `nvidia` runtime Docker needs to start
+   the container — without it the container refuses to start. To run CPU-only,
+   comment out the `gpus:` and `devices:` lines. Once started, the container
+   should see the card (`docker exec kima nvidia-smi`).
 2. In **Settings → Library → Performance**, turn on the two NVIDIA switches
    ("vibe embeddings" and "audio analysis"); they show on Linux x86-64 only.
 
-The first switch you turn on downloads the ~2 GB ONNX GPU runtime into
+GPU use is **off in the app until you flip those switches** — the passthrough
+alone changes nothing. The first switch you turn on downloads the ~2 GB ONNX
+GPU runtime into
 `/data` (about 3.4 GB on disk). Everything also works without the card — the
 analyzers fall back to the CPU. Details: upstream
 [gpu.md](https://github.com/Chevron7Locked/kima-hub/blob/main/docs/gpu.md).

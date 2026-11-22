@@ -40,17 +40,19 @@ services:
       - DISABLE_CLAP=${DISABLE_CLAP:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    # NVIDIA GPU passthrough (Quadro P620): uncomment after Unraid's NVIDIA
-    # Driver plugin is installed (registers the nvidia runtime; `nvidia-smi`
-    # on the host must list the card). Then turn on the switches under
-    # Settings > Library > Performance. Everything also runs on CPU with this
-    # left off.
-    # gpus: all
-    # devices:
-    #   - /dev/nvidia0
-    #   - /dev/nvidiactl
-    #   - /dev/nvidia-uvm
-    #   - /dev/nvidia-uvm-tools
+    # NVIDIA GPU passthrough (Quadro P620), enabled. Requires Unraid's NVIDIA
+    # Driver plugin (registers the nvidia runtime; `nvidia-smi` on the host
+    # must list the card) — otherwise container creation fails with an
+    # unregistered-runtime error. The app itself leaves both GPU switches off
+    # until you turn them on in Settings > Library > Performance, so enabling
+    # the passthrough alone changes nothing. Comment out gpus + devices to run
+    # CPU-only.
+    gpus: all
+    devices:
+      - /dev/nvidia0
+      - /dev/nvidiactl
+      - /dev/nvidia-uvm
+      - /dev/nvidia-uvm-tools
     # Upstream memory guardrails. Each analysis worker needs about 1-1.5 GB (up
     # to 2-3 GB at peak) and the all-in-one image runs two by default — lower
     # both values on low-RAM hosts.
