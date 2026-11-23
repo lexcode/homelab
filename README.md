@@ -51,7 +51,7 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 | Directory                    | Purpose                                                                                                                                                                             |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`media/`](media/)           | Servarr stack (qBittorrent over WireGuard PIA, Sonarr, Radarr, Lidarr, Chaptarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, deunhealth) — see **[media/README.md](media/README.md)**. |
-| [`audiobookshelf/`](audiobookshelf/) | LAN-only [Audiobookshelf](https://github.com/advplyr/audiobookshelf) audiobook and podcast server on the Raspberry Pi 5 — see **[audiobookshelf/README.md](audiobookshelf/README.md)**. |
+| [`audiobookshelf/`](audiobookshelf/) | LAN-only [Audiobookshelf](https://github.com/advplyr/audiobookshelf) audiobook, ebook and podcast server on the Raspberry Pi 5 — see **[audiobookshelf/README.md](audiobookshelf/README.md)**. |
 | [`documents/`](documents/)   | AI-powered document management (paperless-ngx + paperless-gpt with Ollama OCR and tagging) — see **[documents/README.md](documents/README.md)**.                                    |
 | [`monitoring/`](monitoring/) | [Beszel](https://github.com/henrygd/beszel) hub plus co-located agent — see **[monitoring/README.md](monitoring/README.md)**.                                                       |
 | [`management/`](management/) | [Dockge](https://github.com/louislam/dockge) Compose stack manager with click-to-update workflows — see **[management/README.md](management/README.md)**. |
@@ -135,7 +135,7 @@ sudo chown -R 1000:1000 data/audiobookshelf
 docker compose up -d
 ```
 
-The library paths must exist before startup — mount the audiobook share at `/data/audiobooks` (or set `AUDIOBOOKSHELF_AUDIOBOOKS_DIR` to wherever it is mounted) and create an empty `/data/podcasts` if you do not use podcasts.
+The library paths must exist before startup — mount the audiobook share at `/data/audiobooks` (or set `AUDIOBOOKSHELF_AUDIOBOOKS_DIR` to wherever it is mounted) and create an empty `/data/ebooks` or `/data/podcasts` for library types you do not use.
 
 Do **not** add `audio.lexcode.dev` to Cloudflare Tunnel; it is intentionally available only through the LAN DNS and Traefik.
 

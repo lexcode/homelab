@@ -1,9 +1,9 @@
 # Audiobookshelf
 
 [**Audiobookshelf**](https://github.com/advplyr/audiobookshelf) is a
-self-hosted audiobook and podcast server: it streams your library, keeps
-progress per user, and can write metadata and covers into the library. The
-official image supports `linux/arm64`, so it runs on the Raspberry Pi 5.
+self-hosted audiobook, ebook and podcast server: it streams your library,
+keeps progress per user, and can write metadata and covers into the library.
+The official image supports `linux/arm64`, so it runs on the Raspberry Pi 5.
 
 **This stack runs on the Raspberry Pi 5 Docker host**, the same host as
 [`media/`](../media/README.md) and [`dns/`](../dns/README.md). The published
@@ -22,14 +22,15 @@ certificate work is needed.
 - `compose.yml` — the `ghcr.io/advplyr/audiobookshelf` service, its own
   `audiobookshelfnetwork`, Traefik labels and a health check.
 - `.env.example` — host port, bridge subnet, owner UID/GID, time zone and the
-  two library paths.
+  three library paths.
 - `data/audiobookshelf/` — `config/` and `metadata/` at runtime (not committed).
 
 ## Prerequisites
 
 - Docker and Docker Compose v2 on the Pi
 - LAN DNS resolving `*.lexcode.dev` to the Traefik host
-- An audiobook library path on the Pi (and optionally a podcast path)
+- An audiobook library path on the Pi (and optionally ebook and podcast
+  paths)
 - The [`proxy/`](../proxy/README.md) stack running **after** this stack, so
   Traefik can join `audiobookshelfnetwork`
 
@@ -42,10 +43,10 @@ certificate work is needed.
    ```
 
    Set `PUID`/`PGID` to the owner of the library, and point
-   `AUDIOBOOKSHELF_AUDIOBOOKS_DIR` / `AUDIOBOOKSHELF_PODCASTS_DIR` at the real
-   host paths. Both must exist before the first start; if you do not use
-   podcasts, create an empty folder rather than letting Docker create one as
-   root.
+   `AUDIOBOOKSHELF_AUDIOBOOKS_DIR` / `AUDIOBOOKSHELF_EBOOKS_DIR` /
+   `AUDIOBOOKSHELF_PODCASTS_DIR` at the real host paths. All must exist before
+   the first start; for a library type you do not use, create an empty folder
+   rather than letting Docker create one as root.
 
 2. **Create the state directories and mount the library.** The container runs
    as `PUID:PGID`, so it can only write where that user can:
@@ -76,7 +77,7 @@ certificate work is needed.
 4. **Open `https://audio.lexcode.dev`** (or `http://<pi-lan-ip>:13378` while
    testing the published port) and create the first account, which becomes the
    administrator. Add a library pointing at `/audiobooks` (and, if mounted,
-   a podcast library at `/podcasts`).
+   an ebook library at `/ebooks` and a podcast library at `/podcasts`).
 
 5. **Configure the libraries in the UI** — folder structure, metadata
    providers, and whether metadata/covers are written into the library. Those
@@ -90,6 +91,7 @@ certificate work is needed.
 | Host port           | `13378`                              | `AUDIOBOOKSHELF_PORT`; container listens on `80` |
 | Traefik route       | `https://audio.lexcode.dev`          | LAN-only, `websecure` + wildcard certificate     |
 | Audiobook library   | `/data/audiobooks` → `/audiobooks`   | `AUDIOBOOKSHELF_AUDIOBOOKS_DIR`                  |
+| Ebook library       | `/data/ebooks` → `/ebooks`           | `AUDIOBOOKSHELF_EBOOKS_DIR`                      |
 | Podcast library     | `/data/podcasts` → `/podcasts`       | `AUDIOBOOKSHELF_PODCASTS_DIR`                    |
 | Config + SQLite     | `./data/audiobookshelf/config`       | `/config`; keep on local disk                    |
 | Metadata / covers   | `./data/audiobookshelf/metadata`     | `/metadata`; keep on local disk                  |
@@ -119,10 +121,10 @@ Back up both local state directories together:
   definitions.
 - `data/audiobookshelf/metadata` — downloaded covers and extracted metadata.
 
-The media files are separate: they live wherever `AUDIOBOOKSHELF_AUDIOBOOKS_DIR`
-points and are not copied by backing up this stack. Stop the container before
-copying the SQLite database, or use SQLite's online backup, so the snapshot is
-consistent:
+The media files are separate: they live wherever the `AUDIOBOOKSHELF_*_DIR`
+paths point and are not copied by backing up this stack. Stop the container
+before copying the SQLite database, or use SQLite's online backup, so the
+snapshot is consistent:
 
 ```bash
 docker compose stop audiobookshelf
@@ -172,7 +174,7 @@ docker compose logs -f audiobookshelf
 | --- | --- |
 | Traefik returns `502` / `404` for `audio.lexcode.dev` | The proxy has not joined `audiobookshelfnetwork`, or the container is not running. Start this stack first, then `proxy/`. |
 | `permission denied` writing covers or metadata | `PUID`/`PGID` do not match the owner of the library or `data/audiobookshelf`. Fix ownership, then restart. |
-| Empty library even though files exist | The library folder was added as `/audiobooks` or `/podcasts` and the host path is wrong/empty. Check the bind mount with `docker compose config` and `docker compose exec audiobookshelf ls /audiobooks`. |
+| Empty library even though files exist | The library folder was added as `/audiobooks`, `/ebooks` or `/podcasts` and the host path is wrong/empty. Check the bind mount with `docker compose config` and `docker compose exec audiobookshelf ls /audiobooks`. |
 | Container exits on start with a port error | Another process uses `AUDIOBOOKSHELF_PORT` on the host. Change the host side in `.env`; the container side stays `80`. |
 
 ## Layout

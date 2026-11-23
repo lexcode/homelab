@@ -80,8 +80,9 @@ audiobookshelf/
 
 Runs on the Raspberry Pi 5 Docker host, the same host as `media/` and `dns/`,
 but on its own bridge network (`audiobookshelfnetwork`) so it needs neither the
-VPN namespace nor `servarrnetwork`. The library and podcast roots are host
-paths from `.env` (`/data/audiobooks` and `/data/podcasts` by default).
+VPN namespace nor `servarrnetwork`. The audiobook, ebook and podcast roots are
+host paths from `.env` (`/data/audiobooks`, `/data/ebooks` and
+`/data/podcasts` by default).
 Traefik routes `https://audio.lexcode.dev` to the container **LAN-only** —
 there is no Cloudflare Tunnel hostname.
 

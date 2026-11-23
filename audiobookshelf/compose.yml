@@ -34,9 +34,10 @@ services:
       - ./data/audiobookshelf/config:/config
       # Covers, extracted metadata and OPDS cache. Local disk as well.
       - ./data/audiobookshelf/metadata:/metadata
-      # Library roots. Absolute host paths live in .env; both must exist
+      # Library roots. Absolute host paths live in .env; all must exist
       # before the first start so Docker does not create root-owned folders.
       - ${AUDIOBOOKSHELF_AUDIOBOOKS_DIR:-/data/audiobooks}:/audiobooks
+      - ${AUDIOBOOKSHELF_EBOOKS_DIR:-/data/ebooks}:/ebooks
       - ${AUDIOBOOKSHELF_PODCASTS_DIR:-/data/podcasts}:/podcasts
     healthcheck:
       # The image ships node; /healthcheck returns 200 once Express is serving.
