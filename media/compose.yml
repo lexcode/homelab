@@ -251,6 +251,50 @@ services:
       servarrnetwork:
         ipv4_address: ${LIDARR_IP:-172.39.0.5}
 
+  # Chaptarr is a Readarr fork (Readarr was retired in June 2025): it manages
+  # audiobook and ebook libraries and grabs releases through Prowlarr and
+  # qBittorrent. It is the acquisition half of the audiobook library —
+  # Audiobookshelf only serves files, so it never downloads anything itself.
+  # Upstream ships it as beta software; keep the recycling bin on and do not
+  # point it at a library you cannot restore.
+  # No `user:` directive: the image entrypoint starts as root, chowns its own
+  # /config paths and then drops to PUID/PGID through gosu.
+  chaptarr:
+    <<: *arr-dns
+    image: chaptarr/chaptarr:latest
+    container_name: chaptarr
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      # SQLite databases and app settings, on local disk like every other *arr config.
+      - ./data/chaptarr:/config
+      # Libraries and downloads, at the same container paths as the other *arr apps.
+      # Identical paths on both sides are what make imports work without remote path
+      # mappings. The audiobook/ebook roots live under /data (see media/README.md).
+      - /data:/data
+      - /mnt/usb/downloads2:/data/downloads2
+      - /mnt/usb2/downloads:/data/downloads3
+      - /data/downloads-unraid:/data/downloads-unraid
+    ports:
+      - ${CHAPTARR_PORT:-8789}:8789
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.chaptarr.rule=Host(`chaptarr.lexcode.dev`)
+      - traefik.http.routers.chaptarr.entrypoints=websecure
+      - traefik.http.routers.chaptarr.tls.certresolver=letsencrypt
+      - traefik.http.services.chaptarr.loadbalancer.server.port=8789
+    depends_on:
+      vpn:
+        condition: service_healthy
+        restart: true
+    networks:
+      servarrnetwork:
+        ipv4_address: ${CHAPTARR_IP:-172.39.0.12}
+
   bazarr:
     <<: *arr-dns
     image: lscr.io/linuxserver/bazarr:latest

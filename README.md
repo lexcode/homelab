@@ -1,6 +1,6 @@
 # Homelab
 
-Personal infrastructure-as-code for Docker Compose stacks: media automation, document management, shell history sync, shared coding-agent memory, lightweight host monitoring, container management, analytics, a Netflix IE acquisition feed, workflow automation (n8n), push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
+Personal infrastructure-as-code for Docker Compose stacks: media automation, a self-hosted audiobook and podcast server, document management, shell history sync, shared coding-agent memory, lightweight host monitoring, container management, analytics, a Netflix IE acquisition feed, workflow automation (n8n), push notifications (Gotify and optional iGotify assistant for iOS), web-change monitoring (changedetection.io), DNS-level ad blocking, and a self-hosted dashboard.
 
 ```mermaid
 flowchart TB
@@ -18,6 +18,7 @@ flowchart TB
         subgraph local["Other local stacks"]
             direction LR
             media["media/"]
+            audiobookshelf["audiobookshelf/"]
             monitoring["monitoring/"]
             management["management/"]
             terminal["terminal/"]
@@ -49,7 +50,8 @@ See **[docs/STRUCTURE.md](docs/STRUCTURE.md)** for a directory tree of the whole
 
 | Directory                    | Purpose                                                                                                                                                                             |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`media/`](media/)           | Servarr stack (qBittorrent over WireGuard PIA, Sonarr, Radarr, Lidarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, deunhealth) — see **[media/README.md](media/README.md)**. |
+| [`media/`](media/)           | Servarr stack (qBittorrent over WireGuard PIA, Sonarr, Radarr, Lidarr, Chaptarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, deunhealth) — see **[media/README.md](media/README.md)**. |
+| [`audiobookshelf/`](audiobookshelf/) | LAN-only [Audiobookshelf](https://github.com/advplyr/audiobookshelf) audiobook, ebook and podcast server on the Raspberry Pi 5 — see **[audiobookshelf/README.md](audiobookshelf/README.md)**. |
 | [`documents/`](documents/)   | AI-powered document management (paperless-ngx + paperless-gpt with Ollama OCR and tagging) — see **[documents/README.md](documents/README.md)**.                                    |
 | [`monitoring/`](monitoring/) | [Beszel](https://github.com/henrygd/beszel) hub plus co-located agent — see **[monitoring/README.md](monitoring/README.md)**.                                                       |
 | [`management/`](management/) | [Dockge](https://github.com/louislam/dockge) Compose stack manager with click-to-update workflows — see **[management/README.md](management/README.md)**. |
@@ -75,7 +77,7 @@ Each stack owns its `compose.yml`, `.env.example`, and runtime data under `./dat
 - `jq` for the read-only stack status command
 - Separate `.env` files per stack (copy from each `.env.example`)
 
-Networks are isolated by design (for example media on `172.39.0.0/24`, monitoring on `172.39.1.0/24`, analytics on `172.39.2.0/24`, AdGuard Home on `172.39.5.0/24`, and management on `172.39.8.0/24`). Adjust subnets in `.env` if they clash with your LAN or other projects.
+Networks are isolated by design (for example media on `172.39.0.0/24`, monitoring on `172.39.1.0/24`, analytics on `172.39.2.0/24`, AdGuard Home on `172.39.5.0/24`, management on `172.39.8.0/24`, and Audiobookshelf on `172.39.10.0/24`). Adjust subnets in `.env` if they clash with your LAN or other projects.
 
 ## Validate configuration
 
@@ -118,6 +120,24 @@ cd media
 cp .env.example .env   # edit with your secrets and LAN/VPN settings
 docker compose up -d
 ```
+
+## Audiobookshelf
+
+See **[audiobookshelf/README.md](audiobookshelf/README.md)** for the LAN-only `audio.lexcode.dev` route, library and state paths, permissions, backups, and the separate config/metadata directories. The stack runs on the Raspberry Pi 5 Docker host, not behind the media VPN.
+
+Quick start:
+
+```bash
+cd audiobookshelf
+cp .env.example .env   # set PUID/PGID, the library paths, and the host port
+mkdir -p data/audiobookshelf/config data/audiobookshelf/metadata
+sudo chown -R 1000:1000 data/audiobookshelf
+docker compose up -d
+```
+
+The library paths must exist before startup — mount the audiobook share at `/data/audiobooks` (or set `AUDIOBOOKSHELF_AUDIOBOOKS_DIR` to wherever it is mounted) and create an empty `/data/ebooks` or `/data/podcasts` for library types you do not use.
+
+Do **not** add `audio.lexcode.dev` to Cloudflare Tunnel; it is intentionally available only through the LAN DNS and Traefik.
 
 ## Documents
 
@@ -298,7 +318,7 @@ profile.
 ```bash
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now media.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service pulsearr.service teslamate.service n8n.service dns.service ai-memory.service resonarr.service proxy.service
+sudo systemctl enable --now media.service audiobookshelf.service documents.service monitoring.service management.service analytics.service terminal.service homepage.service notifications.service pulsearr.service teslamate.service n8n.service dns.service ai-memory.service resonarr.service proxy.service
 ```
 
 `n8n-sandbox.service` is optional: enable it only when n8n Assistant's sandbox is in use. It is ordered after `n8n.service`, because n8n owns `n8n-sandbox-network`.
