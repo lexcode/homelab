@@ -12,6 +12,8 @@ LKEY=$(grep -oP '(?<=<ApiKey>)[^<]+' media/data/lidarr/config.xml)
 PKEY=$(grep -oP '(?<=<ApiKey>)[^<]+' media/data/prowlarr/config.xml)
 BKEY=$(python3 -c 'import yaml;print(yaml.safe_load(open("media/data/bazarr/config/config.yaml"))["auth"]["apikey"])')
 EKEY=$(python3 -c 'import json;print(json.load(open("media/data/seerr/settings.json"))["main"]["apiKey"])')
+# slskd: no key until one is created in its UI; it then lives in media/data/slskd/slskd.yml
+# under web -> authentication -> api_keys
 ```
 
 Response shapes are documented where they are counter-intuitive. When a call surprises you, read the failure: `404` with a JSON `message` is a wrong route or API version, `401` is a wrong key.
@@ -278,6 +280,39 @@ Empty metadata (no author, title or cover on a searched book) is the metadata
 provider, not the indexer: check Settings → Metadata, and note Hardcover needs
 an API token. Empty search results across every indexer are the same cause as
 elsewhere in the stack — film/TV trackers carry no books.
+
+## slskd (API v0)
+
+Header `X-API-Key` (create the key in slskd's UI; with `SLSKD_REMOTE_CONFIGURATION=true` it
+is written to `media/data/slskd/slskd.yml`). Reaches the `vpn` namespace at
+`http://172.39.0.2:5030`; `http://slskd:5030` does not resolve.
+
+**Not yet exercised against this stack** — the routes below were read from slskd's upstream
+controllers (`src/slskd/*/API`), not verified live, and response field names are unconfirmed.
+Confirm shapes with a `GET` before scripting anything destructive.
+
+```bash
+SLS=http://172.39.0.2:5030
+SLSKEY=<key from data/slskd/slskd.yml>
+
+# session and connection state — is the Soulseek login up, and what does the server say
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/session"
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/server"
+
+# active searches, and the peer responses for one of them
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/searches"
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/searches/<id>/responses"
+
+# queues, positions and failures — the download-side equivalent of an *arr queue
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/transfers/downloads"
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/transfers/downloads/<username>"
+
+# writes: POST /api/v0/searches, POST /api/v0/transfers/downloads/<username>,
+# DELETE /api/v0/transfers/downloads/<username>/<id>  — all change network or disk state
+```
+
+Options live at `/api/v0/options` (upstream documents `PATCH` there for live settings). The
+UI is the supported way to edit them; prefer it over scripts.
 
 ## Beets
 

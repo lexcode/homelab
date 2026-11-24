@@ -1,6 +1,6 @@
 # Media stack (Servarr + VPN)
 
-Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Radarr, Lidarr, Chaptarr, Bazarr, Seerr, Prowlarr, FlareSolverr, SuggestArr, Maintainerr, Beets, and deunhealth. Config lives under `./data/`; libraries and downloads are expected on the host at **`/data`** (bind-mounted into the containers).
+Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Radarr, Lidarr, Chaptarr, Bazarr, Seerr, Prowlarr, FlareSolverr, slskd (Soulseek), SuggestArr, Maintainerr, Beets, and deunhealth. Config lives under `./data/`; libraries and downloads are expected on the host at **`/data`** (bind-mounted into the containers).
 
 ## Prerequisites
 
@@ -23,6 +23,7 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
    - `OPENVPN_USER` / `OPENVPN_PASSWORD` — PIA credentials
    - `PIA_LOC` — PIA location slug, or a comma-separated fallback list (e.g. `ireland,nl_amsterdam,swiss`)
    - `LOCAL_NETWORK` — your LAN CIDR (e.g. `192.168.0.0/24`) so the VPN container allows local access
+   - `SLSK_USERNAME` / `SLSK_PASSWORD` — your Soulseek network account; `SLSKD_USERNAME` / `SLSKD_PASSWORD` — the slskd web UI login (see [Soulseek](#soulseek-single-tracks-slskd))
 
 2. **Create the folder structure**
 
@@ -42,8 +43,11 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
      data/prowlarr \
      data/suggestarr/config_files \
      data/maintainerr \
-     data/beets
+     data/beets \
+     data/slskd
    ```
+
+   slskd also needs its download directory on the host: `/data/downloads-unraid/soulseek`, owned by `PUID`/`PGID`. It is **not** `data/slskd` — that holds slskd's SQLite databases, which upstream requires to stay on local disk.
 
 3. **PIA WireGuard data** (first run)
 
@@ -78,6 +82,7 @@ Docker Compose stack for qBittorrent (through a WireGuard PIA VPN), Sonarr, Rada
 | SuggestArr   | `5000`      | `network_mode: host` — binds on the host |
 | Maintainerr  | `6246`      | `MAINTAINERR_PORT`                       |
 | Beets        | —           | No web UI; CLI only, via `docker compose exec` |
+| slskd        | `5030`      | Via VPN container. Soulseek's own listen port `50300` is **not** published — see [Soulseek](#soulseek-single-tracks-slskd) |
 
 **DNS:** Apps on `servarrnetwork` use public DNS (`1.1.1.1` / `8.8.8.8`) where noted in `compose.yml`, so lookups like Radarr’s API host work reliably. Do not add that YAML anchor to services using `network_mode: service:vpn`.
 
@@ -95,6 +100,7 @@ In-app settings that follow from the network namespaces and the mount layout —
 | Bazarr → Settings → Sonarr / Radarr | `http://sonarr:8989` / `http://radarr:7878` | same network |
 | Seerr → Settings → Services | `http://radarr:7878` / `http://sonarr:8989` | same network |
 | Maintainerr → media server and \*arr connections | container names on `servarrnetwork` | same network |
+| slskd API consumers (a Kima instance, soularr, `curl`) → slskd | `http://172.39.0.2:5030`, or `http://<host>:5030` / `https://slskd.lexcode.dev` from outside Docker | `slskd` has no address of its own — it shares the `vpn` namespace, so `http://slskd:5030` does not resolve |
 
 The download client’s save path and category have to land inside `/data/downloads2`, `/data/downloads3` or `/data/downloads-unraid`. Those are the only download roots mounted into qBittorrent, and it and the \*arr apps see all three at identical container paths — which is what makes imports work without remote path mapping.
 
@@ -102,9 +108,9 @@ The download client’s save path and category have to land inside `/data/downlo
 
 The proxy stack joins `servarrnetwork`. `sonarr`, `radarr`, `lidarr`, `chaptarr`, `bazarr`, `maintainerr`, `seerr`, and `suggestarr` each carry `traefik.*` labels routing them at `<name>.lexcode.dev` — LAN-only, like every other hostname here that isn't listed in the Cloudflare Tunnel ingress. Seerr also has a `cloudflare` router: set its Cloudflare Tunnel public hostname origin to `http://traefik:8081`, not the host-published `http://192.168.0.24:5055`, so public traffic stays on Docker's internal networks.
 
-Two services need a non-default backend address:
+Two cases need a non-default backend address:
 
-- `prowlarr` and `qbittorrent` run with `network_mode: service:vpn`, so their routing labels live on the `vpn` container instead (each router declares its own `loadbalancer.server.port` explicitly).
+- `prowlarr`, `qbittorrent`, `flaresolverr` and `slskd` run with `network_mode: service:vpn`, so their routing labels live on the `vpn` container instead (each router declares its own `loadbalancer.server.port` explicitly).
 - `suggestarr` runs with `network_mode: host`, so it has no IP on `servarrnetwork` for Traefik's Docker provider to discover. Its router therefore declares `loadbalancer.server.url` pointing at the host's LAN IP and `SUGGESTARR_PORT` — that address must stay reachable from the Traefik container.
 
 FlareSolverr is not currently routed publicly.
@@ -331,6 +337,8 @@ tail -f data/beets/import.log                  # what got imported vs. skipped, 
 ./beets/beet.sh shell                # shell in the container
 ./beets/beet.sh beet <anything>      # arbitrary beet command
 ./beets/beet.sh import-auto          # unattended quiet-mode import (strong matches only)
+./beets/beet.sh import-singles       # standalone tracks from /music-inbox
+./beets/beet.sh import-soulseek      # standalone tracks from /soulseek-inbox (slskd downloads)
 ./beets/beet.sh retry <path>         # re-prompt for one previously skipped item
 ```
 
@@ -382,6 +390,88 @@ docker compose exec beets beet version | grep plugins
 **Nothing matches / everything is a low-confidence guess.** SpotiFLAC left too few tags. `fromfilename` and `chroma` (acoustic fingerprinting) are both enabled to cover that, but fingerprinting needs network access to AcoustID — verify with `docker compose exec beets fpcalc -version` and check the container resolves DNS (it uses the `1.1.1.1` / `8.8.8.8` override shared with the *arr services).
 
 **Slow imports.** Expected. Each album is a MusicBrainz lookup plus, on weak metadata, a fingerprint of every track, and writes go over SMB. Import in batches rather than one 5,000-file run.
+
+## Soulseek (single tracks, slskd)
+
+[**Soulseek**](https://www.slsknet.org/) is a peer-to-peer network where users share individual music files. [**slskd**](https://github.com/slskd/slskd) is its client-server implementation — a browser UI plus a REST API — running as the `slskd` service.
+
+### Why this exists next to Lidarr
+
+Lidarr is **album**-oriented: it matches whole releases against MusicBrainz, and it will not grab one track that was never catalogued as a release it can match — a single, a compilation-only B-side, a radio rip, a track from a mix. Those are exactly what Soulseek is good at, because it indexes *files people have*, not releases a database knows about.
+
+This is not a Lidarr replacement. Lidarr keeps monitoring artists and grabbing releases through Prowlarr/qBittorrent; slskd is where you go when Lidarr's search comes back empty for one specific song.
+
+### Why slskd and not a GUI client in a container
+
+[realies/soulseek-docker](https://github.com/realies/soulseek-docker) packages the SoulseekQt desktop application behind a noVNC browser view. It works, but it has no API, no automation surface, and on this host it runs under **Box64 emulation** (`linux/arm64` via emulation, not native). slskd publishes native `arm64` images, and its API is what every other tool in this space binds to — including automation you may add later.
+
+### The VPN trade-off (read before use)
+
+`slskd` runs with `network_mode: service:vpn` — the same posture as qBittorrent, so Soulseek traffic never leaves from the house IP.
+
+The cost is the **inbound listening port**. On Soulseek, uploads are connections that *other people* open to you, so a client without a reachable port is "firewalled": it can still search, and it can still download (the transfers it starts are outbound), but peers cannot connect to it. In practice that means longer queue positions on busy users, some users refusing firewalled clients outright, and **no uploading at all**.
+
+PIA forwards exactly one port per account, and `./scripts/port-sync.sh` already hands it to qBittorrent — two services cannot share it. So there are only three ways to get slskd a real listening port, none of them free:
+
+| Option | Cost |
+| --- | --- |
+| Leave it as shipped (firewalled behind PIA) | Slower queues, no sharing. Downloads still work |
+| A second VPN with its own port forwarding, exposing the port to slskd | A second PIA session or another provider; whether a PIA account can hold two forwards at once is **unverified** here — test before relying on it |
+| Publish `50300` on the host and port-forward it on the router | Peers (and anything watching the network) see the house IP — defeats the reason qBittorrent is behind the VPN. Not recommended |
+
+Sharing is therefore left **off** by default: while firewalled, a shared folder is one nobody can download from. If you ever give slskd a reachable port, share read-only and keep the scan cheap on the Pi:
+
+```yaml
+    environment:
+      - SLSKD_SHARED_DIR=/music
+      - SLSKD_SHARE_CACHE_STORAGE_MODE=Disk  # memory is the default; the library is large
+      - SLSKD_SHARE_CACHE_WORKERS=2          # defaults to one per core
+    volumes:
+      - ${MUSIC_LIBRARY_DIR:-/data/music-unraid}:/music:ro
+```
+
+### Setup
+
+1. **Soulseek account.** Register one at <https://www.slsknet.org/> — free, and required before slskd can log in.
+2. **Environment.** In `.env`, set `SLSK_USERNAME` / `SLSK_PASSWORD` for the network account and `SLSKD_USERNAME` / `SLSKD_PASSWORD` for the web UI. Upstream's web default is `slskd` / `slskd`; do not leave it there.
+3. **Host directory.** `mkdir -p data/slskd /data/downloads-unraid/soulseek`, both owned by `PUID`/`PGID`.
+4. **Start.** `docker compose up -d slskd` (it waits for the `vpn` health check).
+5. **Log in.** `https://slskd.lexcode.dev` or `http://<host>:5030`, with the `SLSKD_*` credentials.
+
+Options — search/transfer limits, download naming, API keys, shares — are edited **in the UI** and written to `data/slskd/slskd.yml`, because `SLSKD_REMOTE_CONFIGURATION=true`. That makes `data/slskd/slskd.yml` the file to back up; the SQLite databases next to it are only search/transfer state.
+
+### Downloading one track
+
+1. **Search** in slskd, e.g. `Radiohead Lift`.
+2. **Pick a file**, preferring a peer with free slots, then download. `SLSKD_DOWNLOADS_DIR=/downloads` is host `/data/downloads-unraid/soulseek`, mounted into the `beets` container as `/soulseek-inbox` and already visible to Lidarr under `/data/downloads-unraid`.
+3. **Import it into the library** — reviewed, tagged, moved to `Artist/Singles/`:
+
+   ```bash
+   ./beets/beet.sh import-soulseek
+   ```
+
+   Same rules as every other import path in this stack: interactive prompt, `import.move: yes`, and `paths.singleton: $artist/Singles/$title`. Nothing is filed until you accept the match (or use `retry <path>` later for one you skipped). **This is deliberately not automatic**: the hourly `import-auto` timer only covers `/music-inbox`, so a partly-downloaded or badly-named Soulseek file never ends up in the library unannounced.
+
+Soulseek filenames are whatever the uploader typed into their own file manager, so expect `fromfilename` to do real work here; fix bad matches with `E` at the prompt rather than letting them through.
+
+### Troubleshooting
+
+**The container runs but slskd never connects.** Empty or wrong `SLSK_USERNAME` / `SLSK_PASSWORD` — those are the *network* account, not the web login. `docker compose logs slskd` names the rejected login; the UI's own connection indicator shows the same state.
+
+**Searches return nothing, or nothing downloads.** Firewalled clients see fewer peers, and some users reject them. Try a different uploader, and remember that a search for a track name only matches files whose names contain it.
+
+**slskd unreachable after a VPN restart.** It shares the `vpn` namespace, so it is orphaned by a bare `docker compose up -d vpn`: `docker compose up -d --force-recreate vpn flaresolverr prowlarr qbittorrent slskd`.
+
+**Nothing shows up in the library after downloading.** The files are in `/data/downloads-unraid/soulseek` until you run `./beets/beet.sh import-soulseek`; check `./beets/beet.sh beet ls -a` and `data/beets/import.log` after accepting a match.
+
+**Permission denied writing downloads.** `/data/downloads-unraid/soulseek` must be owned by `PUID`/`PGID`, and the CIFS mount must carry matching `uid=`/`gid=` — same rule as the rest of the stack.
+
+### Wiring other tools to it
+
+slskd's API is reachable at `http://172.39.0.2:5030` from `servarrnetwork` (it shares the `vpn` namespace, so the container name does not resolve), or over the LAN/ingress URL above. Create an API key in slskd's UI options:
+
+- [Kima](https://github.com/Chevron7Locked/kima-hub)'s "slskd (external)" Soulseek mode takes that URL + key, and reads finished downloads out of a folder you mount into it.
+- [Soularr](https://github.com/mrusse/soularr) automates it the other way round: it reads Lidarr's **wanted albums** and drives slskd. That is album-shaped work Lidarr already attempts, adds a service plus two API keys, and duplicates Prowlarr's job — so it is not part of this stack. Worth revisiting only if Lidarr's own coverage becomes the bottleneck.
 
 ## VPN (PIA) troubleshooting
 
@@ -541,10 +631,11 @@ Conventional paths under the bind-mounted host root. Point Radarr, Sonarr, Lidar
 ├── audiobooks      # CIFS: book library root Chaptarr imports into; Audiobookshelf scans it
 ├── books           # optional ebook root, if you keep those separately from audiobooks
 ├── downloads
-│   └── qbittorrent
-│       ├── completed
-│       ├── incomplete
-│       └── torrents
+│   ├── qbittorrent
+│   │   ├── completed
+│   │   ├── incomplete
+│   │   └── torrents
+│   └── soulseek     # CIFS: Unraid Media/Downloads/soulseek — slskd downloads (Beets reads it as /soulseek-inbox)
 ├── movies
 ├── music
 ├── music-inbox      # CIFS: Unraid Media/Music-Inbox — SpotiFLAC drop zone (Beets reads)

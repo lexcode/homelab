@@ -26,6 +26,11 @@ Commands:
   import-tree           Interactive import of /music-inbox where files are
                         already in per-album directories (no grouping)
   import-singles        Import /music-inbox as standalone tracks (--singletons)
+  import-soulseek       Import /soulseek-inbox (slskd downloads) as standalone
+                        tracks (--singletons), same review flow as import-singles.
+                        A separate root on purpose: import-auto runs
+                        --group-albums over /music-inbox and would try to build
+                        albums out of loose Soulseek singles.
   import-auto          Unattended quiet-mode import of /music-inbox
                        (--group-albums -q): applies only "strong" matches,
                        silently skips the rest. No tty required — this is
@@ -89,6 +94,9 @@ case $command in
     ;;
   import-singles)
     run beet import --singletons /music-inbox "$@"
+    ;;
+  import-soulseek)
+    run beet import --singletons /soulseek-inbox "$@"
     ;;
   import-auto)
     run_quiet beet import --group-albums -q /music-inbox "$@"

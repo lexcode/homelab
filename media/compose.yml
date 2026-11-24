@@ -29,8 +29,8 @@ services:
       - /dev/net/tun:/dev/net/tun
     labels:
       - deunhealth.restart.on.unhealthy=true
-      # prowlarr and qbittorrent run with network_mode: service:vpn, so they share this
-      # container's network namespace and have no network attachment of their own — Traefik's
+      # prowlarr, qbittorrent, flaresolverr and slskd run with network_mode: service:vpn, so they
+      # share this container's network namespace and have no network attachment of their own — Traefik's
       # Docker provider can only route to the container that actually owns servarrnetwork,
       # which is this one. Each router explicitly declares its own service port.
       - traefik.enable=true
@@ -44,11 +44,17 @@ services:
       - traefik.http.routers.qbittorrent.tls.certresolver=letsencrypt
       - traefik.http.routers.qbittorrent.service=qbittorrent
       - traefik.http.services.qbittorrent.loadbalancer.server.port=${WEBUI_PORT:-8080}
+      - traefik.http.routers.slskd.rule=Host(`slskd.lexcode.dev`)
+      - traefik.http.routers.slskd.entrypoints=websecure
+      - traefik.http.routers.slskd.tls.certresolver=letsencrypt
+      - traefik.http.routers.slskd.service=slskd
+      - traefik.http.services.slskd.loadbalancer.server.port=5030
     ports:
       - ${WEBUI_PORT:-8080}:${WEBUI_PORT:-8080} # qBittorrent WebUI
       - ${TORRENTING_PORT:-6881}:${TORRENTING_PORT:-6881}
       - 9696:9696 # prowlarr
       - 8191:8191 # flaresolverr
+      - 5030:5030 # slskd (Soulseek) web UI — LAN only
       - ${TORRENTING_PORT:-41066}:${TORRENTING_PORT:-41066}/tcp
       - ${TORRENTING_PORT:-41066}:${TORRENTING_PORT:-41066}/udp
     networks:
@@ -457,10 +463,69 @@ services:
       # serving the old inode, so a `git pull` would silently not reach the container.
       - ./beets:/beets:ro
       - ${MUSIC_INBOX_DIR:-/data/music-inbox}:/music-inbox
+      # slskd's download directory (Soulseek singles). A separate root from /music-inbox so
+      # the hourly --group-albums import-auto timer cannot mistake loose tracks for an album.
+      - /data/downloads-unraid/soulseek:/soulseek-inbox
       - ${MUSIC_LIBRARY_DIR:-/data/music-unraid}:/music
     networks:
       servarrnetwork:
         ipv4_address: ${BEETS_IP:-172.39.0.11}
+
+  # slskd: Soulseek client, for the individual tracks Lidarr cannot get. Lidarr matches
+  # whole releases against MusicBrainz, so a song that only ever existed on a compilation,
+  # a radio rip or a single nobody catalogued simply never arrives. Soulseek is a
+  # peer-to-peer network of individual files; slskd is its client-server implementation
+  # (browser UI + REST API), which is why it is used here instead of a GUI client in a
+  # container. See "Soulseek" in media/README.md.
+  #
+  # It shares the VPN namespace for the same reason qBittorrent does: this is another
+  # file-sharing network and its traffic must not leave from the house IP. That costs the
+  # inbound listening port — PIA forwards exactly one port per account, and the port-sync
+  # hook in ./scripts/port-sync.sh already gives it to qBittorrent — so slskd runs as a
+  # "firewalled" client: it can search and it can download (transfers it starts are
+  # outbound), but peers cannot connect to it, which costs queue position and rules out
+  # uploading. Upstream documents port forwarding as the way to "connect to everyone".
+  #
+  # Downloads land in /downloads (Unraid Media/Downloads/soulseek) and deliberately NOT in
+  # the Beets inbox: /music-inbox is imported hourly with --group-albums by
+  # systemd/media-beets-import.timer, which would try to build albums out of loose
+  # singles. They are imported separately with `./beets/beet.sh import-soulseek`.
+  slskd:
+    image: slskd/slskd:latest
+    container_name: slskd
+    restart: unless-stopped
+    # slskd's own user handling: the process starts as this user and never holds root,
+    # unlike the PUID/PGID entrypoints of the LinuxServer images.
+    user: ${PUID:-1000}:${PGID:-1000}
+    environment:
+      - TZ=${TZ}
+      # Soulseek network account (slsknet.org) — separate from the web UI login below.
+      - SLSKD_SLSK_USERNAME=${SLSK_USERNAME}
+      - SLSKD_SLSK_PASSWORD=${SLSK_PASSWORD}
+      # Web UI / API login. Must not be left at upstream's slskd/slskd default.
+      - SLSKD_USERNAME=${SLSKD_USERNAME}
+      - SLSKD_PASSWORD=${SLSKD_PASSWORD}
+      # Allow options (API keys, shares, limits) to be edited in the UI; they are written
+      # to ./data/slskd/slskd.yml rather than needing a compose change.
+      - SLSKD_REMOTE_CONFIGURATION=true
+      - SLSKD_DOWNLOADS_DIR=/downloads
+      # Soulseek itself listens here. Left at the default and deliberately NOT published
+      # on the vpn container: see the firewalled note above.
+      - SLSKD_SLSK_LISTEN_PORT=50300
+    volumes:
+      # slskd.yml plus the SQLite databases behind searches and transfers. Must stay on
+      # local disk: upstream lists copy-on-write filesystems and SMB/NFS app directories
+      # as unsupported for this data.
+      - ./data/slskd:/app
+      # Same host directory is mounted into beets as /soulseek-inbox, and Lidarr already
+      # sees it under /data/downloads-unraid — identical container paths are what keep
+      # imports working without remote path mappings.
+      - /data/downloads-unraid/soulseek:/downloads
+    depends_on:
+      vpn:
+        condition: service_healthy
+        restart: true
+    network_mode: service:vpn
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest

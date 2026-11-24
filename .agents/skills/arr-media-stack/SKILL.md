@@ -1,6 +1,6 @@
 ---
 name: arr-media-stack
-description: Operate and troubleshoot the media/ stack in this repo — Radarr, Sonarr, Lidarr, Chaptarr, Prowlarr, Bazarr, Seerr, qBittorrent behind the PIA WireGuard container, FlareSolverr, Maintainerr, SuggestArr, Beets. Use when adding media, checking stack health, queues or history, diagnosing failed imports, stalled torrents, empty search results, missing subtitles, missing audiobooks, or VPN and network problems in this stack.
+description: Operate and troubleshoot the media/ stack in this repo — Radarr, Sonarr, Lidarr, Chaptarr, Prowlarr, Bazarr, Seerr, qBittorrent behind the PIA WireGuard container, FlareSolverr, slskd (Soulseek), Maintainerr, SuggestArr, Beets. Use when adding media, checking stack health, queues or history, diagnosing failed imports, stalled torrents, empty search results, missing subtitles, missing audiobooks, missing individual songs, or VPN and network problems in this stack.
 ---
 
 # Arr media stack
@@ -27,6 +27,7 @@ Run Compose commands from `media/`: `cd media && docker compose <cmd>`. The stac
 | Prowlarr | `prowlarr` | 9696 | `http://172.39.0.2:9696` | `/api/v1` |
 | qBittorrent | `qbittorrent` | 8080 | `http://172.39.0.2:8080` | `/api/v2` |
 | FlareSolverr | `flaresolverr` | 8191 | `http://172.39.0.2:8191` (loopback from Prowlarr) | `POST /v1` |
+| slskd | `slskd` | 5030 | `http://172.39.0.2:5030` | `/api/v0` |
 | Bazarr | `bazarr` | 6767 | `http://bazarr:6767` | `/api` (no version) |
 | Seerr | `seerr` | 5055 | `http://seerr:5055` | `/api/v1` |
 | Maintainerr | `maintainerr` | 6246 | `http://maintainerr:6246` | none stable |
@@ -35,7 +36,7 @@ Run Compose commands from `media/`: `cd media && docker compose <cmd>`. The stac
 
 Lidarr is the trap: it never moved to v3, so `/api/v3/...` returns `404` while everything else answers. A version mismatch looks like a missing endpoint, not an auth error. Chaptarr is the same — it inherits Readarr's v1 API, and its entity is `book`/`author` rather than `book`/`series`.
 
-`prowlarr`, `qbittorrent` and `flaresolverr` carry `network_mode: service:vpn` — they share the VPN container's namespace, have no address of their own, and are unreachable by container name. `172.39.0.2` is `VPN_IP`; from inside that namespace `127.0.0.1` is the same machine. Container-name DNS (`http://flaresolverr:8191`) resolves to nothing.
+`prowlarr`, `qbittorrent`, `flaresolverr` and `slskd` carry `network_mode: service:vpn` — they share the VPN container's namespace, have no address of their own, and are unreachable by container name. `172.39.0.2` is `VPN_IP`; from inside that namespace `127.0.0.1` is the same machine. Container-name DNS (`http://flaresolverr:8191`) resolves to nothing.
 
 Their Traefik labels live on the `vpn` container for the same reason, each router declaring its own port.
 
@@ -49,6 +50,7 @@ LAN hostnames are `<app>.lexcode.dev`; only Seerr is routed publicly, through th
 | Bazarr | `media/data/bazarr/config/config.yaml` → `auth.apikey` | `X-API-KEY` |
 | Seerr | `media/data/seerr/settings.json` → `main.apiKey` | `X-Api-Key` |
 | qBittorrent | username/password only, stored as `WebUI\Username` + a PBKDF2 hash that cannot be read back | cookie |
+| slskd | `SLSKD_USERNAME`/`SLSKD_PASSWORD` in `.env` for the UI; API keys are created in the UI and land in `media/data/slskd/slskd.yml` | `X-API-Key` |
 
 Keys are per-installation: a key from a checkout that is not the running host returns `401` even though the file looks right. `GET /api/v3/system/status` returning `200` is the proof the key is live.
 
@@ -77,7 +79,10 @@ Work down and stop at the first rung that fails — everything below inherits th
 | `401` with a key that looks right | key read from a checkout that is not the running host |
 | `404` on every endpoint of one app | wrong API version — Lidarr is `/api/v1`, not `/api/v3` |
 | Traefik 502/503 on `prowlarr.` / `qbittorrent.` | the label-owning `vpn` container is down or unhealthy |
-| Prowlarr, FlareSolverr or qBittorrent unreachable after any VPN restart | recreating `vpn` orphans the containers sharing its namespace: `docker compose up -d --force-recreate vpn flaresolverr prowlarr qbittorrent` |
+| Prowlarr, FlareSolverr, qBittorrent or slskd unreachable after any VPN restart | recreating `vpn` orphans the containers sharing its namespace: `docker compose up -d --force-recreate vpn flaresolverr prowlarr qbittorrent slskd` |
+| slskd searches work but queues are long, nothing ever uploads, peers report it as firewalled | expected: PIA's single forwarded port belongs to qBittorrent, so slskd has no inbound listen port (`50300`) by design. Not a fault; the options are in `media/README.md` → *Soulseek* |
+| slskd logs in to Soulseek and then exits, or the UI refuses the login | `SLSK_USERNAME`/`SLSK_PASSWORD` are the **network** account from slsknet.org; `SLSKD_*` is only the web UI. They are not interchangeable |
+| Soulseek singles never reach the library | they land in `/data/downloads-unraid/soulseek` and are filed by `./beets/beet.sh import-soulseek`; the hourly `import-auto` timer deliberately never touches that root |
 | VPN restart loop, `curl: (28) Connection timed out` during `addKey` | a PIA region is unreachable. `PIA_LOC` is a fallback list; `PORT_FATAL=1` + `EXIT_ON_FATAL=1` + `deunhealth` turn one dead region into a restart loop by design |
 | Torrents stall at 0 peers while outbound still works | qBittorrent `[BitTorrent] Session\Interface` must be `wg0`; `MTU=1280` and the IPv6-off sysctls are already set on `vpn` |
 | Downloads finish but no inbound peers, ever | PIA's forwarded port must equal qBittorrent's listen port. Compare `media/data/pia-shared/port.dat`, `[BitTorrent] Session\Port` in `media/data/qbittorrent/qBittorrent/qBittorrent.conf`, `TORRENTING_PORT` in `.env`, and what the namespace actually binds: `docker exec vpn ss -lun` |
@@ -100,6 +105,7 @@ Work down and stop at the first rung that fails — everything below inherits th
 | `/data/movies`, `/data/shows`, `/data/music`, `/data/documents` | `//192.168.0.10/...` | second NAS; Radarr `movieImportedCategory`, Sonarr and Lidarr read these |
 | `/data/movies-unraid`, `/data/shows-unraid`, `/data/animes`, `/data/music-unraid`, `/data/music-inbox` | `//192.168.0.149/Media/...` | Unraid shares |
 | `/data/downloads-unraid` | `//192.168.0.149/Media/Downloads` | qBittorrent's real download root |
+| `/data/downloads-unraid/soulseek` | inside the same Unraid `Media/Downloads` share | slskd's `/downloads`; Beets sees it as `/soulseek-inbox`, Lidarr under `/data/downloads-unraid` |
 | `/mnt/usb/downloads2`, `/mnt/usb2/downloads` | **plain directories on the Pi's SD card** | mounted into qBittorrent and the \*arr apps as `/data/downloads2` and `/data/downloads3`. The `usb` names are historical — no USB disk is mounted there |
 
 Current root folders (`GET /api/v3/rootfolder` is authoritative): Radarr `/data/movies`, `/data/movies-unraid`; Sonarr `/data/shows`, `/data/animes`, `/data/shows-unraid`; Lidarr `/data/music`, `/data/music-unraid`. Chaptarr (`GET /api/v1/rootfolder`) points at a book root under `/data` — normally `/data/audiobooks`, the same host path Audiobookshelf's `AUDIOBOOKSHELF_AUDIOBOOKS_DIR` scans. That root is not in the mount table above unless a book share is mounted: an empty local `/data/audiobooks` is the failure mode where the library fills on the SD card and Audiobookshelf shows nothing.
@@ -121,6 +127,12 @@ Books, not film: a Readarr fork (Readarr retired June 2025, still labelled beta 
 - Config lives in `media/data/chaptarr/`, the API key in `config.xml` — but the entrypoint starts as root, chowns `/config`, then drops to `PUID`. `media/data/chaptarr` is local disk, never a share.
 
 Workflow and the Audiobookshelf side: `media/README.md` → *Chaptarr*.
+
+## Soulseek (slskd)
+
+The path for **one song** Lidarr cannot get: Lidarr matches whole releases, Soulseek shares individual files. Downloads land in `/data/downloads-unraid/soulseek` and enter the library only through `./beets/beet.sh import-soulseek` (`--singletons`, reviewed, `Artist/Singles/Title`). `media/data/slskd/slskd.yml` holds the options edited in the UI; its SQLite state must stay on local disk, never on a share.
+
+It is a **firewalled** client on purpose (VPN privacy over inbound reachability), so "no uploads, slow queues" is the design, not a bug. Do not publish `50300` or add a router forward to "fix" it — that exposes the house IP, which the stack's VPN posture exists to prevent.
 
 ## Beets
 
