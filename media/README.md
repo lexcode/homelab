@@ -338,7 +338,7 @@ tail -f data/beets/import.log                  # what got imported vs. skipped, 
 ./beets/beet.sh beet <anything>      # arbitrary beet command
 ./beets/beet.sh import-auto          # unattended quiet-mode import (strong matches only)
 ./beets/beet.sh import-singles       # standalone tracks from /music-inbox
-./beets/beet.sh import-soulseek      # standalone tracks from /soulseek-inbox (slskd downloads)
+./beets/beet.sh import-soulseek      # standalone tracks from /soulseek-downloads (slskd downloads)
 ./beets/beet.sh retry <path>         # re-prompt for one previously skipped item
 ```
 
@@ -445,7 +445,7 @@ Options — search/transfer limits, download naming, API keys, shares — are ed
 ### Downloading one track
 
 1. **Search** in slskd, e.g. `Radiohead Lift`.
-2. **Pick a file**, preferring a peer with free slots, then download. `SLSKD_DOWNLOADS_DIR=/downloads` is host `/data/downloads-unraid/soulseek`, mounted into the `beets` container as `/soulseek-inbox` and already visible to Lidarr under `/data/downloads-unraid`.
+2. **Pick a file**, preferring a peer with free slots, then download. `SLSKD_DOWNLOADS_DIR=/downloads` is host `/data/downloads-unraid/soulseek`, mounted into the `beets` container as `/soulseek-downloads` and already visible to Lidarr under `/data/downloads-unraid`.
 3. **Import it into the library** — reviewed, tagged, moved to `Artist/Singles/`:
 
    ```bash
@@ -471,6 +471,8 @@ Soulseek filenames are whatever the uploader typed into their own file manager, 
 ### Wiring other tools to it
 
 slskd's API is reachable at `http://172.39.0.2:5030` from `servarrnetwork` (it shares the `vpn` namespace, so the container name does not resolve), or over the LAN/ingress URL above. Create an API key in slskd's UI options:
+
+A consumer that finishes the job itself needs the **share**, not the Pi's path: `/data/downloads-unraid` is this host's CIFS mount of Unraid's `Media/Downloads`, so on the Unraid box the same files are at `/mnt/user/Media/Downloads/soulseek`. Mounting `/data/downloads-unraid/soulseek` in a container that runs *on Unraid* yields an empty directory, not the downloads. Mount it at a fixed container path (this stack uses `/soulseek-downloads`, matching Beets) and point the consumer at that path.
 
 - [Kima](https://github.com/Chevron7Locked/kima-hub)'s "slskd (external)" Soulseek mode takes that URL + key, and reads finished downloads out of a folder you mount into it.
 - [Soularr](https://github.com/mrusse/soularr) automates it the other way round: it reads Lidarr's **wanted albums** and drives slskd. That is album-shaped work Lidarr already attempts, adds a service plus two API keys, and duplicates Prowlarr's job — so it is not part of this stack. Worth revisiting only if Lidarr's own coverage becomes the bottleneck.
@@ -637,7 +639,7 @@ Conventional paths under the bind-mounted host root. Point Radarr, Sonarr, Lidar
 │   │   ├── completed
 │   │   ├── incomplete
 │   │   └── torrents
-│   └── soulseek     # CIFS: Unraid Media/Downloads/soulseek — slskd downloads (Beets reads it as /soulseek-inbox)
+│   └── soulseek     # CIFS: Unraid Media/Downloads/soulseek — slskd downloads (Beets reads it as /soulseek-downloads)
 ├── movies
 ├── music
 ├── music-inbox      # CIFS: Unraid Media/Music-Inbox — SpotiFLAC drop zone (Beets reads)

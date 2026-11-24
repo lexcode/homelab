@@ -105,7 +105,7 @@ Work down and stop at the first rung that fails — everything below inherits th
 | `/data/movies`, `/data/shows`, `/data/music`, `/data/documents` | `//192.168.0.10/...` | second NAS; Radarr `movieImportedCategory`, Sonarr and Lidarr read these |
 | `/data/movies-unraid`, `/data/shows-unraid`, `/data/animes`, `/data/music-unraid`, `/data/music-inbox` | `//192.168.0.149/Media/...` | Unraid shares |
 | `/data/downloads-unraid` | `//192.168.0.149/Media/Downloads` | qBittorrent's real download root |
-| `/data/downloads-unraid/soulseek` | inside the same Unraid `Media/Downloads` share | slskd's `/downloads`; Beets sees it as `/soulseek-inbox`, Lidarr under `/data/downloads-unraid` |
+| `/data/downloads-unraid/soulseek` | inside the same Unraid `Media/Downloads` share | slskd's `/downloads`; Beets sees it as `/soulseek-downloads`, Lidarr under `/data/downloads-unraid` |
 | `/mnt/usb/downloads2`, `/mnt/usb2/downloads` | **plain directories on the Pi's SD card** | mounted into qBittorrent and the \*arr apps as `/data/downloads2` and `/data/downloads3`. The `usb` names are historical — no USB disk is mounted there |
 
 Current root folders (`GET /api/v3/rootfolder` is authoritative): Radarr `/data/movies`, `/data/movies-unraid`; Sonarr `/data/shows`, `/data/animes`, `/data/shows-unraid`; Lidarr `/data/music`, `/data/music-unraid`. Chaptarr (`GET /api/v1/rootfolder`) points at a book root under `/data` — normally `/data/audiobooks`, the same host path Audiobookshelf's `AUDIOBOOKSHELF_AUDIOBOOKS_DIR` scans. That root is not in the mount table above unless a book share is mounted: an empty local `/data/audiobooks` is the failure mode where the library fills on the SD card and Audiobookshelf shows nothing.

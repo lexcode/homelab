@@ -465,7 +465,7 @@ services:
       - ${MUSIC_INBOX_DIR:-/data/music-inbox}:/music-inbox
       # slskd's download directory (Soulseek singles). A separate root from /music-inbox so
       # the hourly --group-albums import-auto timer cannot mistake loose tracks for an album.
-      - /data/downloads-unraid/soulseek:/soulseek-inbox
+      - /data/downloads-unraid/soulseek:/soulseek-downloads
       - ${MUSIC_LIBRARY_DIR:-/data/music-unraid}:/music
     networks:
       servarrnetwork:
@@ -517,7 +517,7 @@ services:
       # local disk: upstream lists copy-on-write filesystems and SMB/NFS app directories
       # as unsupported for this data.
       - ./data/slskd:/app
-      # Same host directory is mounted into beets as /soulseek-inbox, and Lidarr already
+      # Same host directory is mounted into beets as /soulseek-downloads, and Lidarr already
       # sees it under /data/downloads-unraid — identical container paths are what keep
       # imports working without remote path mappings.
       - /data/downloads-unraid/soulseek:/downloads

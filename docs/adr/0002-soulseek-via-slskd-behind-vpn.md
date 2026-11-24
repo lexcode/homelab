@@ -12,7 +12,7 @@ The service is deliberately a **firewalled** Soulseek client. PIA forwards exact
 - **Publishing `50300` on the host with a router port-forward** — rejected: inbound Soulseek connections would arrive at the house IP, defeating the reason qBittorrent is behind the VPN in the first place. A file-sharing network is exactly the traffic this stack already insists on tunnelling.
 - **A second VPN session with its own forwarded port, dedicated to slskd** — not adopted, but recorded: it is the only route to a fully reachable and still-private client. Whether a PIA account can hold two simultaneous port forwards is unverified here, so it must be tested before anyone builds on it.
 - **Depending on slskd's built-in VPN integration** — unavailable: it is gluetun-specific (it polls gluetun's control server), and this stack runs `thrnz/docker-wireguard-pia`.
-- **Downloading into the existing Beets inbox** (`/data/music-inbox`) — rejected: `systemd/media-beets-import.timer` imports that directory hourly with `--group-albums`, so loose Soulseek singles would be forced into album matches. A separate root (`/soulseek-inbox`) keeps the two shapes of input apart.
+- **Downloading into the existing Beets inbox** (`/data/music-inbox`) — rejected: `systemd/media-beets-import.timer` imports that directory hourly with `--group-albums`, so loose Soulseek singles would be forced into album matches. A separate root (`/soulseek-downloads`) keeps the two shapes of input apart.
 - **Storing slskd's application data on the music share** — rejected: upstream lists SMB/NFS app directories, BTRFS and ZFS as unsupported for the SQLite data behind searches and transfers. `./data/slskd` stays on local disk.
 
 ## Consequences
