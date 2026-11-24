@@ -432,8 +432,8 @@ Sharing is therefore left **off** by default: while firewalled, a shared folder 
 
 ### Setup
 
-1. **Soulseek account.** Register one at <https://www.slsknet.org/> — free, and required before slskd can log in.
-2. **Environment.** In `.env`, set `SLSK_USERNAME` / `SLSK_PASSWORD` for the network account and `SLSKD_USERNAME` / `SLSKD_PASSWORD` for the web UI. Upstream's web default is `slskd` / `slskd`; do not leave it there.
+1. **Soulseek account.** Required before slskd can log in, and it is free — but there is **no web sign-up**: slsknet.org's registration path answers `403`, and slskd has no account-creation feature of its own. An account is created from inside a Soulseek client's login window. The reference client is [SoulseekQt](https://www.slsknet.org/news/) (download page → Windows/macOS builds); registering from its login dialog asks for a username, password and email. Already had a Soulseek account in any client? Reuse it — `SLSK_USERNAME` / `SLSK_PASSWORD` are just that login.
+2. **Environment.** In `.env`, set `SLSK_USERNAME` / `SLSK_PASSWORD` for the network account and `SLSKD_USERNAME` / `SLSKD_PASSWORD` for the web UI. Upstream's web default is `slskd` / `slskd`; do not leave it there. Empty `SLSK_*` values do not stop the container — it starts and simply never connects.
 3. **Host directory.** `mkdir -p data/slskd /data/downloads-unraid/soulseek`, both owned by `PUID`/`PGID`.
 4. **Start.** `docker compose up -d slskd` (it waits for the `vpn` health check).
 5. **Log in.** `https://slskd.lexcode.dev` or `http://<host>:5030`, with the `SLSKD_*` credentials.
