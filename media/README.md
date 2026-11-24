@@ -438,6 +438,8 @@ Sharing is therefore left **off** by default: while firewalled, a shared folder 
 4. **Start.** `docker compose up -d slskd` (it waits for the `vpn` health check).
 5. **Log in.** `https://slskd.lexcode.dev` or `http://<host>:5030`, with the `SLSKD_*` credentials.
 
+The order is not strict: with empty `SLSK_*` values the container still starts and simply stays offline, so an account can be obtained afterwards. `.env` is read at container creation, so after adding credentials re-create the service (`docker compose up -d --force-recreate slskd`) — a plain `restart` keeps the old environment. Log out of any desktop Soulseek client once slskd is connected; two sessions on one username is at best confusing.
+
 Options — search/transfer limits, download naming, API keys, shares — are edited **in the UI** and written to `data/slskd/slskd.yml`, because `SLSKD_REMOTE_CONFIGURATION=true`. That makes `data/slskd/slskd.yml` the file to back up; the SQLite databases next to it are only search/transfer state.
 
 ### Downloading one track
