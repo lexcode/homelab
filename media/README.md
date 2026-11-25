@@ -470,7 +470,28 @@ Soulseek filenames are whatever the uploader typed into their own file manager, 
 
 ### Wiring other tools to it
 
-slskd's API is reachable at `http://172.39.0.2:5030` from `servarrnetwork` (it shares the `vpn` namespace, so the container name does not resolve), or over the LAN/ingress URL above. Create an API key in slskd's UI options:
+slskd's API is reachable at `http://172.39.0.2:5030` from `servarrnetwork` (it shares the `vpn` namespace, so `http://slskd:5030` does not resolve), or through the published port (`http://<host>:5030`) — the latter is what a consumer running on another machine should use.
+
+To let another tool call it, add an API key. Two equivalent routes, because slskd has no field-per-setting form: **System → Options → Edit** edits the whole options document as YAML (that is what `SLSKD_REMOTE_CONFIGURATION=true` enables), or append the same block to `data/slskd/slskd.yml` on the host:
+
+```yaml
+web:
+  authentication:
+    api_keys:
+      <name>:
+        key: <16-255 characters>
+        role: readwrite
+        cidr: 0.0.0.0/0,::/0
+```
+
+`role: readwrite` is sufficient for an API consumer — verified on this stack: `/api/v0/application`, `/api/v0/searches` and `/api/v0/transfers/downloads` all answer `200`, while `/api/v0/server` and `/api/v0/options` are `administrator`-only and nothing needs them. Editing the file needs only `docker compose restart slskd` (no `.env` change, so no recreate). Verify with a call that returns useful state — `/api/v0/session` answers `200` with an empty body, which proves nothing:
+
+```bash
+curl -s -H "X-API-Key: <key>" http://127.0.0.1:5030/api/v0/application | jq -r '.server.state'
+# "Connected, LoggedIn"
+```
+
+Consumers that file the files themselves also need the directory, not just the API:
 
 A consumer that finishes the job itself needs the **share**, not the Pi's path: `/data/downloads-unraid` is this host's CIFS mount of Unraid's `Media/Downloads`, so on the Unraid box the same files are at `/mnt/user/Media/Downloads/soulseek`. Mounting `/data/downloads-unraid/soulseek` in a container that runs *on Unraid* yields an empty directory, not the downloads. Mount it at a fixed container path (this stack uses `/soulseek-downloads`, matching Beets) and point the consumer at that path.
 

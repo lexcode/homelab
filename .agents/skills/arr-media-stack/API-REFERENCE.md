@@ -283,21 +283,27 @@ elsewhere in the stack — film/TV trackers carry no books.
 
 ## slskd (API v0)
 
-Header `X-API-Key` (create the key in slskd's UI; with `SLSKD_REMOTE_CONFIGURATION=true` it
-is written to `media/data/slskd/slskd.yml`). Reaches the `vpn` namespace at
-`http://172.39.0.2:5030`; `http://slskd:5030` does not resolve.
+Header `X-API-Key`. Keys are added under `web.authentication.api_keys` in
+`media/data/slskd/slskd.yml` (or the same document via System → Options → Edit); `role:
+readwrite` covers everything below. Reaches the `vpn` namespace at `http://172.39.0.2:5030`,
+or `http://<host>:5030` off-host; `http://slskd:5030` does not resolve.
 
-**Not yet exercised against this stack** — the routes below were read from slskd's upstream
-controllers (`src/slskd/*/API`), not verified live, and response field names are unconfirmed.
-Confirm shapes with a `GET` before scripting anything destructive.
+Verified live against this stack (2026-11): `application`, `searches`, `transfers/downloads`
+and `session` answer `200` with a `readwrite` key; `server` and `options` answer `403` at that
+role. Response field names are verified only where noted — confirm with a `GET` before
+scripting anything destructive.
 
 ```bash
 SLS=http://172.39.0.2:5030
 SLSKEY=<key from data/slskd/slskd.yml>
 
-# session and connection state — is the Soulseek login up, and what does the server say
-curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/session"
-curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/server"
+# readiness in one call: version plus the Soulseek login state. This is what a consumer
+# checks before searching; `session` returns 200 with an empty body and proves nothing.
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/application" | jq '{v: .version.current, state: .server.state, connected: .server.isConnected}'
+# {"v":"0.26.2.0","state":"Connected, LoggedIn","connected":true}
+
+# /api/v0/server is administrator-only (403 at readwrite) — don't script against it
+curl -s -o /dev/null -w '%{http_code}\n' -H "X-API-Key: $SLSKEY" "$SLS/api/v0/server"
 
 # active searches, and the peer responses for one of them
 curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/searches"
