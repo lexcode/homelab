@@ -12,6 +12,8 @@ LKEY=$(grep -oP '(?<=<ApiKey>)[^<]+' media/data/lidarr/config.xml)
 PKEY=$(grep -oP '(?<=<ApiKey>)[^<]+' media/data/prowlarr/config.xml)
 BKEY=$(python3 -c 'import yaml;print(yaml.safe_load(open("media/data/bazarr/config/config.yaml"))["auth"]["apikey"])')
 EKEY=$(python3 -c 'import json;print(json.load(open("media/data/seerr/settings.json"))["main"]["apiKey"])')
+# slskd: no key until one is created in its UI; it then lives in media/data/slskd/slskd.yml
+# under web -> authentication -> api_keys
 ```
 
 Response shapes are documented where they are counter-intuitive. When a call surprises you, read the failure: `404` with a JSON `message` is a wrong route or API version, `401` is a wrong key.
@@ -278,6 +280,45 @@ Empty metadata (no author, title or cover on a searched book) is the metadata
 provider, not the indexer: check Settings → Metadata, and note Hardcover needs
 an API token. Empty search results across every indexer are the same cause as
 elsewhere in the stack — film/TV trackers carry no books.
+
+## slskd (API v0)
+
+Header `X-API-Key`. Keys are added under `web.authentication.api_keys` in
+`media/data/slskd/slskd.yml` (or the same document via System → Options → Edit); `role:
+readwrite` covers everything below. Reaches the `vpn` namespace at `http://172.39.0.2:5030`,
+or `http://<host>:5030` off-host; `http://slskd:5030` does not resolve.
+
+Verified live against this stack (2026-11): `application`, `searches`, `transfers/downloads`
+and `session` answer `200` with a `readwrite` key; `server` and `options` answer `403` at that
+role. Response field names are verified only where noted — confirm with a `GET` before
+scripting anything destructive.
+
+```bash
+SLS=http://172.39.0.2:5030
+SLSKEY=<key from data/slskd/slskd.yml>
+
+# readiness in one call: version plus the Soulseek login state. This is what a consumer
+# checks before searching; `session` returns 200 with an empty body and proves nothing.
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/application" | jq '{v: .version.current, state: .server.state, connected: .server.isConnected}'
+# {"v":"0.26.2.0","state":"Connected, LoggedIn","connected":true}
+
+# /api/v0/server is administrator-only (403 at readwrite) — don't script against it
+curl -s -o /dev/null -w '%{http_code}\n' -H "X-API-Key: $SLSKEY" "$SLS/api/v0/server"
+
+# active searches, and the peer responses for one of them
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/searches"
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/searches/<id>/responses"
+
+# queues, positions and failures — the download-side equivalent of an *arr queue
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/transfers/downloads"
+curl -s -H "X-API-Key: $SLSKEY" "$SLS/api/v0/transfers/downloads/<username>"
+
+# writes: POST /api/v0/searches, POST /api/v0/transfers/downloads/<username>,
+# DELETE /api/v0/transfers/downloads/<username>/<id>  — all change network or disk state
+```
+
+Options live at `/api/v0/options` (upstream documents `PATCH` there for live settings). The
+UI is the supported way to edit them; prefer it over scripts.
 
 ## Beets
 
